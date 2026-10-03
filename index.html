@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#2a2230">
+<title>Mitos: mundo abierto</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="iconos/icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="iconos/icono-192.png">
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<canvas id="lienzo" role="img" aria-label="Mapa del juego"></canvas>
+
+<div id="hud">
+  <div id="contadores">
+    <div class="chip"><span class="chip-icono" data-icono="espiral"></span><span id="zona-nombre"></span> <b id="zona-n">0/0</b></div>
+    <div class="chip"><span class="chip-icono" data-icono="objeto"></span>Total <b id="total-n">0/0</b></div>
+  </div>
+  <button id="btn-menu" class="boton-redondo" aria-label="Menú"></button>
+</div>
+
+<div id="aviso" role="status" aria-live="polite" hidden></div>
+<div id="pista-cambio" hidden>Tocá un personaje para cambiar</div>
+
+<div id="controles">
+  <div id="fila-acciones">
+    <div id="zona-joystick"><div id="joystick"><div id="palanca"></div></div></div>
+    <div id="botones">
+      <button id="btn-poder" class="boton-accion" aria-label="Poder"><span class="ico"></span><span class="etiqueta"></span></button>
+      <button id="btn-salto" class="boton-accion" aria-label="Saltar"><span class="ico"></span><span class="etiqueta">Saltar</span></button>
+    </div>
+  </div>
+  <nav id="tira" aria-label="Personajes"></nav>
+</div>
+
+<section id="pantalla-perfiles" class="pantalla" hidden>
+  <div class="tarjeta">
+    <h1>Mitos: mundo abierto</h1>
+    <p class="sub">¿Quién juega?</p>
+    <ul id="lista-perfiles"></ul>
+    <form id="form-nuevo" autocomplete="off">
+      <label for="nombre-nuevo">Perfil nuevo</label>
+      <div class="fila-form">
+        <input id="nombre-nuevo" type="text" maxlength="14" placeholder="Nombre" enterkeyhint="done">
+        <button type="submit" class="boton-grande">Crear</button>
+      </div>
+    </form>
+    <p id="msg-perfiles" class="sub" hidden></p>
+  </div>
+</section>
+
+<section id="pantalla-menu" class="pantalla" hidden>
+  <div class="tarjeta">
+    <h2 id="menu-titulo">Pausa</h2>
+    <div id="menu-principal">
+      <button id="menu-seguir" class="boton-grande">Seguir jugando</button>
+      <button id="menu-objetos" class="boton-grande claro">Mis objetos</button>
+      <button id="menu-perfiles" class="boton-grande claro">Cambiar de perfil</button>
+    </div>
+    <div id="menu-lista" hidden>
+      <ul id="lista-objetos"></ul>
+      <button id="menu-volver" class="boton-grande claro">Volver</button>
+    </div>
+  </div>
+</section>
+
+<script type="module" src="principal.js"></script>
+</body>
+</html>

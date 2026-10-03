@@ -1,0 +1,9 @@
+{
+  "personajes": [
+    { "id": "pegaso",    "nombre": "Pegaso",    "color": "#f4ecd8", "rasgo": "alas",    "poder": { "id": "volar",    "nombre": "Volar",    "activo": true  } },
+    { "id": "minotauro", "nombre": "Minotauro", "color": "#8a5a3c", "rasgo": "cuernos", "poder": { "id": "embestir", "nombre": "Embestir", "activo": true  } },
+    { "id": "ariadna",   "nombre": "Ariadna",   "color": "#b5482e", "rasgo": "ovillo",  "poder": { "id": "hilo",     "nombre": "Hilo",     "activo": false } },
+    { "id": "fenix",     "nombre": "Fénix",     "color": "#e8892a", "rasgo": "llama",   "poder": { "id": "luz",      "nombre": "Luz",      "activo": false } },
+    { "id": "eco",       "nombre": "Eco",       "color": "#1f6f9c", "rasgo": "voz",     "poder": { "id": "voz",      "nombre": "Voz",      "activo": false } }
+  ]
+}
