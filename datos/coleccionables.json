@@ -1,0 +1,10 @@
+{
+  "zonas": [
+    { "id": "pruebas", "nombre": "Campo de pruebas" }
+  ],
+  "objetos": [
+    { "id": "prueba-1", "zona": "pruebas", "nombre": "Objeto de prueba 1", "texto": "Texto de prueba. El texto real lo define Chat." },
+    { "id": "prueba-2", "zona": "pruebas", "nombre": "Objeto de prueba 2", "texto": "Texto de prueba. El texto real lo define Chat." },
+    { "id": "prueba-3", "zona": "pruebas", "nombre": "Objeto de prueba 3", "texto": "Texto de prueba. El texto real lo define Chat." }
+  ]
+}
