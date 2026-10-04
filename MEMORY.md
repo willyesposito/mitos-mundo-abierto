@@ -27,7 +27,7 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Fuente que se activa al llegar volando:** `golpea: "volar"` en una fuente `golpe` (vale Pegaso o Fénix en vuelo). Queda vibrando y se guarda.
 - **Pared `b` (parapeto bajo) bloquea como pared pero se dibuja baja:** sirve de pantalla delante de una puerta sin taparla. Los desafíos de a dos se verifican con cada personaje solo, en orden que no gaste el paso propio (Fénix y Ariadna al final).
 - **Muro agrietado sobre una terraza:** al romperse queda a ras de suelo, así que lo que está detrás debe estar a nivel 0.
-- **`probar.js` tarda varios minutos.** Con un límite de 120 s se cortó a mitad ("Target page, context or browser has been closed"); sin límite dio 142 chequeos OK y ninguna falla (observado el 2026-10-03). No correrlo con un límite de tiempo corto.
+- **`probar.js` tarda varios minutos.** Con un límite de 120 s se cortó a mitad ("Target page, context or browser has been closed"); sin límite dio 173 chequeos OK y ninguna falla (observado el 2026-10-04). No correrlo con un límite de tiempo corto.
 - **Ambiente (flora, fauna, detalles):** decorado o vivo, nunca requisito ni recompensa, no se guarda en el perfil. Cada personaje tiene su propia reacción con el poder. Mezcla base arqueológica minoica y mitos; el mito se cuenta con la reacción, sin texto. Diseño en `diseno-ambiente.md`.
 
 ## Proceso
