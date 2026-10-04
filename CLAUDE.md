@@ -38,7 +38,7 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 | Pegaso | Volar a terrazas y techos (mantener el botón) | alas |
 | Minotauro | Fuerza: empujar bloques y vasijas; embestir para romper muros agrietados | cuernos |
 | Ariadna | Hilo: tender sogas entre argollas (escala o puente, hasta 5 casillas) | ovillo |
-| Fénix | Luz: tocar brilla y enciende braseros; mantener vuela como Pegaso | llama |
+| Fénix | Luz: tocar brilla y enciende braseros; mantener vuela, pero solo hasta terrazas (los techos son de Pegaso, D21) | llama |
 | Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
 
 Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave de perfil con cola larga; sus alas son piezas aparte que aletean por código (D20). Minotauro, Ariadna y Eco tienen cuerpo humano (D19). El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
@@ -61,8 +61,8 @@ Código en la raíz, datos en `datos/`.
 | `sonido.js` | Audio sintetizado (Web Audio), un extra: todo lo que suena también se ve |
 | `datos/personajes.json` | Elenco y poderes |
 | `datos/coleccionables.json` | Catálogo de objetos y zonas. El catálogo real lo define Chat |
-| `datos/mapa-mundo.json` | El mundo: puerto (inicio, abajo), plaza y palacio en terrazas (arriba) en un solo mapa continuo (D21). `zonas` dice qué filas son de cada zona, su desplazamiento y su inicio. La plaza tiene un desafío por poder; el palacio, tres desafíos de a dos. Declara una vez el catálogo de `sonidos` |
-| `datos/mapa-puerto.json`, `mapa-plaza.json`, `mapa-palacio.json` | Los mapas separados de antes de D21. Ya no los carga el juego |
+| `datos/mapa-mundo.json` | El mundo: puerto (inicio, abajo), plaza y palacio en terrazas (arriba) en un solo mapa continuo (D22). `zonas` dice qué filas son de cada zona, su desplazamiento y su inicio. La plaza tiene un desafío por poder; el palacio, tres desafíos de a dos. Declara una vez el catálogo de `sonidos` |
+| `datos/mapa-puerto.json`, `mapa-plaza.json`, `mapa-palacio.json` | Los mapas separados de antes de D22. Ya no los carga el juego |
 | `datos/mapa-pruebas.json` | Campo de pruebas, se abre desde el menú. Leyenda abajo |
 | `ROADMAP.md` | Estado de las sesiones de la etapa. Se actualiza al cerrar cada sesión |
 | `DECISIONS.md` | Decisiones tomadas, con el porqué. Solo se agregan entradas |

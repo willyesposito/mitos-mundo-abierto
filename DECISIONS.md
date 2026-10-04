@@ -45,7 +45,7 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Descartado:** una explicación dentro del juego.
 
 ### D7. Zonas separadas con paso entre ellas
-- **Estado:** reemplazada por D21
+- **Estado:** reemplazada por D22
 - **Decisión:** puerto, plaza y palacio son mapas separados con un paso entre ellos.
 - **Por qué:** era la opción recomendada: más simple de construir y de probar.
 - **Descartado:** un solo mapa continuo.
@@ -127,15 +127,21 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Por qué:** el aleteo necesita el ala separada del cuerpo, y el diseño anterior de Fénix no era el que se buscaba.
 - **Descartado:** versión de fuego aparte para el vuelo; alas con filas de plumas (se veían recargadas).
 
+### D21. Fénix vuela hasta terrazas, Pegaso hasta techos
+- **Estado:** tomada
+- **Decisión:** el vuelo de Fénix llega a la altura de una terraza (nivel 1) y no a un techo (nivel 2). Pegaso sigue llegando a techos.
+- **Por qué:** Willy pidió que Pegaso tenga cosas para hacer que Fénix no. Con tres niveles, la única división que separa a los dos es terraza contra techo.
+- **Descartado:** el mismo vuelo para los dos.
+
 ## Mundo y arte (2026-10-04)
 
-### D21. Un solo mundo continuo
+### D22. Un solo mundo continuo
 - **Estado:** tomada
 - **Decisión:** puerto, plaza y palacio pasan a ser zonas de un mismo mapa continuo, sin pasos ni cambios de pantalla entre ellas, de sur a norte como se conectan hoy. El progreso ya guardado de cada mapa (muros, rejas, empujables, braseros, sogas, sonidos) se traslada al mapa unido: nada de lo abierto vuelve a cerrarse. Reemplaza a D7.
 - **Por qué:** la idea del juego es un mundo abierto; los mapas separados lo cortaban.
 - **Descartado:** mapas separados con paso entre ellos (D7); reiniciar los mecanismos al unir, porque choca con "nada se cierra".
 
-### D22. Cuatro direcciones por personaje
+### D23. Cuatro direcciones por personaje
 - **Estado:** tomada (resuelta por Willy en otro chat)
 - **Decisión:** cada personaje se dibuja en cuatro direcciones. Resuelve la decisión pendiente de A2 en `plan-arte.md`.
 - **Por qué:** no quedó registrado en este repo.

@@ -689,6 +689,7 @@ async function main() {
     ok(vuela > 100, `el aleteo de ${id} volando se ve (${vuela} píxeles distintos entre dos instantes)`);
     ok(quieto < vuela, `quieto, ${id} casi no cambia (${quieto} píxeles contra ${vuela} volando)`);
   }
+  ok(sp.listos && sp.fallidos.length === 0 && Object.keys(sp.escenario).length === sp.esperados && sp.esperados > 40 && Object.values(sp.escenario).every(d => d[0] > 0 && d[1] > 0), `los ${sp.esperados} sprites del escenario cargan y se rasterizan (fallidos: ${sp.fallidos.join(',') || 'ninguno'})`);
   // En el mundo: con cada personaje el canvas difiere del que no dibuja ninguno
   await tp(8.5, 24.5); await espera(900);
   const tomar = id => page.evaluate(async id => {
