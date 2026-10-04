@@ -24,7 +24,7 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
 
 async function main() {
   await new Promise(r => servidor.listen(0, r));
-  const url = `http://localhost:${servidor.address().port}/?prueba`;
+  const url = `http://localhost:${servidor.address().port}/?prueba&pruebas`;
   const browser = await pw.chromium.launch();
   const ctx = await browser.newContext({ ...pw.devices['Pixel 7'], serviceWorkers: 'allow' });
   const page = await ctx.newPage();
@@ -115,9 +115,17 @@ async function main() {
   await toque('touchEnd', []); await espera(1500);
   ok((await est()).enSuelo, 'al soltar Volar, Pegaso baja planeando');
 
-  // 2. Campo de pruebas desde el menú
+  // 2. Campo de pruebas desde el menú (escondido: solo con ?pruebas)
+  {
+    const sin = await ctx.newPage();
+    await sin.goto(url.replace('&pruebas', '')); await sin.waitForSelector('#pantalla-perfiles:not([hidden])');
+    await sin.click('.perfil'); await sin.waitForFunction(() => window.__mundo); await espera(300);
+    await sin.click('#btn-menu');
+    ok(await sin.isVisible('#menu-seguir') && !(await sin.isVisible('#menu-pruebas')), 'sin ?pruebas el menú no muestra el campo de pruebas');
+    await sin.close();
+  }
   await page.click('#btn-menu');
-  ok((await page.textContent('#menu-pruebas')) === 'Campo de pruebas', 'el menú ofrece el campo de pruebas');
+  ok((await page.textContent('#menu-pruebas')) === 'Campo de pruebas' && await page.isVisible('#menu-pruebas'), 'con ?pruebas el menú ofrece el campo de pruebas');
   await page.click('#menu-seguir'); await espera(200);
   await entrarPruebas();
   s = await est();
@@ -780,6 +788,93 @@ async function main() {
   await page.click('.perfil:has-text("Anterior")'); await page.waitForFunction(() => window.__mundo.coleccionables.every(c => !c.recogido)); await espera(500);
   zona('plaza'); s = await est();
   ok(Math.abs(s.x - 11.5) < 0.1 && Math.abs(s.y - 31.5) < 0.1 && (await chip()) === 'Plaza central 0/3', `un perfil viejo sin lugar guardado en la plaza aparece en el inicio de la plaza (${s.x.toFixed(1)}, ${s.y.toFixed(1)})`);
+
+  // 20. A3: señales visuales de los poderes (cada una distinta, todas en el estado del mundo)
+  {
+  const senales = tipo => page.evaluate(t => window.__mundo.senales.filter(q => q.tipo === t).length, tipo);
+  const hastaSenal = async (tipo, max = 2500) => { const t0 = Date.now(); while (Date.now() - t0 < max) { if ((await senales(tipo)) > 0) return true; await espera(25); } return false; };
+  const limpiar = () => M(() => { window.__mundo.senales = []; });
+  // Los cuadros se guardan y se comparan dentro de la página (pasarlos a node pesa demasiado)
+  const lienzo = nombre => page.evaluate(async n => { await new Promise(r => setTimeout(r, 120)); const l = document.querySelector('canvas'); (window.__cuadros = window.__cuadros || {})[n] = l.getContext('2d').getImageData(0, 0, l.width, l.height).data; }, nombre);
+  const difPix = (x, y) => page.evaluate(([x, y]) => { const a = window.__cuadros[x], b = window.__cuadros[y]; let n = 0; for (let k = 0; k < a.length; k += 4) if (Math.abs(a[k] - b[k]) + Math.abs(a[k + 1] - b[k + 1]) + Math.abs(a[k + 2] - b[k + 2]) > 60) n++; return n; }, [x, y]);
+  const fuenteDibujo = fs.readFileSync(path.join(RAIZ, 'dibujo.js'), 'utf8');
+  const trozo = (desde, hasta) => fuenteDibujo.slice(fuenteDibujo.indexOf(desde), fuenteDibujo.indexOf(hasta));
+  ok(!/createRadialGradient|createLinearGradient/.test(trozo('function dibujarJugador', '// ---------- Sprites') + trozo('function dibujarOndas', 'function dibujarObjeto') + trozo('function dibujarSoga', 'function dibujarOndas')),
+    'dibujo.js: el brillo de Fénix, las ondas, las señales y la soga no usan degradés');
+  ok(!/#fff3c8/i.test(trozo('function dibujarSenales', 'function dibujarObjeto')) && !/COL\.oro/.test(trozo('function dibujarJugador', '// ---------- Sprites') + trozo('function dibujarOndas', 'function dibujarObjeto')), 'las señales de poder no usan el oro pálido reservado a mecanismos');
+
+  // Ariadna: la soga se desenrolla (visual) pero se puede pisar desde el primer instante
+  await elegir('ariadna'); zona('plaza'); await tp(14.5, 22.5);
+  await M(() => { window.__progs = []; const m = window.__mundo, s = m.sogas.find(q => q.a[0] === 14 && q.a[1] === 63);
+    window.__tim = setInterval(() => window.__progs.push([s.prog, s.tendida, m.alturaTile(14, 61), s.desde]), 16); });
+  const previo = await M(() => window.__mundo.alturaTile(14, 61));
+  await page.keyboard.press('KeyE'); await espera(300); await foto('A3-1-soga-desenrollando'); await espera(700);
+  const progs = await M(() => { clearInterval(window.__tim); return window.__progs; });
+  const alt = await M(() => window.__mundo.sogas.find(q => q.a[0] === 14 && q.a[1] === 63).casillas[2].h);
+  const medio = progs.find(q => q[1] && q[0] < 1);
+  ok(medio && medio[0] < 0.7 && progs[progs.length - 1][0] === 1 && progs.every((q, i) => i === 0 || q[0] >= progs[i - 1][0] || !progs[i - 1][1]), 'Ariadna: el progreso de la soga va de 0 a 1 en unos 0,5 s y no retrocede');
+  ok(medio && medio[1] && Math.abs(medio[2] - alt) < 1e-9 && Math.abs(previo - alt) > 1e-9, `Ariadna: la soga ya se puede pisar mientras se desenrolla (altura ${medio ? medio[2].toFixed(2) : '?'} contra ${previo.toFixed(2)} antes)`);
+  ok(medio && medio[3] === 0, 'Ariadna: el desenrollo parte de la argolla más cercana');
+  await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
+  await page.click('.perfil:has-text("Anterior")'); await page.waitForFunction(() => window.__mundo); await espera(500);
+  ok(await M(() => { const s = window.__mundo.sogas.find(q => q.a[0] === 14 && q.a[1] === 63); return s.tendida && s.prog === 1; }), 'Ariadna: una soga restaurada del guardado aparece entera, sin animación');
+  await foto('A3-1b-soga-entera');
+
+  // Eco: arcos del color del sonido, y el símbolo sobre su cabeza solo con un sonido guardado
+  await elegir('eco'); zona('plaza'); await tp(11.5, 31.5); await limpiar();
+  await M(() => { window.__mundo.eco = 'caracola'; });
+  await tocar('KeyE'); await foto('A3-2-eco-ondas');
+  const ond = await M(() => ({ n: window.__mundo.ondas.length, c: window.__mundo.ondas[0] && window.__mundo.ondas[0].color, cs: window.__mundo.sonidos.caracola.color }));
+  ok(ond.n > 0 && ond.c === ond.cs, `Eco: al repetir salen ondas con el color del sonido (${ond.c})`);
+  await espera(1200);
+  await M(() => { window.__mundo.eco = null; window.__mundo.ondas = []; });
+  await lienzo('sin1'); await lienzo('sin2');
+  await M(() => { window.__mundo.eco = 'caracola'; });
+  await lienzo('con'); await foto('A3-2b-eco-simbolo');
+  const ruido = await difPix('sin1', 'sin2'), simb = await difPix('sin1', 'con');
+  ok(simb > ruido + 40, `Eco: con sonido guardado se ve su símbolo sobre la cabeza (${simb} píxeles contra ${ruido} sin cambio)`);
+  await elegir('pegaso');
+  await lienzo('p1'); await M(() => { window.__mundo.eco = null; }); await lienzo('p2');
+  ok((await difPix('p1', 'p2')) < simb, 'el símbolo del sonido solo aparece sobre Eco, no sobre otro personaje');
+
+  // Campo de pruebas: Pegaso, Fénix y Minotauro
+  await entrarPruebas();
+  await elegir('pegaso'); await tp(5.5, 23.5); await limpiar();
+  await poner(new Set(['KeyE'])); ok(await hastaSenal('rafaga', 800), 'Pegaso: al despegar sale una ráfaga de aire'); await foto('A3-3-rafaga');
+  await espera(500); await limpiar(); await soltarTodo();
+  ok(await hastaSenal('polvo', 3500), 'Pegaso: al aterrizar de un vuelo levanta polvo'); await foto('A3-4-aterriza');
+  await elegir('eco'); await tp(5.5, 23.5); await espera(300); await limpiar();
+  await poner(new Set(['ArrowRight'])); await espera(50); await saltar(); await espera(100); ok((await senales('polvo')) === 0, 'saltar no levanta polvo en el aire');
+  ok(await hastaSenal('polvo', 1500), 'Eco: al aterrizar de un salto levanta polvo'); await soltarTodo();
+  // No en el agua
+  await elegir('ariadna'); await tp(10.5, 22.5); await limpiar();
+  ok((await M(() => window.__mundo.suelo(10.5, 20.5))) <= -9, 'el tramo de agua del campo de pruebas es vacío');
+  await M(() => { const j = window.__mundo.jugador; j.x = 10.5; j.y = 20.5; j.z = 1.5; j.vz = -3; j.enSuelo = false; j.planeo = false; });
+  await espera(1800);
+  ok((await senales('polvo')) === 0 && (await est()).estado === 'jugando', 'al caer al agua no se levanta polvo y se reaparece en piso firme');
+  // Fénix: brasas al volar y halo al brillar
+  await elegir('fenix'); await tp(5.5, 23.5); await limpiar();
+  await poner(new Set(['KeyE'])); ok(await hastaSenal('brasa', 1500), 'Fénix: al volar suelta brasas'); await espera(400); await foto('A3-5-fenix-brasas');
+  const nBrasas = await senales('brasa'); await soltarTodo(); await espera(1500);
+  ok(nBrasas > 0 && nBrasas < 12, `las brasas son moderadas (${nBrasas} a la vez)`);
+  ok(!(await M(() => window.__mundo.senales.some(q => q.tipo === 'brasa'))), 'las brasas se apagan solas');
+  await limpiar(); await tocar('KeyE');
+  ok((await M(() => window.__mundo.jugador.brillo)) > 0, 'Fénix: tocar brilla');
+  await M(() => { window.__mundo.jugador.brillo = 1; });
+  await lienzo('halo'); await foto('A3-6-fenix-halo'); await espera(1200);
+  await lienzo('sinHalo'); const dh = await difPix('halo', 'sinHalo');
+  ok(dh > 400, `Fénix: el halo de rayos se ve y se apaga (${dh} píxeles)`);
+  // Minotauro: polvo y esfuerzo al empujar, estela y polvo al embestir
+  await elegir('minotauro'); await tp(13.5, 17.5); await limpiar();
+  await poner(new Set(['ArrowRight']));
+  ok(await hastaSenal('polvo', 3000), 'Minotauro: al empujar el bloque sale polvo en su base');
+  ok((await M(() => window.__mundo.jugador.esfuerzo)) > 0, 'Minotauro: mientras empuja hay líneas de esfuerzo'); await foto('A3-7-empuje'); await soltarTodo(); await espera(400);
+  await tp(3.5, 23.5); await limpiar();
+  await poner(new Set(['ArrowRight'])); await espera(40); await page.keyboard.press('KeyE');
+  ok(await hastaSenal('polvo', 600), 'Minotauro: al embestir levanta polvo a los pies');
+  ok(await M(() => !!window.__mundo.jugador.embiste), 'Minotauro: la estela se dibuja mientras embiste'); await foto('A3-8-embestida');
+  await soltarTodo(); await espera(500);
+  }
 
   // 11. Sin conexión
   await page.evaluate(() => navigator.serviceWorker.ready); await espera(500);

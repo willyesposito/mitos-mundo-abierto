@@ -221,6 +221,8 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   ui.alCerrarMenu = null; ui.alCambiarPerfil = null; ui.alCambiarMapa = null;
   ui.abrirMenu = recogidos => {
     $('menu-pruebas').textContent = mapa.id === 'pruebas' ? 'Salir del campo de pruebas' : 'Campo de pruebas';
+    // El campo de pruebas está escondido: solo se ofrece con ?pruebas en la dirección. Dentro, la salida se ve siempre.
+    $('menu-pruebas').hidden = mapa.id !== 'pruebas' && !new URLSearchParams(location.search).has('pruebas');
     $('menu-principal').hidden = false; $('menu-lista').hidden = true; $('menu-titulo').textContent = 'Pausa';
     ui.recogidosMenu = recogidos; menu.hidden = false;
   };

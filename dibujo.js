@@ -71,6 +71,7 @@ function dibujarMundo(ctx, m, v, personajes) {
   while (k < items.length) { dibujarItem(ctx, m, items[k], personajes); k++; }
 
   dibujarParticulas(ctx, m);
+  dibujarSenales(ctx, m);
 
   // Siluetas tenues por encima de todo: se ve al personaje y a los objetos detrás de un muro.
   for (const c of m.coleccionables) if (!c.recogido && ver(Math.floor(c.y))) dibujarSilueta(ctx, m, c);
@@ -341,38 +342,89 @@ function dibujarSoga(ctx, s) {
   const ini = s.casillas[0], fin = s.casillas[s.casillas.length - 1];
   const vertical = s.a[0] === s.b[0];
   const [x0, y0] = pt(ini), [x1, y1] = pt(fin);
+  // Desenrollo visual (la soga ya se puede pisar): parte de la argolla más cercana a Ariadna y avanza hasta la otra
+  const prog = s.prog === undefined ? 1 : s.prog, u = prog < 1 ? 1 - (1 - prog) * (1 - prog) : 1;
+  const ta = s.desde === 1 ? 1 - u : 0, tb = s.desde === 1 ? 1 : u, punta = s.desde === 1 ? ta : tb, EPS = 1e-6;
+  const L = t => [x0 + (x1 - x0) * t, y0 + (y1 - y0) * t];
+  const tramo = (ox, oy, ancho) => { const [ax, ay] = L(ta), [bx, by] = L(tb); lino(ctx, ax + ox, ay + oy, bx + ox, by + oy, ancho); };
   if (s.ha === s.hb) {
     // puente: tablones entre dos sogas
     const n = s.casillas.length * 3;
     for (let i = 0; i <= n; i++) {
-      const t = i / n, px = x0 + (x1 - x0) * t, py = y0 + (y1 - y0) * t;
+      const t = i / n; if (t < ta - EPS || t > tb + EPS) continue;
+      const [px, py] = L(t);
       ctx.fillStyle = i % 2 ? '#b98a52' : '#a5763f'; ctx.strokeStyle = COL.tinta; ctx.lineWidth = 1.5;
       if (vertical) { ctx.fillRect(px - 15, py - 4, 30, 8); ctx.strokeRect(px - 15, py - 4, 30, 8); }
       else { ctx.fillRect(px - 5, py - 12, 10, 24); ctx.strokeRect(px - 5, py - 12, 10, 24); }
     }
-    for (const o of vertical ? [[-15, 0], [15, 0]] : [[0, -12], [0, 12]]) lino(ctx, x0 + o[0], y0 + o[1], x1 + o[0], y1 + o[1], 3);
+    for (const o of vertical ? [[-15, 0], [15, 0]] : [[0, -12], [0, 12]]) tramo(o[0], o[1], 3);
   } else {
     // escala: dos sogas con peldaños
     const n = s.casillas.length * 2;
-    for (const o of [-9, 9]) lino(ctx, x0 + o, y0 - 10, x1 + o, y1 - 10, 3);
+    for (const o of [-9, 9]) tramo(o, -10, 3);
     ctx.lineCap = 'round';
     for (let i = 0; i <= n; i++) {
-      const t = i / n, px = x0 + (x1 - x0) * t, py = y0 + (y1 - y0) * t - 10;
+      const t = i / n; if (t < ta - EPS || t > tb + EPS) continue;
+      const [px, qy] = L(t), py = qy - 10;
       ctx.strokeStyle = COL.tinta; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(px - 9, py); ctx.lineTo(px + 9, py); ctx.stroke();
       ctx.strokeStyle = '#b98a52'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(px - 9, py); ctx.lineTo(px + 9, py); ctx.stroke();
     }
   }
+  if (prog < 1) {
+    // Ovillo óxido en la punta, que gira mientras avanza
+    const [ox, oy] = L(punta), cy = oy - (s.ha === s.hb ? 4 : 12), giro = prog * 14;
+    ctx.fillStyle = COL.oxido; ctx.strokeStyle = COL.tinta; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(ox, cy, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = COL.oxidoOscuro; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(ox, cy, 3.4, giro, giro + 3.6); ctx.stroke();
+  }
 }
 
 function dibujarOndas(ctx, m) {
-  // Las ondas del eco se ven por encima de todo: atraviesan paredes
+  // Las ondas del eco se ven por encima de todo: atraviesan paredes. Arcos de voz concéntricos que se abren y se apagan.
+  ctx.lineCap = 'round';
+  const ARCOS = 6;
   for (const o of m.ondas) {
-    const k = o.t / o.dur, r = (0.2 + k * 0.8) * o.alcance;
-    ctx.strokeStyle = o.color; ctx.lineWidth = 4;
+    const k = o.t / o.dur, cx = o.x * TW, cy = o.y * TH - o.z * LH;
     for (let n = 0; n < 3; n++) {
-      const kk = Math.max(0, k - n * 0.12); if (kk <= 0) continue;
-      ctx.globalAlpha = (1 - kk) * 0.8;
-      ctx.beginPath(); ctx.ellipse(o.x * TW, o.y * TH - o.z * LH, (0.2 + kk * 0.8) * o.alcance * TW, (0.2 + kk * 0.8) * o.alcance * TH, 0, 0, Math.PI * 2); ctx.stroke();
+      const kk = k - n * 0.12; if (kk <= 0) continue;
+      const rx = (0.2 + kk * 0.8) * o.alcance * TW, ry = (0.2 + kk * 0.8) * o.alcance * TH, giro = n * 0.35 + kk * 0.6;
+      ctx.globalAlpha = (1 - kk) * 0.9;
+      for (const [color, ancho] of [[COL.tinta, 7], [o.color, 4]]) {
+        ctx.strokeStyle = color; ctx.lineWidth = ancho;
+        for (let i = 0; i < ARCOS; i++) {
+          const a0 = giro + i * Math.PI * 2 / ARCOS;
+          ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, a0, a0 + Math.PI * 2 / ARCOS * 0.6); ctx.stroke();
+        }
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Señales de poder que viven un rato: polvo (empujar, embestir, aterrizar), ráfaga (despegue) y brasas (Fénix)
+function dibujarSenales(ctx, m) {
+  ctx.lineCap = 'round';
+  for (const q of m.senales) {
+    const k = q.t / q.dur, cx = q.x * TW, cy = q.y * TH - q.z * LH;
+    ctx.globalAlpha = Math.max(0, 1 - k) * 0.9;
+    if (q.tipo === 'polvo') {
+      const r = q.r * (0.6 + k * 0.9);
+      ctx.fillStyle = COL.calSombra; ctx.strokeStyle = 'rgba(59,43,29,.4)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(cx, cy - r * 0.5, r, r * 0.75, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    } else if (q.tipo === 'brasa') {
+      const r = 3.2 * (1 - k * 0.5);
+      ctx.fillStyle = q.oxido ? COL.oxido : COL.ocre; ctx.strokeStyle = COL.tinta; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(cx, cy - r * 1.6); ctx.lineTo(cx + r, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (q.tipo === 'rafaga') {
+      for (const lado of [-1, 1]) for (let n = 0; n < 3; n++) {
+        const x0 = cx + lado * (9 + k * 10 + n * 3), y0 = cy - 3 - n * 7 - k * 6;
+        const x1 = x0 + lado * (12 + k * 16), y1 = y0 - 3 - k * 6;
+        for (const [color, ancho] of [[COL.tinta, 5], [COL.cal, 2.6]]) {
+          ctx.strokeStyle = color; ctx.lineWidth = ancho;
+          ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo((x0 + x1) / 2, y0 - 7, x1, y1); ctx.stroke();
+        }
+      }
     }
   }
   ctx.globalAlpha = 1;
@@ -428,11 +480,21 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
       ctx.beginPath(); ctx.ellipse(gx, gy, 14, 6.5, 0, 0, Math.PI * 2); ctx.stroke();
     }
   }
+  const cuerpoY = j.y * TH - Math.max(j.z, -3) * LH;
   if (j.brillo > 0) {
-    const r = 30 + (1 - j.brillo) * 40, py = j.y * TH - Math.max(j.z, -3) * LH - 20;
-    const gr = ctx.createRadialGradient(gx, py, 4, gx, py, r);
-    gr.addColorStop(0, `rgba(255,220,120,${0.7 * j.brillo})`); gr.addColorStop(1, 'rgba(255,200,90,0)');
-    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(gx, py, r, 0, Math.PI * 2); ctx.fill();
+    // Halo plano de rayos cortos (ocre y óxido, contorno tinta) que se abre y se apaga
+    const b = j.brillo, cy = cuerpoY - 20, r0 = 16 + (1 - b) * 26, largo = 9 + b * 9, giro = (1 - b) * 0.6;
+    const alfa0 = ctx.globalAlpha; ctx.globalAlpha = alfa0 * Math.min(1, b * 1.5); ctx.strokeStyle = COL.tinta; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    for (let i = 0; i < 12; i++) {
+      const a = giro + i * Math.PI / 6, ex = Math.cos(a), ey = Math.sin(a) * 0.85, px = -ey, py = ex * 0.85;
+      ctx.fillStyle = i % 2 ? COL.oxido : COL.ocre;
+      ctx.beginPath();
+      ctx.moveTo(gx + ex * r0 + px * 4, cy + ey * r0 + py * 4);
+      ctx.lineTo(gx + ex * (r0 + largo), cy + ey * (r0 + largo));
+      ctx.lineTo(gx + ex * r0 - px * 4, cy + ey * r0 - py * 4);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.globalAlpha = alfa0;
   }
   const p = personajes[j.personaje];
   if (!p) return;
@@ -440,6 +502,24 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
     x: gx, y: j.y * TH - Math.max(j.z, -3) * LH, fx: j.fx, fy: j.fy, t: m.t,
     caminando: j.camina && j.enSuelo, volando: j.planeo, embistiendo: !!j.embiste, escala: 1, paso: j.paso,
   });
+  if (j.personaje === 'minotauro' && j.esfuerzo > 0) {
+    // Líneas de esfuerzo delante del Minotauro mientras empuja
+    const l = Math.hypot(j.fx, j.fy * 0.8) || 1, dx = j.fx / l, dy = j.fy * 0.8 / l, bx = gx, by = cuerpoY - 22;
+    ctx.lineCap = 'round';
+    for (const [color, ancho] of [[COL.tinta, 5], [COL.cal, 2.4]]) {
+      ctx.strokeStyle = color; ctx.lineWidth = ancho;
+      for (let n = -1; n <= 1; n++) {
+        const a = Math.atan2(dy, dx) + n * 0.55, tem = Math.sin(m.t * 40 + n) * 2, r0 = 22 + tem, r1 = 31 + tem;
+        ctx.beginPath(); ctx.moveTo(bx + Math.cos(a) * r0, by + Math.sin(a) * r0 * 0.9); ctx.lineTo(bx + Math.cos(a) * r1, by + Math.sin(a) * r1 * 0.9); ctx.stroke();
+      }
+    }
+  }
+  if (j.personaje === 'eco' && m.eco && m.sonidos[m.eco]) {
+    // El sonido guardado, sobre la cabeza, con un vaivén leve
+    const snd = m.sonidos[m.eco];
+    ctx.fillStyle = snd.color; ctx.strokeStyle = COL.tinta; ctx.lineWidth = 2;
+    simbolo(ctx, snd.simbolo, gx + Math.sin(m.t * 2.2) * 2.5, cuerpoY - 64 + Math.sin(m.t * 3.1) * 2, 7);
+  }
 }
 
 // ---------- Sprites ----------
@@ -563,10 +643,14 @@ export function dibujarPersonaje(ctx, p, o) {
   if (alas) ala(cerca, alas.cerca, ang);
   ctx.restore();
 
-  // Embestida: estela
+  // Embestida: líneas de velocidad cal con contorno tinta (el polvo a los pies viene del mundo)
   if (o.embistiendo) {
-    ctx.strokeStyle = 'rgba(244,236,216,.7)'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-    for (let n = 0; n < 3; n++) { ctx.beginPath(); ctx.moveTo(-fx * 14, -8 - n * 8); ctx.lineTo(-fx * 30, -8 - n * 8); ctx.stroke(); }
+    const dir = fx < 0 ? -1 : 1;
+    ctx.lineCap = 'round';
+    for (const [color, ancho] of [[COL.tinta, 5.5], [COL.cal, 2.6]]) {
+      ctx.strokeStyle = color; ctx.lineWidth = ancho;
+      for (let n = 0; n < 3; n++) { ctx.beginPath(); ctx.moveTo(-dir * (14 + n * 3), -10 - n * 11); ctx.lineTo(-dir * (34 - n * 2), -10 - n * 11); ctx.stroke(); }
+    }
   }
   ctx.restore();
 }

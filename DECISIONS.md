@@ -146,3 +146,17 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** puerto, plaza y palacio pasan a ser zonas de un mismo mapa continuo, sin pasos ni cambios de pantalla entre ellas, de sur a norte como se conectan hoy. El progreso ya guardado de cada mapa (muros, rejas, empujables, braseros, sogas, sonidos) se traslada al mapa unido: nada de lo abierto vuelve a cerrarse. Reemplaza a D7.
 - **Por qué:** la idea del juego es un mundo abierto; los mapas separados lo cortaban.
 - **Descartado:** mapas separados con paso entre ellos (D7); reiniciar los mecanismos al unir, porque choca con "nada se cierra".
+
+## Cierre de etapa y arte (2026-10-04)
+
+### D24. Campo de pruebas detrás de `?pruebas`
+- **Estado:** tomada (Willy, 2026-10-04)
+- **Decisión:** el botón del campo de pruebas sale del menú y solo aparece si la dirección lleva `?pruebas`. Adentro del campo, la salida se ve siempre. El mapa y su lógica quedan intactos. Completa D8.
+- **Por qué:** la jugadora no lo ve, pero Willy lo conserva para probar poderes sueltos en el celular durante la prueba integral.
+- **Descartado:** retirarlo del juego; esconderlo con un gesto secreto, porque sería difícil de recordar y de probar.
+
+### D25. Señales de poder dibujadas por código
+- **Estado:** tomada (Willy, 2026-10-04)
+- **Decisión:** las señales de poder de A3 (ondas y símbolo de Eco, halo y brasas de Fénix, polvo y esfuerzo del Minotauro, soga que se desenrolla de Ariadna, ráfaga al despegar, polvo al aterrizar) se dibujan por código con la paleta de D17, en color plano y sin oro pálido. No son sprites.
+- **Por qué:** son efectos que se mueven y no tienen forma fija, y los sprites de personajes se diseñan fuera de Code.
+- **Descartado:** el brillo de Fénix con degradé (D17 los descarta).
