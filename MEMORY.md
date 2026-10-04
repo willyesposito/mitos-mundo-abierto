@@ -32,4 +32,5 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 
 ## Proceso
 
+- **Los personajes se diseñan fuera de Code**, en otro chat de Willy. Code no los diseña ni los redibuja: en maquetas van como lugar marcado. Por qué: Willy lo pidió al arrancar el plan de arte (2026-10-04).
 - **El subagente no ve la conversación.** Un encargo incompleto produce trabajo equivocado: cada encargo trae los archivos a tocar, las reglas que aplican, las decisiones ya tomadas, qué queda fuera y el criterio de terminado.
