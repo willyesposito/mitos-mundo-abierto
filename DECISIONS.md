@@ -27,13 +27,13 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Descartado:** Eco solo visual.
 
 ### D4. Soga de Ariadna: hasta 5 casillas, en línea recta, entre argollas
-- **Estado:** vigente sin confirmar (así está en `CLAUDE.md` y en el código)
+- **Estado:** tomada (confirmada por Willy el 2026-10-04)
 - **Decisión:** la soga solo se tiende entre argollas puestas en el mapa, en línea recta y hasta 5 casillas.
 - **Por qué:** era la opción recomendada en el plan; la restricción a argollas evita que la soga se tienda en cualquier lugar.
 - **Descartado:** soga libre en cualquier punto.
 
 ### D5. Cómo termina la ficha del Minotauro
-- **Estado:** vigente sin confirmar (la ficha del juego termina en "Teseo lo venció")
+- **Estado:** tomada (confirmada por Willy el 2026-10-04)
 - **Decisión:** la ficha cuenta el mito en tercera persona y termina con que Teseo lo venció.
 - **Por qué:** era la opción recomendada: la esencia está y no hay detalle crudo.
 - **Descartado:** "Asterión no volvió a salir" (más velado) y cortar en el encierro.
@@ -45,13 +45,13 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Descartado:** una explicación dentro del juego.
 
 ### D7. Zonas separadas con paso entre ellas
-- **Estado:** vigente sin confirmar (cada mapa trae `salidas` y `entradas`)
+- **Estado:** reemplazada por D23
 - **Decisión:** puerto, plaza y palacio son mapas separados con un paso entre ellos.
 - **Por qué:** era la opción recomendada: más simple de construir y de probar.
 - **Descartado:** un solo mapa continuo.
 
 ### D8. Campo de pruebas
-- **Estado:** vigente sin confirmar (hoy se abre desde el menú)
+- **Estado:** tomada (2026-10-04): al cerrar la etapa se esconde, no se retira
 - **Decisión:** accesible desde el menú durante la etapa 1 y retirado o escondido al cerrarla (S8).
 - **Por qué:** sirve para validar poderes en un solo lugar mientras se construye el mapa real.
 - **Descartado:** retirarlo antes de cerrar la etapa.
@@ -138,3 +138,11 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** cada personaje tiene cuatro direcciones: frente (abajo), espalda (arriba) y costado. El costado mira a la derecha y se espeja para la izquierda, así que son tres dibujos por pose (quieto y caminar).
 - **Por qué:** caminando hacia arriba se tiene que ver la espalda, no la cara. Ocho direcciones duplican el trabajo de diseño y en el celular casi no se notan.
 - **Descartado:** dos direcciones espejadas y ocho direcciones.
+
+## Mundo (2026-10-04)
+
+### D23. Un solo mundo continuo
+- **Estado:** tomada
+- **Decisión:** puerto, plaza y palacio pasan a ser zonas de un mismo mapa continuo, sin pasos ni cambios de pantalla entre ellas, de sur a norte como se conectan hoy. El progreso ya guardado de cada mapa (muros, rejas, empujables, braseros, sogas, sonidos) se traslada al mapa unido: nada de lo abierto vuelve a cerrarse. Reemplaza a D7.
+- **Por qué:** la idea del juego es un mundo abierto; los mapas separados lo cortaban.
+- **Descartado:** mapas separados con paso entre ellos (D7); reiniciar los mecanismos al unir, porque choca con "nada se cierra".

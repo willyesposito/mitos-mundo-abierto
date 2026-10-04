@@ -44,14 +44,17 @@ function dibujarMundo(ctx, m, v, personajes) {
 
   const j = m.jugador;
   const items = [];
-  for (const e of m.empujables) items.push({ fila: Math.round(e.py), prof: e.py, tipo: 'empujable', e });
-  for (const c of m.coleccionables) if (!c.recogido) items.push({ fila: Math.floor(c.y), prof: c.y, tipo: 'objeto', c });
-  for (const b of m.braseros) items.push({ fila: b.y, prof: b.y + 0.5, tipo: 'brasero', b });
-  for (const f of m.fuentes) items.push({ fila: f.ty, prof: f.y, tipo: 'fuente', f });
-  for (const b of m.barcas) items.push({ fila: b.y, prof: b.y + 0.4, tipo: 'barca', b });
+  // Solo entra lo que cae en cámara: el mundo es largo y corre en un celular
+  const ver = (fila, minFila = fila) => fila >= y0 - 2 && minFila <= y1 + 4;
+  for (const e of m.empujables) if (ver(Math.round(e.py))) items.push({ fila: Math.round(e.py), prof: e.py, tipo: 'empujable', e });
+  for (const c of m.coleccionables) if (!c.recogido && ver(Math.floor(c.y))) items.push({ fila: Math.floor(c.y), prof: c.y, tipo: 'objeto', c });
+  for (const b of m.braseros) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.5, tipo: 'brasero', b });
+  for (const f of m.fuentes) if (ver(f.ty)) items.push({ fila: f.ty, prof: f.y, tipo: 'fuente', f });
+  for (const b of m.barcas) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.4, tipo: 'barca', b });
   // Las argollas y las sogas se dibujan después de todas las baldosas por las que pasan
   for (const s of m.sogas) {
     const maxFila = Math.max(s.a[1], s.b[1]);
+    if (!ver(maxFila, Math.min(s.a[1], s.b[1]))) continue;
     items.push({ fila: maxFila, prof: -1, tipo: 'soga', s });
     for (const p of [s.a, s.b]) items.push({ fila: p[1], prof: p[1] + 0.3, tipo: 'argolla', s, p });
   }
@@ -70,7 +73,7 @@ function dibujarMundo(ctx, m, v, personajes) {
   dibujarParticulas(ctx, m);
 
   // Siluetas tenues por encima de todo: se ve al personaje y a los objetos detrás de un muro.
-  for (const c of m.coleccionables) if (!c.recogido) dibujarSilueta(ctx, m, c);
+  for (const c of m.coleccionables) if (!c.recogido && ver(Math.floor(c.y))) dibujarSilueta(ctx, m, c);
   ctx.globalAlpha = 0.35;
   if (j.estado !== 'cayendo' || j.z > -1.2) dibujarJugador(ctx, m, personajes, false);
   ctx.globalAlpha = 1;
@@ -121,7 +124,6 @@ function dibujarTile(ctx, m, x, y) {
         else if (antes === 'G' || antes === 'O') pintar(ctx, 'umbral-reja', px, py, 0.5);
         else if (antes === 'D') pintar(ctx, 'umbral-sol', px, py, 0.5);
       }
-      if (m.salidas.has(x + ',' + y)) dibujarSalida(ctx, m, x, y, px, py);
     }
   }
 }
@@ -228,14 +230,6 @@ function dibujarAgua(ctx, m, x, y, px, py) {
     for (let i = 0; i < ondas * 2; i++) ctx.quadraticCurveTo(x0 + medio * (i + 0.5), wy + (i % 2 ? 5 : -5), x0 + medio * (i + 1), wy);
     ctx.stroke();
   }
-}
-
-// Paso a otro mapa: franja ocre con flechas hacia el borde por el que se sale
-function dibujarSalida(ctx, m, x, y, px, py) {
-  const arriba = y < m.rows / 2, cx = px + TW / 2, cy = py + TH / 2, d = arriba ? -1 : 1;
-  ctx.fillStyle = 'rgba(217,164,65,.45)'; ctx.fillRect(px, py, TW, TH);
-  ctx.strokeStyle = COL.oxido; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (const o of [-6, 5]) { ctx.beginPath(); ctx.moveTo(cx - 9, cy + o * d - 3 * d); ctx.lineTo(cx, cy + o * d + 4 * d); ctx.lineTo(cx + 9, cy + o * d - 3 * d); ctx.stroke(); }
 }
 
 // Barca sobre el agua: solo adorno

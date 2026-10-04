@@ -52,7 +52,7 @@ Cada paso termina cuando se cumple su criterio, no cuando está la hoja. El orde
   - **Siluetas detrás de paredes:** relleno cal al 35 % y contorno cal punteado, generadas por código desde el mismo sprite.
 
 ### A2. Los cinco personajes, quietos y caminando
-- **Qué:** base compartida más rasgo propio (alas, cuernos, ovillo, llama, ondas de voz). Quieto y ciclo de caminar.
+- **Qué:** cada uno con su propia silueta (D19) y su rasgo (alas, cuernos, ovillo, llama, ondas de voz). Quieto y ciclo de caminar.
 - **Direcciones (D22):** cuatro. Frente, espalda y costado espejado: tres dibujos por pose.
 - **Termina cuando:** la jugadora, en el celular, nombra a cada personaje sin ayuda.
 

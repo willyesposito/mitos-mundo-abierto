@@ -4,18 +4,18 @@ import { crearDibujo, estadoSprites, dibujarPersonaje } from './dibujo.js';
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
 import { crearSonido } from './sonido.js';
-import { actualizarPerfil, registrarObjeto, guardarMundo } from './nucleo.js';
+import { actualizarPerfil, registrarObjeto, guardarMundo, migrarAlMundo } from './nucleo.js';
 
 const $ = id => document.getElementById(id);
 const pedir = u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
 
 async function arrancar() {
-  const IDS_MAPAS = ['puerto', 'plaza', 'palacio', 'pruebas'];
+  const IDS_MAPAS = ['mundo', 'pruebas'];
   const [{ personajes }, catalogo, ...listaMapas] = await Promise.all([
     pedir('datos/personajes.json'), pedir('datos/coleccionables.json'), ...IDS_MAPAS.map(i => pedir(`datos/mapa-${i}.json`)),
   ]);
   const mapas = Object.fromEntries(listaMapas.map(m => [m.id, m]));
-  let mapa = mapas.puerto;
+  let mapa = mapas.mundo;
 
   const lienzo = $('lienzo');
   const dibujo = crearDibujo(lienzo);
@@ -24,7 +24,7 @@ async function arrancar() {
 
   const sonido = crearSonido(mapas.pruebas.sonidos);   // todos los mapas comparten el mismo catálogo de sonidos
   for (const t of ['pointerdown', 'keydown']) document.addEventListener(t, sonido.despertar, { capture: true });
-  let mundo = null, perfil = null, corriendo = false, ultimo = 0;
+  let mundo = null, perfil = null, corriendo = false, ultimo = 0, zonaActual = null, ultimoLugar = null;
   const vista = { W: 0, H: 0, dpr: 1, esc: 1, camX: 0, camY: 0, focoY: 0 };
 
   const entrada = crearControles({
@@ -45,10 +45,32 @@ async function arrancar() {
   }
   ui.alElegirPersonaje = elegirPersonaje;
 
-  function abrirMenu() { corriendo = false; ui.abrirMenu(perfil.objetos); }
+  function abrirMenu() { recordarLugar(true); corriendo = false; ui.abrirMenu(perfil.objetos); }
   ui.alCerrarMenu = () => { if (mundo) reanudar(); };
   ui.alAbrirFicha = () => { corriendo = false; entrada.x = entrada.y = 0; entrada.poderMantenido = false; };
   ui.alCambiarPerfil = () => { corriendo = false; mundo = null; entrada.x = entrada.y = 0; ui.mostrarPerfiles(iniciar); };
+
+  // Zona donde está parado el personaje: el mundo declara qué filas son de cada zona.
+  function zonaDe(y) {
+    if (!mapa.zonas) return mapa.zona;
+    const f = Math.floor(y), z = mapa.zonas.find(q => f >= q.desde && f <= q.hasta);
+    return z ? z.id : zonaActual;
+  }
+  function actualizarZona() {
+    const id = zonaDe(mundo.jugador.y);
+    if (id === zonaActual) return;
+    zonaActual = id;
+    ui.usarZona(id); ui.contadores(perfil.objetos);
+    recordarLugar(true);
+  }
+  // Guarda dónde reaparecer al recargar: el último piso firme. No en el campo de pruebas.
+  function recordarLugar(forzar) {
+    if (!mundo || !perfil || mundo.id === 'pruebas' || mundo.jugador.estado !== 'jugando') return;
+    const s = mundo.jugador.seguro;
+    if (!forzar && ultimoLugar && Math.hypot(s.x - ultimoLugar[0], s.y - ultimoLugar[1]) < 2) return;
+    ultimoLugar = [s.x, s.y];
+    actualizarPerfil(perfil, { llegada: ultimoLugar });
+  }
 
   // Arma el mundo de un mapa para este perfil. Eco y el personaje viajan con la jugadora entre mapas.
   function cargarMapa(id, llegada, personaje, fundido) {
@@ -58,6 +80,8 @@ async function arrancar() {
     mundo.jugador.personaje = personajes.some(x => x.id === personaje) ? personaje : 'pegaso';
     if (fundido) { mundo.jugador.estado = 'volviendo'; mundo.velo = 1; }
     ui.usarMapa(mapa);
+    zonaActual = zonaDe(mundo.jugador.y); ui.usarZona(zonaActual);
+    ultimoLugar = llegada ? [...llegada] : null;
     ui.sonidoEco(mundo.eco);
     ui.marcarPersonaje(mundo.jugador.personaje);
     ui.contadores(perfil.objetos);
@@ -66,13 +90,14 @@ async function arrancar() {
   }
   function exponer() { if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sprites = estadoSprites; window.__dibujarPersonaje = dibujarPersonaje; window.__sonidos = sonido.registro; } }
 
-  // Cambio de mapa. `id` nulo es volver al mapa de la partida desde el campo de pruebas.
+  // Único cambio de mapa que queda: ir al campo de pruebas desde el menú y volver al mundo donde se estaba.
+  // `id` nulo es volver al mundo desde el campo de pruebas.
   function cambiarMapa(id, llegada) {
+    if (mundo.id !== 'pruebas') recordarLugar(true);
     guardarMundo(perfil, mapa.id, mundo.estado());
     const pj = mundo.jugador.personaje;
     entrada.x = entrada.y = 0; entrada.poderMantenido = false;
-    if (id === null) { id = perfil.mapa || 'puerto'; llegada = perfil.llegada; }
-    else if (id !== 'pruebas') actualizarPerfil(perfil, { mapa: id, llegada: llegada || null });
+    if (id === null) { id = 'mundo'; llegada = perfil.llegada; }
     cargarMapa(id, llegada, pj, true);
     reanudar();
   }
@@ -80,9 +105,8 @@ async function arrancar() {
 
   function iniciar(p) {
     perfil = p;
-    const id = mapas[perfil.mapa] && perfil.mapa !== 'pruebas' ? perfil.mapa : 'puerto';
-    cargarMapa(id, id === perfil.mapa ? perfil.llegada : null, perfil.personaje, false);
-    ui.marcarPersonaje(mundo.jugador.personaje);
+    migrarAlMundo(perfil, mapas.mundo.zonas);   // perfiles viejos: puerto, plaza y palacio pasan al mundo unido
+    cargarMapa('mundo', perfil.llegada, perfil.personaje, false);
     ui.marcarPersonaje(mundo.jugador.personaje);
     ui.pistaCambio(!perfil.vistoCambio);
     ui.recogidosMenu = perfil.objetos;
@@ -94,12 +118,6 @@ async function arrancar() {
   function procesarEventos() {
     let cambioMundo = false;
     for (const e of mundo.eventos.splice(0)) {
-      if (e.tipo === 'salida') {
-        // Se vuelve a la entrada del mapa vecino que corresponde a este mapa
-        const destino = mapas[e.a];
-        cambiarMapa(e.a, destino.entradas && destino.entradas[mapa.id]);
-        return;
-      }
       if (['muro', 'reja', 'empuje', 'brasero', 'sol', 'golpe', 'puerta', 'escucha', 'soga'].includes(e.tipo)) cambioMundo = true;
       if (e.tipo === 'objeto') {
         registrarObjeto(perfil, e.id);
@@ -120,7 +138,7 @@ async function arrancar() {
       else if (e.tipo === 'soga') { ui.aviso('¡Se tendió una soga!', 'Queda para siempre y la usan todos.', 3000); sonido.tocar('soga'); }
       else if (e.tipo === 'pista') ui.aviso(e.texto, '', 3600);
     }
-    if (cambioMundo) guardarMundo(perfil, mapa.id, mundo.estado());
+    if (cambioMundo) { guardarMundo(perfil, mapa.id, mundo.estado()); recordarLugar(true); }
   }
 
   function ajustar() {
@@ -162,6 +180,7 @@ async function arrancar() {
     let dt = total;
     while (dt > 0) { const s = Math.min(dt, 1 / 60); mundo.actualizar(s, entrada); dt -= s; }
     procesarEventos();
+    actualizarZona(); recordarLugar(false);
     const j = mundo.jugador;
     centrarCamara(j.estado === 'volviendo' && j.estadoT < 0.02, total);
     dibujo.dibujar(mundo, vista);
@@ -169,7 +188,8 @@ async function arrancar() {
   }
 
   addEventListener('resize', () => { ajustar(); if (mundo) centrarCamara(true); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && mundo && !ui.menuAbierto()) { entrada.x = entrada.y = 0; } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && mundo) { recordarLugar(true); if (!ui.menuAbierto()) entrada.x = entrada.y = 0; } });
+  addEventListener('pagehide', () => recordarLugar(true));
   document.addEventListener('contextmenu', ev => ev.preventDefault());
   ajustar();
   ui.mostrarPerfiles(iniciar);

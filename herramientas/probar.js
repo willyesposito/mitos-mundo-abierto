@@ -32,13 +32,18 @@ async function main() {
   page.on('pageerror', e => errores.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errores.push(m.text()); });
 
-  const est = () => page.evaluate(() => {
+  // Mundo continuo: las coordenadas de las pruebas son locales a la zona donde se juega (OFF = desplazamiento de la zona).
+  // Se suman al hablar con el mundo (tp, celda, ir) y se restan al leer (est). En el campo de pruebas OFF es [0, 0].
+  const ZONAS = { puerto: [1, 74], plaza: [0, 40], palacio: [0, 0] };
+  let OFF = ZONAS.puerto;
+  const zona = n => { OFF = ZONAS[n]; };
+  const est = () => page.evaluate(([ox, oy]) => {
     const m = window.__mundo, j = m.jugador;
-    return { x: j.x, y: j.y, z: j.z, vz: j.vz, enSuelo: j.enSuelo, pj: j.personaje, estado: j.estado,
+    return { x: j.x - ox, y: j.y - oy, z: j.z, vz: j.vz, enSuelo: j.enSuelo, pj: j.personaje, estado: j.estado,
       recogidos: m.coleccionables.filter(c => c.recogido).map(c => c.id),
       celda: (x, y) => null };
-  });
-  const celda = (x, y) => page.evaluate(([x, y]) => window.__mundo.celdas[y][x], [x, y]);
+  }, OFF);
+  const celda = (x, y) => page.evaluate(([x, y]) => window.__mundo.celdas[y][x], [x + OFF[0], y + OFF[1]]);
   const abiertas = () => page.evaluate(() => window.__mundo.enlaces.map(e => e.abierto));
   const foto = n => page.screenshot({ path: path.join(SALIDA, n + '.png') });
 
@@ -67,13 +72,14 @@ async function main() {
   // Mantiene una tecla hasta que se cumpla la condición (o se agote el tiempo) y la suelta enseguida.
   async function hasta(tecla, cond, max = 4000) {
     const t0 = Date.now(); await poner(new Set([tecla]));
-    while (Date.now() - t0 < max && !(await page.evaluate(cond))) await espera(20);
+    while (Date.now() - t0 < max && !(await page.evaluate(cond, OFF))) await espera(20);
     await soltarTodo(); await espera(150);
   }
   // El campo de pruebas se abre desde el menú (no es el inicio)
   const entrarPruebas = async () => {
     await page.click('#btn-menu'); await page.click('#menu-pruebas');
     await page.waitForFunction(() => window.__mundo && window.__mundo.id === 'pruebas'); await espera(500);
+    OFF = [0, 0];
   };
   const bloque = () => page.evaluate(() => window.__mundo.empujables.filter(e => e.tipo === 'bloque').map(e => [e.tx, e.ty])[0]);
 
@@ -86,7 +92,7 @@ async function main() {
   await foto('02-inicio');
   let s = await est();
   ok(s.pj === 'pegaso' && s.enSuelo && Math.abs(s.x - 10.5) < 0.01 && Math.abs(s.y - 21.5) < 0.01, 'arranca con Pegaso en el muelle del puerto');
-  ok(await page.evaluate(() => window.__mundo.id) === 'puerto' && (await page.textContent('#zona-nombre')) === 'Puerto', 'el juego arranca en el puerto');
+  ok(await page.evaluate(() => window.__mundo.id) === 'mundo' && (await page.textContent('#zona-nombre')) === 'Puerto', 'el juego arranca en el mundo unido, en la zona del puerto');
   ok(await page.isVisible('#pista-cambio'), 'se ve la pista de cambio de personaje la primera vez');
 
   // 1b. Toques reales: joystick + botones a la vez
@@ -214,7 +220,7 @@ async function main() {
   const lista = await page.textContent('#lista-perfiles');
   ok(lista.includes('Prueba') && lista.includes('0/7'), 'los objetos de prueba no suman a la partida (0/7 en el perfil)');
   await page.click('.perfil'); await page.waitForFunction(() => window.__mundo); await espera(300);
-  ok(await page.evaluate(() => window.__mundo.id) === 'puerto', 'tras recargar desde el campo de pruebas, se vuelve al mapa de la partida');
+  ok(await page.evaluate(() => window.__mundo.id) === 'mundo', 'tras recargar desde el campo de pruebas, se vuelve al mundo de la partida');
   await entrarPruebas();
   s = await est();
   ok(s.recogidos.length === 3 && (await page.textContent('#zona-n')) === '3/3', 'los objetos de prueba siguen recogidos y no reaparecen');
@@ -244,7 +250,7 @@ async function main() {
   ok((await celda(11, 5)) === '.' && (await abiertas())[0] === true, 'el primer perfil conserva su mundo después de usar otro');
 
   // --- Ayudas para las sesiones de poderes: reubicar al personaje y elegirlo ---
-  const tp = (x, y) => page.evaluate(([x, y]) => { const m = window.__mundo, j = m.jugador; j.x = x; j.y = y; j.z = m.suelo(x, y); j.vz = 0; j.enSuelo = true; j.planeo = false; j.estado = 'jugando'; j.seguro = { x, y, z: j.z }; }, [x, y]);
+  const tp = (x, y) => page.evaluate(([x, y]) => { const m = window.__mundo, j = m.jugador; j.x = x; j.y = y; j.z = m.suelo(x, y); j.vz = 0; j.enSuelo = true; j.planeo = false; j.estado = 'jugando'; j.seguro = { x, y, z: j.z }; }, [x + OFF[0], y + OFF[1]]);
   const elegir = async id => { await page.click(`.pj[data-id=${id}]`); await espera(150); };
   const tocar = async (tecla = 'KeyE') => { await page.keyboard.press(tecla); await espera(250); };
   const sonidos = () => page.evaluate(() => window.__sonidos.slice());
@@ -415,38 +421,52 @@ async function main() {
   const est2 = await page.evaluate(() => JSON.stringify(Object.keys(window.__mundo.estado()).sort()));
   ok(est2 === JSON.stringify(['braseros', 'eco', 'empujables', 'fuentes', 'muros', 'puertas', 'rejas', 'sogas', 'soles']), `el estado guardado tiene una clave por mecanismo (${est2})`);
 
-  // 17. Sesión 6: recorrido completo desde el inicio (puerto y plaza)
+  // 17. Mundo unido: recorrido completo desde el inicio (puerto y plaza), sin ningún cambio de mapa
   const idMapa = () => page.evaluate(() => window.__mundo.id);
-  const objetosPlaza = () => page.evaluate(() => window.__mundo.coleccionables.filter(c => c.recogido).map(c => c.id));
+  const marcar = () => page.evaluate(() => { window.__marca = window.__mundo; });
+  const mismoMapa = () => page.evaluate(() => window.__mundo === window.__marca);   // el mismo objeto mundo: no hubo cambio de mapa
+  const mapaZona = Object.fromEntries(cat.objetos.map(o => [o.id, o.zona]));
+  const recog = z => page.evaluate(([z, mz]) => window.__mundo.coleccionables.filter(c => c.recogido).map(c => c.id).filter(id => mz[id] === z), [z, mapaZona]);
   const embestir = async () => { await poner(new Set(['ArrowUp'])); await espera(40); await page.keyboard.press('KeyE'); await espera(700); await soltarTodo(); await espera(150); };
+  const chip = async () => (await page.textContent('#zona-nombre')) + ' ' + (await page.textContent('#zona-n'));
   await page.click('#btn-menu'); await page.click('#menu-perfiles');
   await page.fill('#nombre-nuevo', 'Ruta'); await page.click('#form-nuevo button[type=submit]');
-  await page.waitForFunction(() => window.__mundo && window.__mundo.id === 'puerto'); await espera(500);
-  ok((await idMapa()) === 'puerto' && (await page.textContent('#zona-n')) === '0/1', 'un perfil nuevo empieza en el puerto, sin objetos');
+  await page.waitForFunction(() => window.__mundo && window.__mundo.id === 'mundo'); await espera(500);
+  zona('puerto'); await marcar();
+  s = await est();
+  ok((await idMapa()) === 'mundo' && (await chip()) === 'Puerto 0/1' && Math.abs(s.x - 10.5) < 0.01 && Math.abs(s.y - 21.5) < 0.01, 'un perfil nuevo empieza en el mundo, en el puerto, sin objetos');
+  ok(await page.evaluate(() => window.__mundo.rows) === 98 && await page.evaluate(() => window.__mundo.cols) === 24, 'el mundo es un solo mapa de 24 por 98 casillas');
   await foto('24-puerto');
+  // Ningún texto visible en inglés (pantalla de juego y menú)
+  const textoVisible = () => page.evaluate(() => document.body.innerText);
+  ok(!ingles.test(await textoVisible()), 'la pantalla de juego no tiene texto en inglés');
+  await page.click('#btn-menu'); const textoMenu = await textoVisible();
+  await page.click('#menu-objetos'); const textoLista = await textoVisible();
+  await page.click('#menu-volver'); await page.click('#menu-seguir'); await espera(200);
+  ok(!ingles.test(textoMenu + ' ' + textoLista), 'el menú y la lista de objetos no tienen texto en inglés');
   // Puerto: el ancla se agarra caminando; no hay nada que resolver
   await ir(10.5, 13.5, { orden: 'y', tol: 0.15 }); await espera(300);
-  ok((await est()).recogidos.includes('ancla-piedra') && (await page.textContent('#zona-n')) === '1/1', 'Pegaso agarra el ancla de piedra caminando por el muelle');
+  ok((await est()).recogidos.includes('ancla-piedra') && (await chip()) === 'Puerto 1/1', 'Pegaso agarra el ancla de piedra caminando por el muelle');
   // Eco escucha la caracola
   await elegir('eco');
   await ir(10.5, 15.5, { orden: 'y', tol: 0.15 }); await ir(5.5, 15.5, { orden: 'x', tol: 0.15 }); await espera(300);
   ok((await M(() => window.__mundo.eco)) === 'caracola', 'Eco guarda la caracola en el puerto');
   await foto('25-puerto-caracola');
   await ir(10.5, 15.5, { orden: 'x', tol: 0.15 });
-  await hasta('ArrowUp', () => window.__mundo.id === 'plaza', 9000); await espera(700);
-  s = await est();
-  ok((await idMapa()) === 'plaza' && s.y > 30 && s.pj === 'eco', `la salida norte del puerto lleva a la plaza, a su entrada sur (y=${s.y.toFixed(1)})`);
-  ok((await M(() => window.__mundo.eco)) === 'caracola' && (await page.textContent('#eco-texto')).includes('Caracola'), 'Eco conserva el sonido de la caracola al cambiar de mapa');
-  ok((await page.textContent('#zona-nombre')) === 'Plaza central' && (await page.textContent('#zona-n')) === '0/3', 'la plaza muestra su zona y sus tres objetos');
-  const guardado = () => page.evaluate(() => { const d = JSON.parse(localStorage.getItem('mitos-mundo-abierto-v1')); const p = d.perfiles.find(q => q.nombre === 'Ruta'); return { mapa: p.mapa, eco: p.eco, puerto: !!(p.mundos && p.mundos.puerto) }; });
+  await hasta('ArrowUp', ([ox, oy]) => window.__mundo.jugador.y < 73.6, 9000); await espera(700);
+  zona('plaza'); s = await est();
+  ok(await mismoMapa() && s.y > 30 && s.pj === 'eco', `caminando al norte del puerto se llega a la plaza sin cambiar de mapa (y local=${s.y.toFixed(1)})`);
+  ok((await chip()) === 'Plaza central 0/3', 'al cruzar caminando el chip de zona pasa a la plaza y a sus tres objetos');
+  ok((await M(() => window.__mundo.eco)) === 'caracola' && (await page.textContent('#eco-texto')).includes('Caracola'), 'Eco conserva el sonido de la caracola al cruzar de zona');
+  const guardado = () => page.evaluate(() => { const d = JSON.parse(localStorage.getItem('mitos-mundo-abierto-v1')); const p = d.perfiles.find(q => q.nombre === 'Ruta'); return { mapa: p.mapa, eco: p.eco, mundo: !!(p.mundos && p.mundos.mundo), llegada: p.llegada }; });
   const g0 = await guardado();
-  ok(g0.mapa === 'plaza' && g0.eco === 'caracola' && g0.puerto, 'el perfil guarda en qué mapa está y el sonido de Eco');
+  ok(g0.mapa === 'mundo' && g0.eco === 'caracola' && g0.mundo && Array.isArray(g0.llegada) && g0.llegada[1] < 74, 'el perfil guarda el mundo, el sonido de Eco y dónde reaparecer (ya en la plaza)');
   await tp(11.5, 24.5); await espera(900); await foto('26-plaza-sur');
   await tp(11.5, 12.5); await espera(900); await foto('27-plaza-norte');
 
   // Ningún desafío de la plaza se resuelve con otro personaje
   const retos = { sol: [5.5, 10.5], mar: [16.5, 10.5], muro: [5.5, 23.5] };
-  const esquema = () => page.evaluate(() => ({ D: window.__mundo.celdas[8][5], O: window.__mundo.celdas[8][16], M: window.__mundo.celdas[22][5], br: window.__mundo.braseros.filter(b => b.encendido).length }));
+  const esquema = () => page.evaluate(() => ({ D: window.__mundo.celdas[48][5], O: window.__mundo.celdas[48][16], M: window.__mundo.celdas[62][5], br: window.__mundo.braseros.filter(b => b.y >= 40 && b.y < 74 && b.encendido).length }));
   const nombres = ['pegaso', 'fenix', 'minotauro', 'ariadna', 'eco'];
   const dentro = { sol: s => s.y < 8.9, mar: s => s.y < 8.9, muro: s => s.y < 22.9 };
   let intentos = 0, colados = 0;
@@ -465,12 +485,13 @@ async function main() {
   const e0 = await esquema();
   ok(intentos === 12 && colados === 0, `ningún personaje equivocado entra a un recinto de la plaza, ni volando (${intentos} intentos)`);
   ok(e0.D === 'D' && e0.O === 'O' && e0.M === 'M' && e0.br === 0, 'tras probar con los demás, la puerta del sol, la del mar y el muro siguen cerrados');
-  ok((await objetosPlaza()).length === 0, 'ningún objeto de la plaza se consigue con otro personaje');
+  ok((await recog('plaza')).length === 0, 'ningún objeto de la plaza se consigue con otro personaje');
   await elegir('eco'); await tp(16.5, 11.5);
   await M(() => { window.__mundo.eco = null; }); await tocar('KeyE');
   ok((await esquema()).O === 'O', 'Eco sin el sonido de la caracola no abre la puerta del mar');
   await M(() => { window.__mundo.eco = 'caracola'; });
   // Terrazas bajas: Pegaso y Fénix practican, sin premio
+  const sogaPlaza = () => page.evaluate(() => window.__mundo.sogas.find(q => q.a[0] === 14 && q.a[1] === 63).tendida);
   await elegir('minotauro'); await tp(14.5, 20.5);
   await poner(new Set(['ArrowUp'])); await espera(900); await soltarTodo();
   ok((await est()).z < 0.1, 'el Minotauro no sube a las terrazas bajas');
@@ -493,7 +514,7 @@ async function main() {
   s = await est(); ok(s.enSuelo && Math.abs(s.z - 2) < 0.05 && s.x > 18, `Pegaso volando sí sube a un techo (z=${s.z.toFixed(2)}, x=${s.x.toFixed(2)})`);
   await foto('28-terrazas');
   await elegir('ariadna'); await tp(14.5, 22.5); await tocar('KeyE');
-  ok(await page.evaluate(() => window.__mundo.sogas[0].tendida), 'Ariadna tiende la soga entre las argollas de la plaza');
+  ok(await sogaPlaza(), 'Ariadna tiende la soga entre las argollas de la plaza');
 
   // Soluciones, cada una con su personaje
   await elegir('fenix'); await tp(2.5, 12.5); await tocar('KeyE');
@@ -501,59 +522,62 @@ async function main() {
   await ir(8.5, 12.5, { orden: 'x', tol: 0.15 }); await tocar('KeyE');
   ok((await esquema()).D === '.', 'con los dos braseros encendidos se abre el pórtico del sol');
   await ir(5.5, 12.5, { orden: 'x', tol: 0.15 }); await ir(5.5, 4.5, { orden: 'y', tol: 0.15 }); await espera(300);
-  ok((await objetosPlaza()).includes('tablero-juego'), 'Fénix consigue el tablero de juego');
+  ok((await recog('plaza')).includes('tablero-juego'), 'Fénix consigue el tablero de juego');
   await foto('29-tablero');
   await elegir('eco'); await tp(16.5, 11.5); await tocar('KeyE'); await espera(300);
   ok((await esquema()).O === '.', 'Eco repite la caracola y se abre la puerta del mar');
   await foto('30-puerta-mar');
   await ir(16.5, 4.5, { orden: 'y', tol: 0.15 }); await espera(300);
-  ok((await objetosPlaza()).includes('fresco-delfines'), 'Eco consigue el fresco de los delfines');
+  ok((await recog('plaza')).includes('fresco-delfines'), 'Eco consigue el fresco de los delfines');
   await elegir('minotauro'); await tp(5.5, 24.5); await embestir(); await espera(300);
   ok((await esquema()).M === '.', 'el Minotauro rompe el muro agrietado');
   await ir(5.5, 18.5, { orden: 'y', tol: 0.15 }); await espera(300);
-  ok((await objetosPlaza()).includes('riton-toro') && (await page.textContent('#zona-n')) === '3/3' && (await page.textContent('#total-n')) === '4/7', 'el Minotauro consigue el ritón: la plaza queda en 3/3 y el total en 4/7');
+  ok((await recog('plaza')).includes('riton-toro') && (await chip()) === 'Plaza central 3/3' && (await page.textContent('#total-n')) === '4/7', 'el Minotauro consigue el ritón: la plaza queda en 3/3 y el total en 4/7');
   await foto('31-riton');
 
-  // Volver al puerto y regresar: se aparece en la entrada que corresponde
+  // Volver al puerto y regresar caminando: mismo mapa, cada zona con su chip
   await tp(11.5, 31.5);
-  await hasta('ArrowDown', () => window.__mundo.id === 'puerto', 6000); await espera(700);
-  s = await est(); ok((await idMapa()) === 'puerto' && s.y < 4 && s.pj === 'minotauro', `al volver al puerto se aparece en su entrada norte (y=${s.y.toFixed(1)})`);
-  ok(s.recogidos.includes('ancla-piedra') && (await page.textContent('#zona-n')) === '1/1', 'el ancla sigue recogida al volver al puerto');
+  await hasta('ArrowDown', ([ox, oy]) => window.__mundo.jugador.y > 74.4, 6000); await espera(700);
+  zona('puerto'); s = await est();
+  ok(await mismoMapa() && s.y < 4 && s.pj === 'minotauro' && (await chip()) === 'Puerto 1/1', `al volver al sur se pasa al puerto sin cambiar de mapa, y el ancla sigue recogida (y local=${s.y.toFixed(1)})`);
   await foto('32-puerto-vuelta');
-  await hasta('ArrowUp', () => window.__mundo.id === 'plaza', 6000); await espera(700);
-  s = await est(); ok((await idMapa()) === 'plaza' && s.y > 30, 'y otra vez a la plaza, por su entrada sur');
-  ok((await esquema()).D === '.' && (await esquema()).M === '.' && (await esquema()).br === 2, 'la plaza queda como se la dejó al cruzar de mapa');
+  await hasta('ArrowUp', ([ox, oy]) => window.__mundo.jugador.y < 73.6, 6000); await espera(700);
+  zona('plaza'); s = await est();
+  ok(await mismoMapa() && s.y > 30 && (await chip()) === 'Plaza central 3/3', 'y otra vez a la plaza, con su contador');
+  ok((await esquema()).D === '.' && (await esquema()).M === '.' && (await esquema()).br === 2, 'la plaza queda como se la dejó al cruzar de zona');
 
-  // Recarga en medio: mismo mapa, todo igual
+  // Recarga en medio: mismo lugar, todo igual
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
   await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(500);
   s = await est(); const e1 = await esquema();
-  ok((await idMapa()) === 'plaza' && s.y > 30 && s.pj === 'minotauro', 'tras recargar sigue en la plaza, en su entrada, con el mismo personaje');
+  ok((await idMapa()) === 'mundo' && s.y > 30 && s.pj === 'minotauro' && (await chip()) === 'Plaza central 3/3', 'tras recargar sigue en la plaza, donde estaba, con el mismo personaje');
   ok(e1.D === '.' && e1.O === '.' && e1.M === '.' && e1.br === 2, 'tras recargar, el pórtico, la puerta del mar y el muro siguen abiertos');
-  ok(s.recogidos.length === 3 && (await page.textContent('#total-n')) === '4/7', 'tras recargar, los objetos siguen recogidos (4/7 en total)');
+  ok(s.recogidos.length === 4 && (await page.textContent('#total-n')) === '4/7', 'tras recargar, los objetos siguen recogidos (4/7 en total)');
   ok((await M(() => window.__mundo.eco)) === 'caracola' && (await page.textContent('#eco-texto')).includes('Caracola'), 'tras recargar, Eco recuerda la caracola');
-  ok(await page.evaluate(() => window.__mundo.sogas[0].tendida), 'tras recargar, la soga de la plaza sigue tendida');
-  // El campo de pruebas desde la plaza, y de vuelta
+  ok(await sogaPlaza(), 'tras recargar, la soga de la plaza sigue tendida');
+  // El campo de pruebas desde la plaza, y de vuelta al mismo lugar del mundo
   await entrarPruebas();
   ok((await page.textContent('#eco-texto')).includes('Caracola'), 'el sonido de Eco viaja también al campo de pruebas');
   await page.click('#btn-menu');
   ok((await page.textContent('#menu-pruebas')) === 'Salir del campo de pruebas', 'dentro del campo de pruebas el menú ofrece salir');
-  await page.click('#menu-pruebas'); await page.waitForFunction(() => window.__mundo.id === 'plaza'); await espera(500);
-  s = await est(); ok(s.y > 30, 'al salir del campo de pruebas se vuelve a la plaza, a su entrada');
+  await page.click('#menu-pruebas'); await page.waitForFunction(() => window.__mundo.id === 'mundo'); await espera(500);
+  zona('plaza'); s = await est(); ok(s.y > 30 && (await chip()) === 'Plaza central 3/3', 'al salir del campo de pruebas se vuelve al mundo, a la plaza donde se estaba');
   await entrarPruebas();
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
   await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(400);
-  ok((await idMapa()) === 'plaza', 'recargar desde el campo de pruebas devuelve a la plaza: el campo de pruebas no es el inicio');
+  ok((await idMapa()) === 'mundo' && (await page.textContent('#zona-nombre')) === 'Plaza central', 'recargar desde el campo de pruebas devuelve al mundo, a la plaza: el campo de pruebas no es el inicio');
 
-  // 18. Sesión 7: palacio en terrazas (tres desafíos de a dos, desde la plaza)
-  await elegir('minotauro'); await tp(11.5, 4.5); await espera(200);
-  await hasta('ArrowUp', () => window.__mundo.id === 'palacio', 6000); await espera(700);
-  s = await est();
-  ok((await idMapa()) === 'palacio' && s.y > 36 && (await page.textContent('#zona-nombre')) === 'Palacio' && (await page.textContent('#zona-n')) === '0/3', `la rampa norte de la plaza lleva al palacio, a su entrada sur (y=${s.y.toFixed(1)})`);
+  // 18. Sesión 7: palacio en terrazas (tres desafíos de a dos), al que se llega caminando desde la plaza
+  await elegir('minotauro'); zona('plaza'); await tp(11.5, 4.5); await espera(200); await marcar();
+  await hasta('ArrowUp', ([ox, oy]) => window.__mundo.jugador.y < 39.6, 6000); await espera(700);
+  zona('palacio'); s = await est();
+  ok(await mismoMapa() && s.y > 36 && (await chip()) === 'Palacio 0/3', `la rampa norte de la plaza lleva al palacio sin cambiar de mapa (y=${s.y.toFixed(1)})`);
   await foto('33-palacio-entrada');
-  const pal = () => page.evaluate(() => { const m = window.__mundo; const v = m.empujables[0];
-    return { D: m.celdas[33][17], G: m.celdas[29][19], M: m.celdas[17][8], O: m.celdas[10][17], sogas: m.sogas[0].tendida, fuente: m.fuentes[0].activa,
-      br: m.braseros.filter(b => b.encendido).length, vas: v.tx + ',' + v.ty, got: m.coleccionables.filter(c => c.recogido).length }; });
+  const PAL_IDS = ['tablilla-arcilla', 'hacha-doble', 'figura-serpientes'];
+  const pal = () => page.evaluate(ids => { const m = window.__mundo; const v = m.empujables[0];
+    return { D: m.celdas[33][17], G: m.celdas[29][19], M: m.celdas[17][8], O: m.celdas[10][17],
+      sogas: m.sogas.find(q => q.a[0] === 8 && q.a[1] === 24).tendida, fuente: m.fuentes.find(f => f.tx === 4 && f.ty === 6).activa,
+      br: m.braseros.filter(b => b.y < 40 && b.encendido).length, vas: v.tx + ',' + v.ty, got: m.coleccionables.filter(c => c.recogido && ids.includes(c.id)).length }; }, PAL_IDS);
   const ningunObjeto = async () => (await pal()).got === 0;
   const mantener = async (teclas, ms) => { await poner(new Set(teclas)); await espera(ms); await soltarTodo(); await espera(150); };
   let intentosPal = 0, logrosPal = 0;
@@ -622,14 +646,14 @@ async function main() {
   await hasta('ArrowRight', () => window.__mundo.celdas[29][19] === '.', 4000); await espera(200);
   ok((await pal()).vas === '17,29' && (await pal()).G === '.', 'Almacenes: el Minotauro empuja la vasija a la placa y se abre la reja');
   await tp(18.5, 29.5); await ir(21.5, 29.5, { orden: 'x', tol: 0.15 }); await espera(300);
-  ok((await objetosPlaza()).includes('tablilla-arcilla'), 'Fénix y el Minotauro consiguen la tablilla de arcilla');
+  ok((await recog('palacio')).includes('tablilla-arcilla'), 'Fénix y el Minotauro consiguen la tablilla de arcilla');
   await foto('35-almacenes');
   await tp(8.5, 23.5); await ir(8.5, 19.0, { orden: 'y', tol: 0.12 }); await ir(8.5, 18.4, { orden: 'y', tol: 0.1 }); await espera(200); s = await est();
   ok(s.z > 0.95, `Frescos: el Minotauro sube por la escala de Ariadna (z=${s.z.toFixed(2)})`);
   await embestir(); await espera(300);
   ok((await pal()).M === '.', 'el Minotauro rompe el muro agrietado de la terraza');
   await ir(8.5, 14.5, { orden: 'y', tol: 0.15 }); await espera(300);
-  ok((await objetosPlaza()).includes('hacha-doble'), 'Ariadna y el Minotauro consiguen el hacha doble');
+  ok((await recog('palacio')).includes('hacha-doble'), 'Ariadna y el Minotauro consiguen el hacha doble');
   await foto('36-frescos-hacha');
   await elegir('eco'); await tp(4.5, 8.5); await espera(400);
   ok((await M(() => window.__mundo.eco)) === 'cimbalo' && (await page.textContent('#eco-texto')).includes('Címbalo'), 'Címbalos: Eco escucha el címbalo que hizo sonar quien vuela');
@@ -637,23 +661,24 @@ async function main() {
   ok((await pal()).O === '.', 'Eco repite el címbalo y la puerta de bronce se abre');
   await foto('37-puerta-bronce');
   await tp(17.5, 11.5); await ir(17.5, 5.5, { orden: 'y', tol: 0.15 }); await espera(300);
-  ok((await objetosPlaza()).includes('figura-serpientes'), 'Pegaso y Eco consiguen la figura con serpientes');
+  ok((await recog('palacio')).includes('figura-serpientes'), 'Pegaso y Eco consiguen la figura con serpientes');
   await foto('38-figura');
-  ok((await page.textContent('#zona-n')) === '3/3' && (await page.textContent('#total-n')) === '7/7', 'el palacio queda en 3/3 y la partida en 7/7');
+  ok((await chip()) === 'Palacio 3/3' && (await page.textContent('#total-n')) === '7/7', 'el palacio queda en 3/3 y la partida en 7/7');
 
   // El campo de pruebas cuenta aparte
   await entrarPruebas();
   ok((await page.textContent('#zona-n')) === '0/3' && !(await page.isVisible('#total-n')), 'el campo de pruebas cuenta aparte (0/3) y no muestra el total de la partida');
-  await page.click('#btn-menu'); await page.click('#menu-pruebas'); await page.waitForFunction(() => window.__mundo.id === 'palacio'); await espera(500);
-  ok((await page.textContent('#total-n')) === '7/7', 'al volver a la partida el total sigue en 7/7');
+  await page.click('#btn-menu'); await page.click('#menu-pruebas'); await page.waitForFunction(() => window.__mundo.id === 'mundo'); await espera(500);
+  zona('palacio');
+  ok((await page.textContent('#total-n')) === '7/7' && (await chip()) === 'Palacio 3/3', 'al volver a la partida el total sigue en 7/7');
 
   // Recarga en el palacio: todo igual
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
   await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(500);
   const p2 = await pal();
-  ok((await idMapa()) === 'palacio' && p2.D === '.' && p2.G === '.' && p2.M === '.' && p2.O === '.' && p2.sogas && p2.fuente && p2.br === 2 && p2.vas === '17,29' && p2.got === 3,
+  ok((await idMapa()) === 'mundo' && (await page.textContent('#zona-nombre')) === 'Palacio' && p2.D === '.' && p2.G === '.' && p2.M === '.' && p2.O === '.' && p2.sogas && p2.fuente && p2.br === 2 && p2.vas === '17,29' && p2.got === 3,
     'tras recargar en el palacio todo sigue igual: puerta del sol, reja, muro, puerta de bronce, soga, címbalo y vasija');
-  ok((await page.textContent('#total-n')) === '7/7' && (await page.textContent('#zona-n')) === '3/3', 'tras recargar, la partida sigue en 7/7');
+  ok((await page.textContent('#total-n')) === '7/7' && (await chip()) === 'Palacio 3/3', 'tras recargar, la partida sigue en 7/7');
   await tp(8.5, 24.5); await espera(900); await foto('39-palacio-medio');
   await tp(11.5, 6.5); await espera(900); await foto('40-palacio-norte');
 
@@ -700,6 +725,61 @@ async function main() {
     const px = await page.evaluate(id => { const c = document.querySelector(`.pj[data-id=${id}] canvas`); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; }, id);
     ok(px > 500, `la tira muestra el sprite de ${id} (${px} píxeles con contenido)`);
   }
+
+  // 19. Mundo unido: el mapa y la migración de perfiles guardados con el formato viejo (tres mapas)
+  const mundoJson = JSON.parse(fs.readFileSync(path.join(RAIZ, 'datos/mapa-mundo.json'), 'utf8'));
+  ok(mundoJson.filas.every(f => f.length === mundoJson.filas[0].length) && mundoJson.filas.length === 98, 'mapa-mundo: todas las filas tienen el mismo largo (98 filas)');
+  ok(mundoJson.zonas.map(z => z.id).join() === 'palacio,plaza,puerto' && mundoJson.zonas[0].desde === 0 && mundoJson.zonas.every((z, i, a) => i === 0 || z.desde === a[i - 1].hasta + 1) && mundoJson.zonas[2].hasta === 97,
+    'mapa-mundo: palacio, plaza y puerto, de norte a sur, cubren todas las filas sin huecos');
+  ok(mundoJson.zonas.every(z => cat.zonas.some(q => q.id === z.id)) && Object.keys(mundoJson.sonidos).sort().join() === 'caracola,cimbalo', 'mapa-mundo: las zonas existen en el catálogo y el mundo declara el catálogo de sonidos una vez');
+  ok(mundoJson.objetos.filter(o => o.tipo === 'coleccionable').length === 7, 'mapa-mundo: los siete coleccionables están en el mundo');
+  const resto = o => /^#/.test(mundoJson.filas[o.y][o.x]) ? false : true;
+  ok(mundoJson.objetos.every(resto) && mundoJson.braseros.every(resto) && mundoJson.fuentes.every(resto), 'mapa-mundo: objetos, braseros y fuentes no quedan dentro de una pared');
+  // Dos perfiles con el formato viejo, que entran al próximo arranque (después de que la página guarde lo suyo)
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('inyectado')) return;
+    sessionStorage.setItem('inyectado', '1');
+    const clave = 'mitos-mundo-abierto-v1', d = JSON.parse(localStorage.getItem(clave));
+    const vacio = { muros: [], rejas: [], empujables: {}, braseros: [], soles: [], fuentes: [], puertas: [], eco: 'caracola', sogas: [] };
+    d.perfiles.push({ id: 'pantiguo1', nombre: 'Antigua', objetos: { 'ancla-piedra': true, 'tablilla-arcilla': true }, personaje: 'ariadna', vistoCambio: true, mapa: 'palacio', llegada: [8.5, 23.5], eco: 'caracola',
+      mundos: { puerto: { ...vacio }, plaza: { ...vacio, muros: ['5,22'], braseros: ['2,11'], sogas: ['14,23'] }, palacio: { ...vacio, rejas: ['19,29'], empujables: { '15,29': [17, 29] }, braseros: ['3,31'], sogas: ['8,24'] } } });
+    d.perfiles.push({ id: 'pantiguo2', nombre: 'Anterior', objetos: {}, personaje: 'pegaso', vistoCambio: false, mapa: 'plaza', llegada: null, eco: null, mundos: {} });
+    localStorage.setItem(clave, JSON.stringify(d));
+  });
+  await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
+  await page.click('.perfil:has-text("Antigua")'); await page.waitForFunction(() => window.__mundo); await espera(600);
+  const estadoMigrado = async () => {
+    const r = await page.evaluate(() => { const m = window.__mundo, j = m.jugador;
+      const b = (x, y) => m.braseros.find(q => q.x === x && q.y === y).encendido;
+      return { id: m.id, x: j.x, y: j.y, pj: j.personaje, muro: m.celdas[62][5],
+        reja: m.celdas[29][19], enlace: m.enlaces[0].abierto, vas: m.empujables[0].tx + ',' + m.empujables[0].ty,
+        brPlaza: b(2, 51), brPlaza2: b(8, 51), brPalacio: b(3, 31), brPalacio2: b(9, 31), solPalacio: m.celdas[33][17],
+        sogaPalacio: m.sogas.find(q => q.a[0] === 8 && q.a[1] === 24).tendida, sogaPlaza: m.sogas.find(q => q.a[0] === 14 && q.a[1] === 63).tendida,
+        sogasTendidas: m.sogas.filter(q => q.tendida).length, eco: m.eco, got: m.coleccionables.filter(c => c.recogido).map(c => c.id).sort().join() }; });
+    const p = await page.evaluate(() => JSON.parse(localStorage.getItem('mitos-mundo-abierto-v1')).perfiles.find(q => q.nombre === 'Antigua'));
+    return { ...r, perfil: p, chip: await chip(), total: await page.textContent('#total-n') };
+  };
+  zona('palacio');
+  let mg = await estadoMigrado();
+  ok(mg.id === 'mundo' && mg.pj === 'ariadna' && Math.abs(mg.x - 8.5) < 0.1 && Math.abs(mg.y - 23.5) < 0.1 && mg.chip === 'Palacio 1/3', `un perfil viejo en el palacio carga en el mundo, en el mismo lugar (${mg.x.toFixed(1)}, ${mg.y.toFixed(1)})`);
+  ok(mg.muro === '.' && mg.reja === '.' && mg.enlace && mg.vas === '17,29', 'la migración conserva el muro roto de la plaza (trasladado), la reja abierta y la vasija movida del palacio');
+  ok(mg.brPlaza && !mg.brPlaza2 && mg.brPalacio && !mg.brPalacio2 && mg.solPalacio === 'D', 'la migración conserva los braseros encendidos de cada zona, y no enciende los demás');
+  ok(mg.sogaPalacio && mg.sogaPlaza && mg.sogasTendidas === 2, 'la migración conserva las sogas tendidas de la plaza y del palacio');
+  ok(mg.eco === 'caracola' && mg.got === 'ancla-piedra,tablilla-arcilla' && mg.total === '2/7', 'la migración conserva el sonido de Eco y los coleccionables (2/7)');
+  ok(mg.perfil.mapa === 'mundo' && mg.perfil.mundoUnido === true && mg.perfil.mundos.plaza.muros.join() === '5,22' && mg.perfil.mundos.palacio.rejas.join() === '19,29' && mg.perfil.mundos.mundo.muros.join() === '5,62' && mg.perfil.mundos.mundo.braseros.slice().sort().join(' ') === '2,51 3,31',
+    'el perfil queda en el mundo, marcado como migrado, con las claves viejas intactas y las nuevas trasladadas');
+  await foto('41-migrado');
+  // Recargar después: la migración no se repite y todo sigue igual
+  await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
+  await page.click('.perfil:has-text("Antigua")'); await page.waitForFunction(() => window.__mundo); await espera(600);
+  const mg2 = await estadoMigrado();
+  const igual = ['id', 'pj', 'muro', 'reja', 'enlace', 'vas', 'brPlaza', 'brPlaza2', 'brPalacio', 'brPalacio2', 'solPalacio', 'sogaPalacio', 'sogaPlaza', 'sogasTendidas', 'eco', 'got', 'chip', 'total'].every(k => mg2[k] === mg[k]);
+  ok(igual && Math.abs(mg2.x - 8.5) < 0.1 && Math.abs(mg2.y - 23.5) < 0.1 && JSON.stringify(mg2.perfil.mundos.mundo) === JSON.stringify(mg.perfil.mundos.mundo), 'recargar después de migrar mantiene todo igual, en el mismo lugar');
+  // Perfil viejo sin lugar guardado, en la plaza: aparece en el inicio de la plaza, trasladado
+  await page.click('#btn-menu'); await page.click('#menu-perfiles');
+  await page.click('.perfil:has-text("Anterior")'); await page.waitForFunction(() => window.__mundo.coleccionables.every(c => !c.recogido)); await espera(500);
+  zona('plaza'); s = await est();
+  ok(Math.abs(s.x - 11.5) < 0.1 && Math.abs(s.y - 31.5) < 0.1 && (await chip()) === 'Plaza central 0/3', `un perfil viejo sin lugar guardado en la plaza aparece en el inicio de la plaza (${s.x.toFixed(1)}, ${s.y.toFixed(1)})`);
 
   // 11. Sin conexión
   await page.evaluate(() => navigator.serviceWorker.ready); await espera(500);
