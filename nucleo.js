@@ -26,7 +26,7 @@ export function crearPerfil(nombre) {
   if (!nombre || datos.perfiles.length >= MAX_PERFILES) return null;
   const p = {
     id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-    nombre, objetos: {}, mundos: {}, personaje: 'pegaso', vistoCambio: false, mapa: 'puerto', llegada: null, eco: null,
+    nombre, objetos: {}, mundos: {}, personaje: 'pegaso', vistoCambio: false, mapa: 'mundo', llegada: null, eco: null, mundoUnido: true,
   };
   datos.perfiles.push(p);
   guardar();
@@ -55,4 +55,44 @@ export function guardarMundo(perfil, mapaId, estado) {
 export function actualizarPerfil(perfil, cambios) {
   Object.assign(perfil, cambios);
   guardar();
+}
+
+// Puerto, plaza y palacio eran tres mapas; ahora son un solo mapa continuo (`mundo`). Esto traslada el
+// progreso ya guardado de cada mapa viejo al mundo unido, con el desplazamiento de su zona (`zonas` del
+// mapa del mundo: id, dx, dy, inicio). Corre una sola vez por perfil y no borra las claves viejas.
+const ES_CASILLA = /^-?\d+,-?\d+$/;
+function trasladarEstado(estado, dx, dy) {
+  const casilla = k => { const [x, y] = k.split(',').map(Number); return (x + dx) + ',' + (y + dy); };
+  const sal = {};
+  for (const [clave, v] of Object.entries(estado || {})) {
+    if (Array.isArray(v)) sal[clave] = v.map(k => (typeof k === 'string' && ES_CASILLA.test(k)) ? casilla(k) : k);
+    else if (v && typeof v === 'object') {
+      sal[clave] = {};
+      for (const [k, p] of Object.entries(v)) {
+        const nk = ES_CASILLA.test(k) ? casilla(k) : k;
+        sal[clave][nk] = Array.isArray(p) && p.length === 2 && p.every(Number.isFinite) ? [p[0] + dx, p[1] + dy] : p;
+      }
+    } else if (clave === 'eco') sal.eco = v;
+  }
+  return sal;
+}
+export function migrarAlMundo(perfil, zonas) {
+  if (perfil.mundoUnido) return false;
+  const viejos = perfil.mundos || {};
+  const unido = { ...(viejos.mundo || {}) };
+  for (const z of zonas) {
+    const t = trasladarEstado(viejos[z.id], z.dx, z.dy);
+    for (const [clave, v] of Object.entries(t)) {
+      if (Array.isArray(v)) unido[clave] = [...new Set([...(unido[clave] || []), ...v])];
+      else if (v && typeof v === 'object') unido[clave] = { ...(unido[clave] || {}), ...v };
+      else if (clave === 'eco') unido.eco = unido.eco || v;
+    }
+  }
+  const zona = zonas.find(z => z.id === perfil.mapa);
+  if (zona) perfil.llegada = perfil.llegada ? [perfil.llegada[0] + zona.dx, perfil.llegada[1] + zona.dy] : [...zona.inicio];
+  perfil.mapa = 'mundo';
+  perfil.mundos = { ...viejos, mundo: unido };
+  perfil.mundoUnido = true;
+  guardar();
+  return true;
 }

@@ -9,7 +9,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   const ui = {};
   const porId = Object.fromEntries(personajes.map(p => [p.id, p]));
   const porObjeto = Object.fromEntries(catalogo.objetos.map(o => [o.id, o]));
-  let zona = catalogo.zonas.find(z => z.id === mapa.zona);
+  let zonaId = mapa.zona || null;   // en el mundo continuo la zona es donde está parado el personaje (ver usarZona)
   let avisoTimer = null;
 
   // Solo cuentan los objetos que ya están puestos en algún mapa
@@ -20,7 +20,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   $('btn-menu').innerHTML = ICONOS.menu;
   $('btn-ficha').innerHTML = ICONOS.info;
   $('btn-salto').querySelector('.ico').innerHTML = ICONOS.saltar;
-  $('zona-nombre').textContent = zona ? zona.nombre : '';
+  pintarZona();
 
   // --- Tira de personajes ---
   const tira = $('tira');
@@ -75,11 +75,17 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     $('eco-texto').textContent = s ? `Eco guarda: ${s.nombre}` : 'Eco: sin sonido guardado';
     chip.dataset.sonido = s ? sonidoEco : '';
   }
+  function pintarZona() {
+    const z = catalogo.zonas.find(q => q.id === zonaId);
+    $('zona-nombre').textContent = z ? z.nombre : '';
+  }
   ui.usarMapa = m => {
-    mapa = m; zona = catalogo.zonas.find(z => z.id === mapa.zona);
-    $('zona-nombre').textContent = zona ? zona.nombre : '';
+    mapa = m; zonaId = m.zona || null;
+    pintarZona();
     pintarChipEco();
   };
+  // Cambia la zona que muestra el HUD (al cruzar caminando de una zona a otra del mismo mapa)
+  ui.usarZona = id => { zonaId = id; pintarZona(); };
   ui.sonidoEco = id => { sonidoEco = id || null; pintarChipEco(); };
   ui.nombreSonido = id => ((mapa.sonidos || {})[id] || {}).nombre || '';
 
@@ -132,11 +138,11 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   ui.contadores = recogidos => {
     const total = partida.length;
     const enTotal = partida.filter(o => recogidos[o.id]).length;
-    const deZona = contables.filter(o => o.zona === mapa.zona);
+    const deZona = contables.filter(o => o.zona === zonaId);
     const enZona = deZona.filter(o => recogidos[o.id]).length;
     $('zona-n').textContent = `${enZona}/${deZona.length}`;
     $('total-n').textContent = `${enTotal}/${total}`;
-    $('total-n').closest('.chip').style.display = mapa.zona === 'pruebas' ? 'none' : '';
+    $('total-n').closest('.chip').style.display = zonaId === 'pruebas' ? 'none' : '';
   };
   ui.pulsarContadores = () => {
     const el = $('contadores'); el.classList.remove('pulso'); void el.offsetWidth; el.classList.add('pulso');

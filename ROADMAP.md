@@ -4,7 +4,7 @@ Estado de las sesiones. El contenido de cada una (fichas, catálogo, desafíos) 
 
 Estados: **pendiente**, **construida** (`probar.js` pasa) y **validada** (la jugadora lo usó en el celular). Solo Willy marca "validada".
 
-Última verificación: 2026-10-04, `probar.js` con 173 chequeos OK y ninguna falla.
+Última verificación: 2026-10-04, `probar.js` con 207 chequeos OK y ninguna falla.
 
 ## Etapa 1: primer mapa completo (puerto, plaza, palacio)
 
@@ -18,10 +18,10 @@ Se cierra con el criterio de terminado de `CLAUDE.md`.
 - [x] **S5 Fichas y catálogo**: construida. Decisiones: D5, D6.
 - [x] **S6 Puerto y plaza**: construida. Decisión: D7.
 - [x] **S7 Palacio en terrazas**: construida. Sin decisión nueva. Falta probarla en el celular.
-- [ ] **S7b Un solo mundo**: pendiente. Decisión: D21 (el progreso guardado se traslada).
+- [x] **S7b Un solo mundo**: construida. Decisión: D21. Falta probarla en el celular, en especial un perfil con progreso de antes.
 - [ ] **S8 Cierre de etapa**: pendiente. Decisión: D8 (esconder el campo de pruebas).
 
-Siguiente: S7b.
+Siguiente: S8.
 
 ## Arte: sprites embebidos
 

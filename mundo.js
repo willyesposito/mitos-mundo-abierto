@@ -40,7 +40,7 @@ export function alturaCelda(c) {
 }
 
 // `guardado` es el estado del mapa para este perfil (ver `estado()` abajo). Puede venir vacío.
-// `llegada` es [x, y] cuando se entra desde otro mapa; si falta, se empieza en `inicio`.
+// `llegada` es [x, y] donde se aparece (la última posición firme guardada); si falta, se empieza en `inicio`.
 export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
   const arranque = llegada || mapa.inicio;
   const filas = mapa.filas;
@@ -135,7 +135,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
   }));
 
   const m = {
-    id: mapa.id, barcas: mapa.barcas || [], salidas: new Map(), saliendo: false,
+    id: mapa.id, barcas: mapa.barcas || [],
     cols, rows, celdas, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], eventos: [], t: 0, velo: 0,
     jugador: {
@@ -149,8 +149,6 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     },
     suelo, alturaTile, actualizar, cambiarPersonaje, estado,
   };
-
-  for (const sa of mapa.salidas || []) for (const [x, y] of sa.celdas) m.salidas.set(x + ',' + y, sa.a);
 
   // Estado persistente del mapa. Una clave por mecanismo: los poderes nuevos suman la suya.
   function estado() {
@@ -514,12 +512,6 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     // Último piso firme
     if (control && j.enSuelo && !empujableEn(Math.floor(j.x), Math.floor(j.y)) && esquinasFirmes(j.x, j.y, j.z))
       j.seguro = { x: j.x, y: j.y, z: j.z };
-
-    // Salida a otro mapa: se avisa una sola vez; quien carga el mapa nuevo es la interfaz
-    if (control && !m.saliendo) {
-      const a = m.salidas.get(Math.floor(j.x) + ',' + Math.floor(j.y));
-      if (a) { m.saliendo = true; m.eventos.push({ tipo: 'salida', a }); }
-    }
 
     // Objetos
     if (control) {
