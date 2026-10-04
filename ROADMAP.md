@@ -31,7 +31,7 @@ Plan en `plan-arte.md`. Decisiones: D16 a D19. Orden de inicio a definir por Wil
 - [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y direcciones.
 - [ ] **A3 Movimiento y poderes**: pendiente.
 - [ ] **A4 Interfaz**: pendiente.
-- [ ] **A5 Escenario y mecanismos**: pendiente.
+- [x] **A5 Escenario y mecanismos**: construida (`probar.js`: 187 OK). Decisión: D17. Falta la animación de la reja al abrirse y ver techo, reja y puerta de sonido en el celular.
 - [ ] **A6 Coleccionables y ambiente**: pendiente.
 
 ## Abierto

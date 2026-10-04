@@ -646,6 +646,7 @@ async function main() {
   const IDS = ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco'];
   const sp = await page.evaluate(() => window.__sprites());
   ok(sp.listos && IDS.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'los cinco sprites cargan (tamaño natural mayor que cero)');
+  ok(sp.listos && sp.fallidos.length === 0 && Object.keys(sp.escenario).length === sp.esperados && sp.esperados > 40 && Object.values(sp.escenario).every(d => d[0] > 0 && d[1] > 0), `los ${sp.esperados} sprites del escenario cargan y se rasterizan (fallidos: ${sp.fallidos.join(',') || 'ninguno'})`);
   // En el mundo: con cada personaje el canvas difiere del que no dibuja ninguno
   await tp(8.5, 24.5); await espera(900);
   const tomar = id => page.evaluate(async id => {
