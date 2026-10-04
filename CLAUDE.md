@@ -38,10 +38,10 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 | Pegaso | Volar a terrazas y techos (mantener el botón) | alas |
 | Minotauro | Fuerza: empujar bloques y vasijas; embestir para romper muros agrietados | cuernos |
 | Ariadna | Hilo: tender sogas entre argollas (escala o puente, hasta 5 casillas) | ovillo |
-| Fénix | Luz: tocar brilla y enciende braseros; mantener vuela, pero solo hasta terrazas (los techos son de Pegaso) | llama |
+| Fénix | Luz: tocar brilla y enciende braseros; mantener vuela, pero solo hasta terrazas (los techos son de Pegaso, D21) | llama |
 | Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
 
-Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave; Minotauro, Ariadna y Eco tienen cuerpo humano (D19). El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
+Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave de perfil con cola larga; sus alas son piezas aparte que aletean por código (D20). Minotauro, Ariadna y Eco tienen cuerpo humano (D19). El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
 
 ## Mapa de archivos
 
@@ -56,7 +56,7 @@ Código en la raíz, datos en `datos/`.
 | `interfaz.js` | HUD, avisos, tira de personajes, perfiles, menú |
 | `controles.js` | Joystick, botones, teclado |
 | `nucleo.js` | Guardado local con varios perfiles (clave `mitos-mundo-abierto-v1`): objetos y estado del mundo por mapa |
-| `sprites/personajes/` | Sprites SVG de los cinco personajes. Pies en (0,0), mirando a la derecha |
+| `sprites/personajes/` | Sprites SVG de los cinco personajes. Pies en (0,0), mirando a la derecha. Pegaso y Fénix traen además `-ala-cerca` y `-ala-lejos`, con el origen en el hombro |
 | `iconos.js` | Íconos de interfaz |
 | `sonido.js` | Audio sintetizado (Web Audio), un extra: todo lo que suena también se ve |
 | `datos/personajes.json` | Elenco y poderes |

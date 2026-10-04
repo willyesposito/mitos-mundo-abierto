@@ -121,7 +121,13 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Por qué:** sus fichas dicen "Caballo con alas" y "Ave de plumas rojas y doradas"; la figura humana contradecía el texto del juego.
 - **Descartado:** base humana compartida para los cinco.
 
-### D20. Fénix vuela hasta terrazas, Pegaso hasta techos
+### D20. Alas separadas y Fénix de perfil
+- **Estado:** tomada
+- **Decisión:** las alas de Pegaso y Fénix son piezas SVG aparte (cercana y lejana), con el origen en el hombro, y el aleteo se hace por código. Fénix pasa a ave de perfil con cola larga y cresta que cae hacia atrás, sin las tres puntas. Las alas son una sola forma por pieza, sin plumas dibujadas. Las alas de fuego de Fénix al volar usan estas mismas piezas. Completa D19.
+- **Por qué:** el aleteo necesita el ala separada del cuerpo, y el diseño anterior de Fénix no era el que se buscaba.
+- **Descartado:** versión de fuego aparte para el vuelo; alas con filas de plumas (se veían recargadas).
+
+### D21. Fénix vuela hasta terrazas, Pegaso hasta techos
 - **Estado:** tomada
 - **Decisión:** el vuelo de Fénix llega a la altura de una terraza (nivel 1) y no a un techo (nivel 2). Pegaso sigue llegando a techos.
 - **Por qué:** Willy pidió que Pegaso tenga cosas para hacer que Fénix no. Con tres niveles, la única división que separa a los dos es terraza contra techo.

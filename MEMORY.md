@@ -31,8 +31,9 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Escenario en sprites (A5):** `sprites/escenario/` se rasteriza una vez al cargar a min(3, dpr) y se dibuja con drawImage; mientras no cargó todo, solo se pinta el fondo. Puertas y muro agrietado son superposiciones de 44×90 alineadas al pie de la cara. `m.origen` es copia de solo lectura de las celdas originales: sin ella no se puede dibujar el muro roto ni el umbral de una reja abierta, porque la casilla pasa a `.`. Un SVG reeditado obliga a subir `VERSION` de `sw.js`.
 - **Ambiente (flora, fauna, detalles):** decorado o vivo, nunca requisito ni recompensa, no se guarda en el perfil. Cada personaje tiene su propia reacción con el poder. Mezcla base arqueológica minoica y mitos; el mito se cuenta con la reacción, sin texto. Diseño en `diseno-ambiente.md`.
 - **Los sprites miran a la derecha y se espejan con fx < 0:** si un sprite nuevo mira a la izquierda, queda al revés en el juego.
+- **Un ala que aletea es un SVG aparte con el origen en el hombro:** el juego carga cada SVG como imagen entera y no puede mover una parte. Va una cercana (encima del cuerpo) y una lejana (detrás, desfasada), y el aleteo es girarlas sobre ese punto.
 
 ## Proceso
 
-- **Los personajes se diseñan fuera de Code**, en otro chat de Willy. Code no los diseña ni los redibuja: en maquetas van como lugar marcado. Por qué: Willy lo pidió al arrancar el plan de arte (2026-10-04).
+- **Los personajes se diseñan fuera de Code**, en otro chat de Willy. Code no los diseña ni los redibuja: en maquetas van como lugar marcado. Por qué: Willy lo pidió al arrancar el plan de arte (2026-10-04). Excepción: cuando Willy pide diseñar acá, en el lienzo de Design, y aprueba ahí; así se hicieron las alas de Pegaso y Fénix.
 - **El subagente no ve la conversación.** Un encargo incompleto produce trabajo equivocado: cada encargo trae los archivos a tocar, las reglas que aplican, las decisiones ya tomadas, qué queda fuera y el criterio de terminado.
