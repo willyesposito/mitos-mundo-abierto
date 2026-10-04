@@ -646,6 +646,24 @@ async function main() {
   const IDS = ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco'];
   const sp = await page.evaluate(() => window.__sprites());
   ok(sp.listos && IDS.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'los cinco sprites cargan (tamaño natural mayor que cero)');
+  const ALAS = ['pegaso-ala-cerca', 'pegaso-ala-lejos', 'fenix-ala-cerca', 'fenix-ala-lejos'];
+  ok(ALAS.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'las cuatro alas cargan (tamaño natural mayor que cero)');
+  // Aleteo: se dibuja el personaje en un canvas aparte en dos instantes y se cuentan los píxeles que difieren
+  const aleteo = (id, volando, t1, t2) => page.evaluate(([id, volando, t1, t2]) => {
+    const dib = t => {
+      const c = document.createElement('canvas'); c.width = 120; c.height = 120; const cx = c.getContext('2d');
+      window.__dibujarPersonaje(cx, { id }, { x: 60, y: 90, fx: 1, fy: 1, t, caminando: false, volando, embistiendo: false, escala: 1, paso: 0 });
+      return cx.getImageData(0, 0, 120, 120).data;
+    };
+    const a = dib(t1), b = dib(t2); let n = 0;
+    for (let k = 0; k < a.length; k += 4) if (Math.abs(a[k + 3] - b[k + 3]) > 60 || Math.abs(a[k] - b[k]) + Math.abs(a[k + 1] - b[k + 1]) + Math.abs(a[k + 2] - b[k + 2]) > 90) n++;
+    return n;
+  }, [id, volando, t1, t2]);
+  for (const id of ['pegaso', 'fenix']) {
+    const vuela = await aleteo(id, true, 0, Math.PI / 40), quieto = await aleteo(id, false, 0, 0.4);
+    ok(vuela > 100, `el aleteo de ${id} volando se ve (${vuela} píxeles distintos entre dos instantes)`);
+    ok(quieto < vuela, `quieto, ${id} casi no cambia (${quieto} píxeles contra ${vuela} volando)`);
+  }
   // En el mundo: con cada personaje el canvas difiere del que no dibuja ninguno
   await tp(8.5, 24.5); await espera(900);
   const tomar = id => page.evaluate(async id => {
@@ -675,6 +693,7 @@ async function main() {
   await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(500);
   const spOff = await page.evaluate(() => window.__sprites());
   ok(spOff.listos && IDS.every(id => spOff.imagenes[id] && spOff.imagenes[id][0] > 0), 'sin conexión el juego arranca y los cinco sprites cargan');
+  ok(ALAS.every(id => spOff.imagenes[id] && spOff.imagenes[id][0] > 0), 'sin conexión las cuatro alas cargan');
   const tiraOff = await page.evaluate(() => { const c = document.querySelector('.pj[data-id=eco] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; });
   ok(tiraOff > 500, 'sin conexión la tira muestra los sprites');
   await ctx.setOffline(false);

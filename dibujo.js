@@ -425,6 +425,15 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
 const SPRITES = {
   pegaso: [-22, -51, 44, 52], minotauro: [-18, -51, 36, 52], ariadna: [-18, -51, 36, 52],
   fenix: [-18, -51, 36, 52], eco: [-18, -51, 36, 52],
+  // Alas de Pegaso y Fénix: piezas aparte, con el origen (0, 0) en la articulación del hombro, donde giran
+  'pegaso-ala-cerca': [-27, -28, 34, 34], 'pegaso-ala-lejos': [-27, -28, 34, 34],
+  'fenix-ala-cerca': [-27, -28, 34, 34], 'fenix-ala-lejos': [-27, -28, 34, 34],
+};
+// Alas por personaje: hombro cercano y lejano (relativos a los pies, mirando a la derecha), ángulos de la
+// ala cercana en grados (abajo, media, arriba; positivo = sentido horario) y desfase de la lejana.
+const ALAS = {
+  pegaso: { cerca: [1, -23], lejos: [-2, -24], abajo: -45, media: 0, arriba: 25, desfase: 15 },
+  fenix: { cerca: [-2, -22], lejos: [-4, -23], abajo: -75, media: -35, arriba: -8, desfase: 30 },
 };
 const imagenes = {};
 let spritesListos = false;
@@ -444,7 +453,7 @@ const alListos = [];
   }
 }
 
-// Llama a `f` cuando los cinco sprites terminaron de cargar (enseguida si ya terminaron).
+// Llama a `f` cuando los nueve sprites (cinco cuerpos y cuatro alas) terminaron de cargar (enseguida si ya terminaron).
 export function alTenerSprites(f) { if (spritesListos) f(); else alListos.push(f); }
 // Para las pruebas: estado de la carga y tamaño natural de cada sprite cargado.
 export function estadoSprites() {
@@ -452,18 +461,37 @@ export function estadoSprites() {
 }
 
 // Dibuja el sprite del personaje con los pies en (x, y). Mirando a la izquierda se espeja; hacia atrás usa el mismo.
+// Pegaso y Fénix llevan las alas aparte: ala lejana, cuerpo, ala cercana.
 export function dibujarPersonaje(ctx, p, o) {
   const { x, y, fx, caminando, escala, paso } = o;
   const img = spritesListos && imagenes[p.id];
   if (!img) return;
   const [sx, sy, sw, sh] = SPRITES[p.id];
   const bob = caminando ? Math.abs(Math.sin(paso * 5)) * 2 : 0;
+  const alas = ALAS[p.id];
+  const cerca = alas && imagenes[p.id + '-ala-cerca'], lejos = alas && imagenes[p.id + '-ala-lejos'];
+  // Ángulo de la ala cercana: volando, aleteo completo; si no, vaivén leve y lento alrededor de la pose media
+  let ang = 0;
+  if (alas) {
+    if (o.volando) ang = alas.abajo + (alas.arriba - alas.abajo) * (Math.sin(o.t * 20) + 1) / 2;
+    else ang = alas.media + Math.sin(o.t * 2) * 10;
+  }
+  const ala = (im, art, grados) => {
+    if (!im) return;
+    const [ax, ay, aw, ah] = SPRITES[p.id + (im === cerca ? '-ala-cerca' : '-ala-lejos')];
+    ctx.save();
+    ctx.translate(art[0], art[1] - bob); ctx.rotate(grados * Math.PI / 180);
+    ctx.drawImage(im, ax, ay, aw, ah);
+    ctx.restore();
+  };
   ctx.save();
   ctx.translate(x, y); ctx.scale(escala, escala);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.save();
   if (fx < 0) ctx.scale(-1, 1);
+  if (alas) ala(lejos, alas.lejos, ang - alas.desfase);
   ctx.drawImage(img, sx, sy - bob, sw, sh);
+  if (alas) ala(cerca, alas.cerca, ang);
   ctx.restore();
 
   // Embestida: estela
