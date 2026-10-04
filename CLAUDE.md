@@ -41,7 +41,7 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 | Fénix | Luz: tocar brilla y enciende braseros; mantener vuela como Pegaso | llama |
 | Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
 
-Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave; Minotauro, Ariadna y Eco tienen cuerpo humano (D18). El arte son sprites SVG en `sprites/personajes/` (D16, D17, `plan-arte.md`).
+Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave; Minotauro, Ariadna y Eco tienen cuerpo humano (D19). El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
 
 ## Mapa de archivos
 

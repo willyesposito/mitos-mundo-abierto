@@ -103,13 +103,19 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Por qué:** el dibujo por código limita el detalle del arte definitivo, y los sprites siguen funcionando sin conexión.
 - **Descartado:** seguir dibujando por código; imágenes remotas.
 
-### D17. Sprites en SVG
+### D17. Fresco con volumen como dirección de arte
+- **Estado:** tomada
+- **Decisión:** el arte es fresco minoico de color plano por zonas, con tres tonos por material, bisel, textura y desgaste, sobre la paleta cerrada de `plan-arte.md` (A1). El oro pálido queda reservado a los mecanismos.
+- **Por qué:** Willy pidió una propuesta más realista y trabajada que el fresco plano de partida, y la aprobó así.
+- **Descartado:** fresco plano sin volumen (primera versión de la hoja); degradés.
+
+### D18. Sprites en SVG
 - **Estado:** tomada
 - **Decisión:** los sprites son SVG vectoriales en `sprites/`, con los pies en (0,0) y 1 unidad = 1 px de juego. Se diseñan en el lienzo de diseño del chat del proyecto.
 - **Por qué:** la prueba A0 mostró que el diseño sale como dibujo vectorial: pesa poco, funciona sin red y se ve nítido en cualquier densidad.
 - **Descartado:** PNG rasterizados como fuente.
 
-### D18. Pegaso y Fénix son animales
+### D19. Pegaso y Fénix son animales
 - **Estado:** tomada
 - **Decisión:** Pegaso se dibuja como caballo alado y Fénix como ave. Minotauro, Ariadna y Eco conservan cuerpo humano. Cada uno se reconoce por su silueta, no por una base compartida.
 - **Por qué:** sus fichas dicen "Caballo con alas" y "Ave de plumas rojas y doradas"; la figura humana contradecía el texto del juego.
