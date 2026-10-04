@@ -33,7 +33,7 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Descartado:** soga libre en cualquier punto.
 
 ### D5. Cómo termina la ficha del Minotauro
-- **Estado:** vigente sin confirmar (la ficha del juego termina en "Teseo lo venció")
+- **Estado:** tomada (confirmada por Willy el 2026-10-04)
 - **Decisión:** la ficha cuenta el mito en tercera persona y termina con que Teseo lo venció.
 - **Por qué:** era la opción recomendada: la esencia está y no hay detalle crudo.
 - **Descartado:** "Asterión no volvió a salir" (más velado) y cortar en el encierro.
@@ -45,13 +45,13 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Descartado:** una explicación dentro del juego.
 
 ### D7. Zonas separadas con paso entre ellas
-- **Estado:** vigente sin confirmar (cada mapa trae `salidas` y `entradas`)
+- **Estado:** reemplazada por D21
 - **Decisión:** puerto, plaza y palacio son mapas separados con un paso entre ellos.
 - **Por qué:** era la opción recomendada: más simple de construir y de probar.
 - **Descartado:** un solo mapa continuo.
 
 ### D8. Campo de pruebas
-- **Estado:** vigente sin confirmar (hoy se abre desde el menú)
+- **Estado:** tomada (2026-10-04): al cerrar la etapa se esconde, no se retira
 - **Decisión:** accesible desde el menú durante la etapa 1 y retirado o escondido al cerrarla (S8).
 - **Por qué:** sirve para validar poderes en un solo lugar mientras se construye el mapa real.
 - **Descartado:** retirarlo antes de cerrar la etapa.
@@ -126,3 +126,17 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** las alas de Pegaso y Fénix son piezas SVG aparte (cercana y lejana), con el origen en el hombro, y el aleteo se hace por código. Fénix pasa a ave de perfil con cola larga y cresta que cae hacia atrás, sin las tres puntas. Las alas son una sola forma por pieza, sin plumas dibujadas. Las alas de fuego de Fénix al volar usan estas mismas piezas. Completa D19.
 - **Por qué:** el aleteo necesita el ala separada del cuerpo, y el diseño anterior de Fénix no era el que se buscaba.
 - **Descartado:** versión de fuego aparte para el vuelo; alas con filas de plumas (se veían recargadas).
+
+## Mundo y arte (2026-10-04)
+
+### D21. Un solo mundo continuo
+- **Estado:** tomada
+- **Decisión:** puerto, plaza y palacio pasan a ser zonas de un mismo mapa continuo, sin pasos ni cambios de pantalla entre ellas. Reemplaza a D7.
+- **Por qué:** la idea del juego es un mundo abierto; los mapas separados lo cortaban.
+- **Descartado:** mapas separados con paso entre ellos (D7).
+
+### D22. Cuatro direcciones por personaje
+- **Estado:** tomada (resuelta por Willy en otro chat)
+- **Decisión:** cada personaje se dibuja en cuatro direcciones. Resuelve la decisión pendiente de A2 en `plan-arte.md`.
+- **Por qué:** no quedó registrado en este repo.
+- **Descartado:** dos direcciones espejadas; ocho.

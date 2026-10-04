@@ -18,17 +18,18 @@ Se cierra con el criterio de terminado de `CLAUDE.md`.
 - [x] **S5 Fichas y catálogo**: construida. Decisiones: D5, D6.
 - [x] **S6 Puerto y plaza**: construida. Decisión: D7.
 - [x] **S7 Palacio en terrazas**: construida. Sin decisión nueva. Falta probarla en el celular.
-- [ ] **S8 Cierre de etapa**: pendiente. Decisión: D8 (retirar el campo de pruebas).
+- [ ] **S7b Un solo mundo**: pendiente. Decisión: D21. Falta decidir qué pasa con el progreso ya guardado.
+- [ ] **S8 Cierre de etapa**: pendiente. Decisión: D8 (esconder el campo de pruebas).
 
-Siguiente: S8.
+Siguiente: S7b.
 
 ## Arte: sprites embebidos
 
-Plan en `plan-arte.md`. Decisiones: D16 a D20. Orden de inicio a definir por Willy.
+Plan en `plan-arte.md`. Decisiones: D16 a D20 y D22. Orden de inicio a definir por Willy.
 
 - [x] **A0 Prueba de tubería**: construida. Decisiones: D18, D19. Cinco personajes quietos en SVG. Falta que Willy lo vea en el celular, a tamaño real y sin conexión.
 - [x] **A1 Dirección de arte**: construida y aprobada por Willy. Decisión: D17. Resultado en `plan-arte.md`.
-- [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y direcciones.
+- [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y las cuatro direcciones (D22).
 - [ ] **A3 Movimiento y poderes**: pendiente. Aleteo de Pegaso y Fénix hecho (D20); faltan las ondas de Eco y las señales de los demás poderes.
 - [ ] **A4 Interfaz**: pendiente.
 - [ ] **A5 Escenario y mecanismos**: pendiente.
@@ -37,7 +38,7 @@ Plan en `plan-arte.md`. Decisiones: D16 a D20. Orden de inicio a definir por Wil
 ## Abierto
 
 - Validar S1 a S6 en el celular con la jugadora, siguiendo la lista de observación del final de `plan-etapa-1.md`.
-- Confirmar D4, D5, D7 y D8: están vigentes en el código pero sin confirmación de Willy registrada (ver `DECISIONS.md`).
+- Confirmar D4: está vigente en el código pero sin confirmación de Willy registrada.
 
 ## Fuera de la etapa 1
 
