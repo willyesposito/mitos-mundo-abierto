@@ -26,3 +26,5 @@ Leer al inicio de cada sesión. `CLAUDE.md` define el proyecto; acá va lo apren
 - **Eco escucha al entrar en alcance** (no mientras está cerca), así guarda lo último que oyó; al cambiar a Eco se reinicia.
 - **El pseudoelemento `::after` de `.tarjeta` tapa botones**: en tarjetas con botones abajo ocultarlo.
 - **Catálogo real con `"ubicado": false`** no cuenta en contadores hasta que esté puesto en un mapa.
+- **Varios mapas:** el perfil guarda `mapa`, `llegada` (dónde aparece al recargar) y `eco` (el sonido de Eco viaja entre mapas). Todos los mapas deben declarar los mismos `sonidos`, o el sonido guardado se pierde al cruzar. El campo de pruebas no se guarda como mapa actual: recargar desde ahí vuelve a la partida.
+- Recintos con pared de 3 no se sobrevuelan (vuelo máx. 2,9): sirven para que un desafío sea exclusivo de su personaje.

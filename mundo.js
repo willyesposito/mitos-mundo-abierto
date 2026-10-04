@@ -40,7 +40,9 @@ export function alturaCelda(c) {
 }
 
 // `guardado` es el estado del mapa para este perfil (ver `estado()` abajo). Puede venir vacío.
-export function crearMundo(mapa, recogidos, guardado = {}) {
+// `llegada` es [x, y] cuando se entra desde otro mapa; si falta, se empieza en `inicio`.
+export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
+  const arranque = llegada || mapa.inicio;
   const filas = mapa.filas;
   const rows = filas.length, cols = filas[0].length;
   const celdas = [], empujables = [];
@@ -133,19 +135,22 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
   }));
 
   const m = {
+    id: mapa.id, barcas: mapa.barcas || [], salidas: new Map(), saliendo: false,
     cols, rows, celdas, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], eventos: [], t: 0, velo: 0,
     jugador: {
-      x: mapa.inicio[0], y: mapa.inicio[1], z: 0, vz: 0,
+      x: arranque[0], y: arranque[1], z: 0, vz: 0,
       enSuelo: true, coyote: 0, buffer: 0, planeo: false,
       fx: 0, fy: 1, camina: false, paso: 0,
       personaje: 'pegaso', embiste: null, embCool: 0,
       empuje: { e: null, t: 0 }, pistaCool: 0, tap: false, poderT: 0, brillo: 0, ecoCool: 0,
-      seguro: { x: mapa.inicio[0], y: mapa.inicio[1], z: 0 },
+      seguro: { x: arranque[0], y: arranque[1], z: 0 },
       estado: 'jugando', estadoT: 0,
     },
     suelo, alturaTile, actualizar, cambiarPersonaje, estado,
   };
+
+  for (const sa of mapa.salidas || []) for (const [x, y] of sa.celdas) m.salidas.set(x + ',' + y, sa.a);
 
   // Estado persistente del mapa. Una clave por mecanismo: los poderes nuevos suman la suya.
   function estado() {
@@ -384,7 +389,7 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
   function reaparecer() {
     const j = m.jugador;
     let s = j.seguro;
-    if (empujableEn(Math.floor(s.x), Math.floor(s.y))) s = { x: mapa.inicio[0], y: mapa.inicio[1], z: 0 };
+    if (empujableEn(Math.floor(s.x), Math.floor(s.y))) s = { x: arranque[0], y: arranque[1], z: 0 };
     j.x = s.x; j.y = s.y; j.z = suelo(s.x, s.y); j.vz = 0;
     j.enSuelo = true; j.planeo = false; j.coyote = 0; j.buffer = 0;
   }
@@ -507,6 +512,12 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
     // Último piso firme
     if (control && j.enSuelo && !empujableEn(Math.floor(j.x), Math.floor(j.y)) && esquinasFirmes(j.x, j.y, j.z))
       j.seguro = { x: j.x, y: j.y, z: j.z };
+
+    // Salida a otro mapa: se avisa una sola vez; quien carga el mapa nuevo es la interfaz
+    if (control && !m.saliendo) {
+      const a = m.salidas.get(Math.floor(j.x) + ',' + Math.floor(j.y));
+      if (a) { m.saliendo = true; m.eventos.push({ tipo: 'salida', a }); }
+    }
 
     // Objetos
     if (control) {

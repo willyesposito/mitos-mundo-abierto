@@ -40,6 +40,7 @@ function dibujarMundo(ctx, m, v, personajes) {
   for (const c of m.coleccionables) if (!c.recogido) items.push({ fila: Math.floor(c.y), prof: c.y, tipo: 'objeto', c });
   for (const b of m.braseros) items.push({ fila: b.y, prof: b.y + 0.5, tipo: 'brasero', b });
   for (const f of m.fuentes) items.push({ fila: f.ty, prof: f.y, tipo: 'fuente', f });
+  for (const b of m.barcas) items.push({ fila: b.y, prof: b.y + 0.4, tipo: 'barca', b });
   // Las argollas y las sogas se dibujan después de todas las baldosas por las que pasan
   for (const s of m.sogas) {
     const maxFila = Math.max(s.a[1], s.b[1]);
@@ -111,6 +112,7 @@ function dibujarTile(ctx, m, x, y) {
       ctx.fillRect(px, py, TW, TH);
       if (baldosa) { ctx.strokeStyle = COL.baldosaLinea; ctx.lineWidth = 1.5; ctx.strokeRect(px + 2.5, py + 2.5, TW - 5, TH - 5); }
       if (c === 'p') dibujarPlaca(ctx, m, x, y, px, py);
+      if (m.salidas.has(x + ',' + y)) dibujarSalida(ctx, m, x, y, px, py);
     }
   }
 }
@@ -184,6 +186,24 @@ function dibujarAgua(ctx, m, x, y, px, py) {
   }
 }
 
+// Paso a otro mapa: franja ocre con flechas hacia el borde por el que se sale
+function dibujarSalida(ctx, m, x, y, px, py) {
+  const arriba = y < m.rows / 2, cx = px + TW / 2, cy = py + TH / 2, d = arriba ? -1 : 1;
+  ctx.fillStyle = 'rgba(217,164,65,.45)'; ctx.fillRect(px, py, TW, TH);
+  ctx.strokeStyle = COL.oxido; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const o of [-6, 5]) { ctx.beginPath(); ctx.moveTo(cx - 9, cy + o * d - 3 * d); ctx.lineTo(cx, cy + o * d + 4 * d); ctx.lineTo(cx + 9, cy + o * d - 3 * d); ctx.stroke(); }
+}
+
+// Barca sobre el agua: solo adorno
+function dibujarBarca(ctx, m, b) {
+  const x0 = b.x * TW + 3, x1 = (b.x + b.largo) * TW - 3, cy = b.y * TH + TH * 0.5 + Math.sin(m.t * 1.4 + b.x) * 1.5;
+  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse((x0 + x1) / 2, cy + 8, (x1 - x0) / 2, 7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = COL.oxido;
+  ctx.beginPath(); ctx.moveTo(x0, cy - 8); ctx.lineTo(x1, cy - 8); ctx.quadraticCurveTo(x1 - 8, cy + 10, (x0 + x1) / 2, cy + 10); ctx.quadraticCurveTo(x0 + 8, cy + 10, x0, cy - 8); ctx.fill();
+  ctx.fillStyle = COL.cal; ctx.fillRect(x0 + 2, cy - 8, x1 - x0 - 4, 4);
+  ctx.fillStyle = COL.ocre; ctx.fillRect(x0 + 8, cy - 1, x1 - x0 - 16, 3);
+}
+
 function dibujarPlaca(ctx, m, x, y, px, py) {
   const activa = m.empujables.some(e => e.tx === x && e.ty === y && e.t >= 1);
   const cx = px + TW / 2, cy = py + TH / 2;
@@ -200,6 +220,7 @@ function dibujarItem(ctx, m, it, personajes) {
   if (it.tipo === 'empujable') dibujarEmpujable(ctx, it.e);
   else if (it.tipo === 'brasero') dibujarBrasero(ctx, m, it.b);
   else if (it.tipo === 'fuente') dibujarFuente(ctx, m, it.f);
+  else if (it.tipo === 'barca') dibujarBarca(ctx, m, it.b);
   else if (it.tipo === 'soga') dibujarSoga(ctx, it.s);
   else if (it.tipo === 'argolla') dibujarArgolla(ctx, it.s, it.p);
   else if (it.tipo === 'objeto') dibujarObjeto(ctx, m, it.c, true);

@@ -60,7 +60,8 @@ Código en la raíz, datos en `datos/`.
 | `sonido.js` | Audio sintetizado (Web Audio), un extra: todo lo que suena también se ve |
 | `datos/personajes.json` | Elenco y poderes |
 | `datos/coleccionables.json` | Catálogo de objetos y zonas. El catálogo real lo define Chat |
-| `datos/mapa-pruebas.json` | Campo de pruebas. Leyenda abajo |
+| `datos/mapa-puerto.json`, `datos/mapa-plaza.json` | Puerto (inicio) y plaza. Cada mapa trae `salidas` (celdas que llevan a otro mapa) y `entradas` (dónde se aparece viniendo de cada mapa). Los dos comparten el catálogo de `sonidos` |
+| `datos/mapa-pruebas.json` | Campo de pruebas, se abre desde el menú. Leyenda abajo |
 | `sw.js` | Service worker. **Subir `VERSION` en cada deploy real** |
 | `herramientas/probar.js` | No es parte del juego. Juega el juego en un navegador sin pantalla, con teclado y toques, y verifica todo |
 

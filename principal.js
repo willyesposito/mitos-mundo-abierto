@@ -10,16 +10,19 @@ const $ = id => document.getElementById(id);
 const pedir = u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
 
 async function arrancar() {
-  const [{ personajes }, catalogo, mapa] = await Promise.all([
-    pedir('datos/personajes.json'), pedir('datos/coleccionables.json'), pedir('datos/mapa-pruebas.json'),
+  const IDS_MAPAS = ['puerto', 'plaza', 'pruebas'];
+  const [{ personajes }, catalogo, ...listaMapas] = await Promise.all([
+    pedir('datos/personajes.json'), pedir('datos/coleccionables.json'), ...IDS_MAPAS.map(i => pedir(`datos/mapa-${i}.json`)),
   ]);
+  const mapas = Object.fromEntries(listaMapas.map(m => [m.id, m]));
+  let mapa = mapas.puerto;
 
   const lienzo = $('lienzo');
   const dibujo = crearDibujo(lienzo);
   dibujo.usarPersonajes(personajes);
   const ui = crearInterfaz({ personajes, catalogo, mapa });
 
-  const sonido = crearSonido(mapa.sonidos);
+  const sonido = crearSonido(mapas.pruebas.sonidos);   // todos los mapas comparten el mismo catálogo de sonidos
   for (const t of ['pointerdown', 'keydown']) document.addEventListener(t, sonido.despertar, { capture: true });
   let mundo = null, perfil = null, corriendo = false, ultimo = 0;
   const vista = { W: 0, H: 0, dpr: 1, esc: 1, camX: 0, camY: 0, focoY: 0 };
@@ -47,18 +50,43 @@ async function arrancar() {
   ui.alAbrirFicha = () => { corriendo = false; entrada.x = entrada.y = 0; entrada.poderMantenido = false; };
   ui.alCambiarPerfil = () => { corriendo = false; mundo = null; entrada.x = entrada.y = 0; ui.mostrarPerfiles(iniciar); };
 
-  function iniciar(p) {
-    perfil = p;
-    mundo = crearMundo(mapa, perfil.objetos, (perfil.mundos || {})[mapa.id]);
-    mundo.jugador.personaje = personajes.some(x => x.id === perfil.personaje) ? perfil.personaje : 'pegaso';
+  // Arma el mundo de un mapa para este perfil. Eco y el personaje viajan con la jugadora entre mapas.
+  function cargarMapa(id, llegada, personaje, fundido) {
+    mapa = mapas[id];
+    const guardado = { ...((perfil.mundos || {})[id] || {}), eco: perfil.eco || ((perfil.mundos || {})[id] || {}).eco };
+    mundo = crearMundo(mapa, perfil.objetos, guardado, llegada);
+    mundo.jugador.personaje = personajes.some(x => x.id === personaje) ? personaje : 'pegaso';
+    if (fundido) { mundo.jugador.estado = 'volviendo'; mundo.velo = 1; }
+    ui.usarMapa(mapa);
     ui.sonidoEco(mundo.eco);
     ui.marcarPersonaje(mundo.jugador.personaje);
     ui.contadores(perfil.objetos);
+    ajustar(); centrarCamara(true);
+    exponer();
+  }
+  function exponer() { if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sonidos = sonido.registro; } }
+
+  // Cambio de mapa. `id` nulo es volver al mapa de la partida desde el campo de pruebas.
+  function cambiarMapa(id, llegada) {
+    guardarMundo(perfil, mapa.id, mundo.estado());
+    const pj = mundo.jugador.personaje;
+    entrada.x = entrada.y = 0; entrada.poderMantenido = false;
+    if (id === null) { id = perfil.mapa || 'puerto'; llegada = perfil.llegada; }
+    else if (id !== 'pruebas') actualizarPerfil(perfil, { mapa: id, llegada: llegada || null });
+    cargarMapa(id, llegada, pj, true);
+    reanudar();
+  }
+  ui.alCambiarMapa = id => cambiarMapa(id, id === 'pruebas' ? mapas.pruebas.inicio : null);
+
+  function iniciar(p) {
+    perfil = p;
+    const id = mapas[perfil.mapa] && perfil.mapa !== 'pruebas' ? perfil.mapa : 'puerto';
+    cargarMapa(id, id === perfil.mapa ? perfil.llegada : null, perfil.personaje, false);
+    ui.marcarPersonaje(mundo.jugador.personaje);
+    ui.marcarPersonaje(mundo.jugador.personaje);
     ui.pistaCambio(!perfil.vistoCambio);
     ui.recogidosMenu = perfil.objetos;
-    ajustar(); centrarCamara(true);
     reanudar();
-    if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sonidos = sonido.registro; }
   }
 
   function reanudar() { if (corriendo || !mundo) return; corriendo = true; ultimo = performance.now(); requestAnimationFrame(bucle); }
@@ -66,6 +94,12 @@ async function arrancar() {
   function procesarEventos() {
     let cambioMundo = false;
     for (const e of mundo.eventos.splice(0)) {
+      if (e.tipo === 'salida') {
+        // Se vuelve a la entrada del mapa vecino que corresponde a este mapa
+        const destino = mapas[e.a];
+        cambiarMapa(e.a, destino.entradas && destino.entradas[mapa.id]);
+        return;
+      }
       if (['muro', 'reja', 'empuje', 'brasero', 'sol', 'golpe', 'puerta', 'escucha', 'soga'].includes(e.tipo)) cambioMundo = true;
       if (e.tipo === 'objeto') {
         registrarObjeto(perfil, e.id);
@@ -78,7 +112,7 @@ async function arrancar() {
       else if (e.tipo === 'brillo') sonido.tocar('brillo');
       else if (e.tipo === 'brasero') { ui.aviso('¡Se encendió un brasero!', '', 2200); sonido.tocar('brasero'); }
       else if (e.tipo === 'sol') { ui.aviso('¡Se abrió la puerta del sol!', '', 2800); sonido.tocar('abre'); }
-      else if (e.tipo === 'escucha') { ui.sonidoEco(e.id); ui.aviso(`Eco escuchó: ${ui.nombreSonido(e.id)}`, 'Solo guarda el último sonido que escucha.', 2800); sonido.tocar('escucha', e.id); }
+      else if (e.tipo === 'escucha') { actualizarPerfil(perfil, { eco: mundo.eco }); ui.sonidoEco(e.id); ui.aviso(`Eco escuchó: ${ui.nombreSonido(e.id)}`, 'Solo guarda el último sonido que escucha.', 2800); sonido.tocar('escucha', e.id); }
       else if (e.tipo === 'eco') sonido.tocar('eco', e.id);
       else if (e.tipo === 'golpe') { ui.aviso(`¡Sonó: ${ui.nombreSonido(e.id)}!`, 'Va a seguir vibrando.', 3000); sonido.tocar('golpe', e.id); }
       else if (e.tipo === 'resuena') sonido.tocar('resuena', e.id);
