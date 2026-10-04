@@ -41,7 +41,7 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 | Fénix | Luz: tocar brilla y enciende braseros; mantener vuela como Pegaso | llama |
 | Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
 
-Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Los personajes tienen una base compartida más un rasgo propio. El arte pasa a sprites embebidos (D16, `plan-arte.md`); hasta que cada paso de ese plan se integre, sigue el dibujo por código.
+Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave; Minotauro, Ariadna y Eco tienen cuerpo humano (D19). El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
 
 ## Mapa de archivos
 
@@ -56,6 +56,7 @@ Código en la raíz, datos en `datos/`.
 | `interfaz.js` | HUD, avisos, tira de personajes, perfiles, menú |
 | `controles.js` | Joystick, botones, teclado |
 | `nucleo.js` | Guardado local con varios perfiles (clave `mitos-mundo-abierto-v1`): objetos y estado del mundo por mapa |
+| `sprites/personajes/` | Sprites SVG de los cinco personajes. Pies en (0,0), mirando a la derecha |
 | `iconos.js` | Íconos de interfaz |
 | `sonido.js` | Audio sintetizado (Web Audio), un extra: todo lo que suena también se ve |
 | `datos/personajes.json` | Elenco y poderes |

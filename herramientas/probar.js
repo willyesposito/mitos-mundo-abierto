@@ -642,11 +642,41 @@ async function main() {
   await tp(8.5, 24.5); await espera(900); await foto('39-palacio-medio');
   await tp(11.5, 6.5); await espera(900); await foto('40-palacio-norte');
 
+  // 11. Sprites de personajes
+  const IDS = ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco'];
+  const sp = await page.evaluate(() => window.__sprites());
+  ok(sp.listos && IDS.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'los cinco sprites cargan (tamaño natural mayor que cero)');
+  // En el mundo: con cada personaje el canvas difiere del que no dibuja ninguno
+  await tp(8.5, 24.5); await espera(900);
+  const tomar = id => page.evaluate(async id => {
+    window.__mundo.jugador.personaje = id; await new Promise(r => setTimeout(r, 200));
+    const l = document.querySelector('canvas'), d = l.getContext('2d').getImageData(0, 0, l.width, l.height).data;
+    return Array.from(d);
+  }, id);
+  const pjOriginal = (await est()).pj;
+  const base = await tomar('ninguno');
+  for (const id of IDS) {
+    const img = await tomar(id); let dif = 0;
+    for (let k = 0; k < base.length; k += 4) if (Math.abs(img[k] - base[k]) + Math.abs(img[k + 1] - base[k + 1]) + Math.abs(img[k + 2] - base[k + 2]) > 60) dif++;
+    ok(dif > 500, `se ve el sprite de ${id} en el mundo (${dif} píxeles distintos)`);
+  }
+  await page.evaluate(p => { window.__mundo.jugador.personaje = p; }, pjOriginal); await espera(200);
+  // En la tira: cada tarjeta tiene contenido
+  for (const id of IDS) {
+    const px = await page.evaluate(id => { const c = document.querySelector(`.pj[data-id=${id}] canvas`); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; }, id);
+    ok(px > 500, `la tira muestra el sprite de ${id} (${px} píxeles con contenido)`);
+  }
+
   // 11. Sin conexión
   await page.evaluate(() => navigator.serviceWorker.ready); await espera(500);
   await ctx.setOffline(true);
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
   ok(true, 'carga sin conexión desde el service worker');
+  await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(500);
+  const spOff = await page.evaluate(() => window.__sprites());
+  ok(spOff.listos && IDS.every(id => spOff.imagenes[id] && spOff.imagenes[id][0] > 0), 'sin conexión el juego arranca y los cinco sprites cargan');
+  const tiraOff = await page.evaluate(() => { const c = document.querySelector('.pj[data-id=eco] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; });
+  ok(tiraOff > 500, 'sin conexión la tira muestra los sprites');
   await ctx.setOffline(false);
 
   ok(errores.length === 0, 'sin errores en consola' + (errores.length ? ': ' + errores.join(' | ') : ''));

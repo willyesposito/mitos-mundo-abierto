@@ -420,111 +420,55 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
   });
 }
 
-// Personaje base compartido + un rasgo propio. Pies en (x, y).
+// ---------- Sprites de personajes ----------
+// Cada sprite es un SVG con 1 unidad = 1 px de juego y los pies en (0, 0): [x, y, ancho, alto] de su viewBox.
+const SPRITES = {
+  pegaso: [-22, -51, 44, 52], minotauro: [-18, -51, 36, 52], ariadna: [-18, -51, 36, 52],
+  fenix: [-18, -51, 36, 52], eco: [-18, -51, 36, 52],
+};
+const imagenes = {};
+let spritesListos = false;
+const alListos = [];
+{
+  let pendientes = Object.keys(SPRITES).length;
+  const terminado = () => {
+    if (--pendientes > 0) return;
+    spritesListos = true;
+    for (const f of alListos.splice(0)) f();
+  };
+  for (const id of Object.keys(SPRITES)) {
+    const img = new Image();
+    img.onload = () => { imagenes[id] = img; terminado(); };
+    img.onerror = () => terminado();   // si uno falla, ese personaje no se dibuja pero el juego sigue
+    img.src = `sprites/personajes/${id}.svg`;
+  }
+}
+
+// Llama a `f` cuando los cinco sprites terminaron de cargar (enseguida si ya terminaron).
+export function alTenerSprites(f) { if (spritesListos) f(); else alListos.push(f); }
+// Para las pruebas: estado de la carga y tamaño natural de cada sprite cargado.
+export function estadoSprites() {
+  return { listos: spritesListos, imagenes: Object.fromEntries(Object.entries(imagenes).map(([id, i]) => [id, [i.naturalWidth, i.naturalHeight]])) };
+}
+
+// Dibuja el sprite del personaje con los pies en (x, y). Mirando a la izquierda se espeja; hacia atrás usa el mismo.
 export function dibujarPersonaje(ctx, p, o) {
-  const { x, y, fx, fy, t, caminando, volando, escala, paso } = o;
+  const { x, y, fx, caminando, escala, paso } = o;
+  const img = spritesListos && imagenes[p.id];
+  if (!img) return;
+  const [sx, sy, sw, sh] = SPRITES[p.id];
+  const bob = caminando ? Math.abs(Math.sin(paso * 5)) * 2 : 0;
   ctx.save();
   ctx.translate(x, y); ctx.scale(escala, escala);
-  const contorno = '#2a2230';
-  const bob = caminando ? Math.abs(Math.sin(paso * 5)) * 2 : 0;
-  const mirandoAtras = fy < -0.5 && Math.abs(fy) > Math.abs(fx);
-  ctx.lineWidth = 1.8; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = contorno;
-
-  // Detrás del cuerpo
-  if (p.rasgo === 'alas') {
-    const aleteo = Math.sin(t * (volando ? 20 : 3.5)) * (volando ? 0.7 : 0.18);
-    for (const s of [-1, 1]) {
-      ctx.save(); ctx.translate(s * 7, -20 - bob); ctx.rotate(s * (0.5 + aleteo));
-      ctx.fillStyle = '#fffaf0'; ctx.strokeStyle = '#8fb6d0';
-      ctx.beginPath(); ctx.ellipse(s * 9, -8, 8, 16, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.restore();
-    }
-    ctx.strokeStyle = contorno;
-  }
-  if (p.rasgo === 'ovillo' && !mirandoAtras) { /* el ovillo va al frente */ }
-  if (p.rasgo === 'llama') {
-    ctx.fillStyle = 'rgba(255,170,60,.22)'; ctx.beginPath(); ctx.arc(0, -22 - bob, 20, 0, Math.PI * 2); ctx.fill();
-    if (volando) {
-      // alas de fuego al volar
-      const aleteo = Math.sin(t * 20) * 0.6;
-      for (const s of [-1, 1]) {
-        ctx.save(); ctx.translate(s * 7, -20 - bob); ctx.rotate(s * (0.5 + aleteo));
-        ctx.fillStyle = '#ffb23c'; ctx.strokeStyle = '#e8892a';
-        ctx.beginPath(); ctx.ellipse(s * 9, -8, 7, 15, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.restore();
-      }
-      ctx.strokeStyle = contorno;
-    }
-  }
-
-  // Piernas
-  ctx.fillStyle = '#3a2a22';
-  const a = caminando ? Math.sin(paso * 5) * 2.5 : 0;
-  ctx.fillRect(-6, -7, 4.5, 7 + a * 0.4); ctx.fillRect(1.5, -7, 4.5, 7 - a * 0.4);
-
-  // Cuerpo
-  ctx.fillStyle = p.color;
-  ctx.beginPath(); ctx.roundRect(-9, -26 - bob, 18, 20, 6); ctx.fill(); ctx.stroke();
-  if (p.rasgo === 'cuernos') { ctx.fillStyle = '#5a3a26'; ctx.fillRect(-9, -13 - bob, 18, 3); }
-  if (p.rasgo === 'llama') { ctx.fillStyle = '#ffd36a'; ctx.beginPath(); ctx.arc(0, -16 - bob, 4, 0, Math.PI * 2); ctx.fill(); }
-  if (p.rasgo === 'voz') { ctx.fillStyle = '#9ec5dd'; ctx.fillRect(-9, -13 - bob, 18, 3); }
-
-  // Cabeza
-  const hy = -33.5 - bob;
-  ctx.fillStyle = p.rasgo === 'cuernos' ? '#8a5a3c' : '#f0d2a8';
-  ctx.beginPath(); ctx.arc(0, hy, 8.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
-  if (p.rasgo === 'cuernos') {
-    ctx.fillStyle = '#f4ecd8';
-    for (const s of [-1, 1]) {
-      ctx.beginPath(); ctx.moveTo(s * 6, hy - 5); ctx.quadraticCurveTo(s * 14, hy - 6, s * 12, hy - 15); ctx.quadraticCurveTo(s * 9, hy - 9, s * 3, hy - 7); ctx.closePath(); ctx.fill(); ctx.stroke();
-    }
-    if (!mirandoAtras) { ctx.fillStyle = '#c99a72'; ctx.beginPath(); ctx.ellipse(fx * 2, hy + 3.5, 4.5, 3, 0, 0, Math.PI * 2); ctx.fill(); }
-  }
-  if (p.rasgo === 'ovillo') {
-    ctx.fillStyle = '#3a2a22'; ctx.beginPath(); ctx.arc(0, hy - 1, 9, Math.PI, 0); ctx.fill();
-    if (mirandoAtras) { ctx.beginPath(); ctx.arc(0, hy, 8.5, 0, Math.PI * 2); ctx.fill(); }
-  }
-  if (p.rasgo === 'alas') {
-    ctx.fillStyle = '#9ec5dd'; ctx.beginPath(); ctx.arc(0, hy - 2, 8.8, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
-  }
-  if (p.rasgo === 'llama') {
-    for (const [dx, h, c] of [[-5, 10, '#e8892a'], [0, 15, '#ffb23c'], [5, 10, '#e8892a']]) {
-      const wob = Math.sin(t * 9 + dx) * 1.5;
-      ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(dx - 4, hy - 6); ctx.quadraticCurveTo(dx + wob, hy - h - 6, dx + 4, hy - 6); ctx.closePath(); ctx.fill(); ctx.stroke();
-    }
-  }
-  if (p.rasgo === 'voz') {
-    const pulso = (t * 1.6) % 1;
-    ctx.lineWidth = 2; ctx.lineCap = 'round';
-    for (let n = 0; n < 3; n++) {
-      const q = (pulso + n / 3) % 1;
-      ctx.strokeStyle = `rgba(158,197,221,${1 - q})`;
-      ctx.beginPath(); ctx.arc(10, hy, 6 + q * 12, -0.9, 0.9); ctx.stroke();
-    }
-    ctx.lineWidth = 1.8; ctx.strokeStyle = contorno;
-  }
-
-  // Ojos
-  if (!mirandoAtras) {
-    ctx.fillStyle = contorno;
-    const ex = fx * 2.5;
-    ctx.beginPath(); ctx.arc(ex - 3, hy + 0.5, 1.5, 0, Math.PI * 2); ctx.arc(ex + 3, hy + 0.5, 1.5, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // Ovillo de Ariadna, al frente
-  if (p.rasgo === 'ovillo') {
-    const ox = 12, oy = -11 - bob;
-    ctx.fillStyle = '#b5482e'; ctx.beginPath(); ctx.arc(ox, oy, 5.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.strokeStyle = '#f4ecd8'; ctx.lineWidth = 1.3;
-    ctx.beginPath(); ctx.arc(ox, oy, 3.2, 0.4, 4.4); ctx.moveTo(ox - 5, oy - 1); ctx.lineTo(ox + 5, oy + 1); ctx.stroke();
-    ctx.strokeStyle = '#b5482e'; ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.moveTo(ox + 3, oy + 5); ctx.quadraticCurveTo(ox + 10, oy + 12, ox + 4, oy + 14); ctx.stroke();
-  }
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.save();
+  if (fx < 0) ctx.scale(-1, 1);
+  ctx.drawImage(img, sx, sy - bob, sw, sh);
+  ctx.restore();
 
   // Embestida: estela
   if (o.embistiendo) {
-    ctx.strokeStyle = 'rgba(244,236,216,.7)'; ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(244,236,216,.7)'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
     for (let n = 0; n < 3; n++) { ctx.beginPath(); ctx.moveTo(-fx * 14, -8 - n * 8); ctx.lineTo(-fx * 30, -8 - n * 8); ctx.stroke(); }
   }
   ctx.restore();
