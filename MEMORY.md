@@ -35,6 +35,8 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Un ala que aletea es un SVG aparte con el origen en el hombro:** el juego carga cada SVG como imagen entera y no puede mover una parte. Va una cercana (encima del cuerpo) y una lejana (detrás, desfasada), y el aleteo es girarlas sobre ese punto.
 
 - **Íconos de interfaz con relleno en tres tonos por material (luz, base, sombra) y contorno tinta**, como los objetos del juego, nunca de trazo fino solo. Por qué: Willy pidió íconos más pulidos en la maqueta de A4 (2026-10-04).
+- **Señales de poder (A3):** viven en `m.senales` (polvo, ráfaga, brasas) y `j.esfuerzo`, en `mundo.js`, y se dibujan en `dibujo.js`. No tocan física ni guardado. La soga tiene `prog` (0 a 1) y `desde`: es caminable desde el instante en que se tiende, la animación es solo visual, y una soga restaurada del guardado arranca con `prog` 1. El polvo de aterrizaje también sale al bajar caminando de una terraza.
+- **Campo de pruebas (D24):** el menú lo ofrece solo con `?pruebas` en la dirección. `probar.js` carga `?prueba&pruebas`: `prueba` en singular expone `window.__mundo` y es otra cosa.
 
 ## Proceso
 

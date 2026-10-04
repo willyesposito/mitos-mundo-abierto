@@ -127,7 +127,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     if ((ax !== bx && ay !== by) || n < 1 || n > MAX_SOGA || Math.abs(hb - ha) / n > TOL_SOGA) return null;
     const casillas = [];
     for (let i = 0; i <= n; i++) casillas.push({ x: ax + Math.sign(bx - ax) * i, y: ay + Math.sign(by - ay) * i, h: ha + (hb - ha) * i / n });
-    return { a: s.a, b: s.b, ha, hb, casillas, tendida: false };
+    return { a: s.a, b: s.b, ha, hb, casillas, tendida: false, prog: 1, desde: 0 };
   }).filter(Boolean);
   function tenderEn(s) { s.tendida = true; for (const c of s.casillas) cuerdas.set(c.x + ',' + c.y, c.h); }
   for (const s of sogas) if (sogasTendidas.has(s.a.join(','))) tenderEn(s);
@@ -141,13 +141,13 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
   const m = {
     id: mapa.id, barcas: mapa.barcas || [],
     cols, rows, celdas, origen, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
-    particulas: [], eventos: [], t: 0, velo: 0,
+    particulas: [], senales: [], eventos: [], t: 0, velo: 0,
     jugador: {
       x: arranque[0], y: arranque[1], z: 0, vz: 0,
       enSuelo: true, coyote: 0, buffer: 0, planeo: false,
       fx: 0, fy: 1, camina: false, paso: 0,
       personaje: 'pegaso', embiste: null, embCool: 0,
-      empuje: { e: null, t: 0 }, pistaCool: 0, tap: false, poderT: 0, brillo: 0, ecoCool: 0,
+      empuje: { e: null, t: 0 }, pistaCool: 0, tap: false, poderT: 0, brillo: 0, ecoCool: 0, esfuerzo: 0, senalT: 0,
       seguro: { x: arranque[0], y: arranque[1], z: 0 },
       estado: 'jugando', estadoT: 0,
     },
@@ -214,6 +214,27 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     }
   }
 
+  // Señales visuales de los poderes (solo se dibujan; no tocan la física). Posición en casillas, z en niveles.
+  // tipo: 'polvo' (nubecita), 'rafaga' (arcos de aire a los costados), 'brasa' (partícula que cae).
+  function senal(tipo, x, y, z, dur, extra = {}) {
+    if (m.senales.length > 70) m.senales.shift();
+    m.senales.push({ tipo, x, y, z, t: 0, dur, ...extra });
+  }
+  function polvo(x, y, z, n = 3, dispersion = 0.25) {
+    for (let i = 0; i < n; i++) {
+      const lado = n === 1 ? 0 : (i / (n - 1) - 0.5) * 2;
+      senal('polvo', x + lado * dispersion, y + (Math.random() - 0.5) * 0.12, z, 0.5 + Math.random() * 0.2, { vx: lado * 0.5, r: 5 + Math.random() * 3 });
+    }
+  }
+  function actualizarSenales(dt) {
+    for (const q of m.senales) {
+      q.t += dt;
+      if (q.tipo === 'polvo') { q.x += q.vx * dt; q.z += 0.25 * dt; }
+      else if (q.tipo === 'brasa') { q.x += q.vx * dt; q.z = Math.max(q.z - 0.9 * dt, Math.max(suelo(q.x, q.y), 0)); }
+    }
+    m.senales = m.senales.filter(q => q.t < q.dur);
+  }
+
   function cambiarPersonaje(id) {
     const j = m.jugador;
     if (j.estado !== 'jugando' || j.personaje === id) return;
@@ -245,6 +266,10 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       const k = e.t * e.t * (3 - 2 * e.t);
       e.px = e.ox + (e.tx - e.ox) * k;
       e.py = e.oy + (e.ty - e.oy) * k;
+      if (e.t < 1) {
+        const paso = Math.floor(e.t * 4);
+        if (paso !== e.pasoPolvo) { e.pasoPolvo = paso; polvo(e.px + 0.5, e.py + 0.95, alturaCelda(celdas[e.ty][e.tx]), 2, 0.3); }
+      }
     }
     for (const l of enlaces) {
       if (l.abierto) continue;
@@ -331,6 +356,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       chispas(s.abre[0] + 0.5, s.abre[1] + 0.5, 0.8, '#ffd36a', 26, 2.8);
       m.eventos.push({ tipo: 'sol' });
     }
+    for (const s of sogas) if (s.prog < 1) s.prog = Math.min(1, s.prog + dt / 0.5);
     for (const o of m.ondas) o.t += dt;
     m.ondas = m.ondas.filter(o => o.t < o.dur);
     m.jugador.brillo = Math.max(0, m.jugador.brillo - dt / 0.9);
@@ -353,6 +379,9 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       if (j.pistaCool <= 0) { j.pistaCool = 6; m.eventos.push({ tipo: 'pista', texto: 'Ariadna tiende la soga parada junto a una argolla de bronce.' }); }
       return;
     }
+    // La soga se puede pisar desde ya; el desenrollo es solo visual y parte de la argolla más cercana a Ariadna
+    const da = Math.hypot(mejor.a[0] + 0.5 - j.x, mejor.a[1] + 0.5 - j.y), db = Math.hypot(mejor.b[0] + 0.5 - j.x, mejor.b[1] + 0.5 - j.y);
+    mejor.desde = da <= db ? 0 : 1; mejor.prog = 0;
     tenderEn(mejor);
     for (const c of mejor.casillas) chispas(c.x + 0.5, c.y + 0.5, c.h + 0.4, '#b5482e', 6, 1.6);
     m.eventos.push({ tipo: 'soga' });
@@ -379,7 +408,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     if (c !== ',' && c !== 'p') return false;
     if (empujableEn(tx, ty) || jugadorSolapa(tx, ty)) return false;
     if (alturaCelda(c) !== alturaCelda(celdas[e.ty][e.tx])) return false;
-    e.ox = e.tx; e.oy = e.ty; e.tx = tx; e.ty = ty; e.t = 0;
+    e.ox = e.tx; e.oy = e.ty; e.tx = tx; e.ty = ty; e.t = 0; e.pasoPolvo = -1; m.jugador.esfuerzo = 0.45;
     chispas(e.ox + 0.5, e.oy + 0.5, 0.1, '#cbb994', 5, 1.2);
     m.eventos.push({ tipo: 'empuje' });
     return true;
@@ -411,6 +440,8 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     actualizarEmpujables(dt);
     actualizarMecanismos(dt);
     actualizarParticulas(dt);
+    actualizarSenales(dt);
+    j.esfuerzo = Math.max(0, j.esfuerzo - dt);
 
     if (j.estado === 'volviendo') {
       j.estadoT += dt; m.velo = Math.max(0, 1 - j.estadoT / 0.3);
@@ -438,6 +469,8 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       const sx = j.x + em.dx * (MEDIO + 0.2), sy = j.y + em.dy * (MEDIO + 0.2);
       const tx = Math.floor(sx), ty = Math.floor(sy);
       if (celdas[ty] && celdas[ty][tx] === 'M' && j.z - suelo(j.x, j.y) < 0.5) romperMuro(tx, ty);
+      j.senalT -= dt;
+      if (j.senalT <= 0) { j.senalT = 0.06; polvo(j.x - em.dx * 0.3, j.y - em.dy * 0.3 + 0.05, j.z, 1); }
       em.t -= dt;
       if (em.t <= 0) j.embiste = null;
     }
@@ -463,6 +496,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
         if (lat < 0.42 && Math.abs(j.z - alturaCelda(celdas[ty][tx])) < 0.3) intento = { e, dx, dy };
       }
     }
+    if (intento && j.personaje === 'minotauro') j.esfuerzo = 0.3;
     if (intento && intento.e === j.empuje.e) j.empuje.t += dt;
     else { j.empuje.e = intento ? intento.e : null; j.empuje.t = 0; }
     if (intento && j.personaje === 'minotauro' && j.empuje.t > EMPUJE_ESPERA) {
@@ -494,7 +528,12 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       j.vz = SALTO; j.enSuelo = false; j.coyote = 0; j.buffer = 0;
     }
     if (vuela) {
+      if (!j.planeo && j.enSuelo) senal('rafaga', j.x, j.y, j.z, 0.45, { fx: j.fx || 1 });   // despegue desde el piso
       j.enSuelo = false; j.planeo = true;
+      if (j.personaje === 'fenix') {
+        j.senalT -= dt;
+        if (j.senalT <= 0) { j.senalT = 0.14; senal('brasa', j.x + (Math.random() - 0.5) * 0.3, j.y + 0.05, j.z + 0.35, 0.7 + Math.random() * 0.3, { vx: (Math.random() - 0.5) * 0.6, oxido: Math.random() < 0.5 }); }
+      }
       j.vz = Math.min(VUELO_VEL, j.vz + VUELO_ACEL * dt);
     }
     if (!j.enSuelo) {
@@ -505,6 +544,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       if (vuela && j.z >= tope) { j.z = tope; j.vz = Math.min(j.vz, 0); }
       const g = suelo(j.x, j.y);
       if (j.vz <= 0 && j.z <= g && g > ABISMO) {
+        if ((j.vz < -2.5 || j.planeo) && j.estado === 'jugando') polvo(j.x, j.y + 0.05, g, 4, 0.35);   // aterriza en piso firme
         j.z = g; j.vz = 0; j.enSuelo = true; j.planeo = false;
       } else if (g <= ABISMO && j.z < -2.4 && control) iniciarCaida();
     }
