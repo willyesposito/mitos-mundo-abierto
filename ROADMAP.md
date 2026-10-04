@@ -4,7 +4,7 @@ Estado de las sesiones. El contenido de cada una (fichas, catálogo, desafíos) 
 
 Estados: **pendiente**, **construida** (`probar.js` pasa) y **validada** (la jugadora lo usó en el celular). Solo Willy marca "validada".
 
-Última verificación: 2026-10-04, `probar.js` con 197 chequeos OK y ninguna falla (con D21).
+Última verificación: 2026-10-04, `probar.js` con 197 chequeos OK y ninguna falla (A4 unida con A5, aleteo y D21).
 
 ## Etapa 1: primer mapa completo (puerto, plaza, palacio)
 
@@ -24,13 +24,13 @@ Siguiente: S8.
 
 ## Arte: sprites embebidos
 
-Plan en `plan-arte.md`. Decisiones: D16 a D20. Orden de inicio a definir por Willy.
+Plan en `plan-arte.md`. Decisiones: D16 a D22. Orden de inicio a definir por Willy.
 
 - [x] **A0 Prueba de tubería**: construida. Decisiones: D18, D19. Cinco personajes quietos en SVG. Falta que Willy lo vea en el celular, a tamaño real y sin conexión.
 - [x] **A1 Dirección de arte**: construida y aprobada por Willy. Decisión: D17. Resultado en `plan-arte.md`.
-- [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y direcciones.
+- [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y direcciones. Cuatro direcciones (D22); los diseños salen del chat de diseño de Willy.
 - [ ] **A3 Movimiento y poderes**: pendiente. Aleteo de Pegaso y Fénix hecho (D20); faltan las ondas de Eco y las señales de los demás poderes.
-- [ ] **A4 Interfaz**: pendiente.
+- [x] **A4 Interfaz**: construida. Maqueta aprobada en el lienzo de Design "Mitos: interfaz" (privado de Willy). Íconos en tres tonos, tira con insignia de rasgo, aviso con medallón, pista con velo y ficha nueva. Falta que la jugadora lo pruebe en el celular.
 - [x] **A5 Escenario y mecanismos**: construida (`probar.js`: 193 OK tras unir con el aleteo). Decisión: D17. Falta la animación de la reja al abrirse y ver techo, reja y puerta de sonido en el celular.
 - [ ] **A6 Coleccionables y ambiente**: pendiente.
 

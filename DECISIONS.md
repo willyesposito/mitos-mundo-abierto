@@ -132,3 +132,9 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** el vuelo de Fénix llega a la altura de una terraza (nivel 1) y no a un techo (nivel 2). Pegaso sigue llegando a techos.
 - **Por qué:** Willy pidió que Pegaso tenga cosas para hacer que Fénix no. Con tres niveles, la única división que separa a los dos es terraza contra techo.
 - **Descartado:** el mismo vuelo para los dos.
+
+### D22. Cuatro direcciones por personaje
+- **Estado:** tomada (Willy, 2026-10-04)
+- **Decisión:** cada personaje tiene cuatro direcciones: frente (abajo), espalda (arriba) y costado. El costado mira a la derecha y se espeja para la izquierda, así que son tres dibujos por pose (quieto y caminar).
+- **Por qué:** caminando hacia arriba se tiene que ver la espalda, no la cara. Ocho direcciones duplican el trabajo de diseño y en el celular casi no se notan.
+- **Descartado:** dos direcciones espejadas y ocho direcciones.

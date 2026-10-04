@@ -18,7 +18,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   const partida = contables.filter(o => o.zona !== 'pruebas');
   document.querySelectorAll('[data-icono]').forEach(el => { el.innerHTML = ICONOS[el.dataset.icono]; });
   $('btn-menu').innerHTML = ICONOS.menu;
-  $('btn-ficha').innerHTML = ICONOS.info;
+  $('btn-ficha').innerHTML = ICONOS.ficha;
   $('btn-salto').querySelector('.ico').innerHTML = ICONOS.saltar;
   $('zona-nombre').textContent = zona ? zona.nombre : '';
 
@@ -27,6 +27,8 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   for (const p of personajes) {
     const b = document.createElement('button');
     b.className = 'pj'; b.dataset.id = p.id; b.setAttribute('aria-label', p.nombre);
+    const ret = document.createElement('div'); ret.className = 'retrato';
+    const ins = document.createElement('div'); ins.className = 'insignia'; ins.innerHTML = ICONOS['rasgo_' + p.id] || '';
     const c = document.createElement('canvas'); c.width = 112; c.height = 112;
     const cx = c.getContext('2d');
     alTenerSprites(() => {
@@ -35,7 +37,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     });
     c.style.width = '52px'; c.style.height = '52px';
     const n = document.createElement('span'); n.textContent = p.nombre;
-    b.append(c, n); tira.append(b);
+    ret.append(c, ins); b.append(ret, n); tira.append(b);
   }
   ui.alElegirPersonaje = null;
   // Tocar elige; mantener apretado abre la ficha
@@ -107,7 +109,12 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
         const li = document.createElement('li'); li.textContent = linea.slice(2); ul.append(li);
       } else { ul = null; const q = document.createElement('p'); q.textContent = linea; caja.append(q); }
     }
-    $('ficha-senal').textContent = 'Señal en el mapa: ' + p.ficha.senal;
+    const sn = $('ficha-senal'); sn.innerHTML = '';
+    const bs = document.createElement('b'); bs.textContent = 'Buscá:'; sn.append(bs, ' ' + p.ficha.senal);
+    const n = personajes.length, i = personajes.findIndex(q => q.id === id);
+    const ant = personajes[(i + n - 1) % n], sig = personajes[(i + 1) % n];
+    $('ficha-anterior').innerHTML = ICONOS.anterior; $('ficha-anterior').append(ant.nombre);
+    $('ficha-siguiente').textContent = sig.nombre; $('ficha-siguiente').insertAdjacentHTML('beforeend', ICONOS.siguiente);
     ficha.querySelector('.tarjeta').scrollTop = 0;
   }
   function abrirFicha(id) {
@@ -126,7 +133,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   $('btn-ficha').addEventListener('click', () => abrirFicha());
   ui.alAbrirFicha = null;
 
-  ui.pistaCambio = visible => { $('pista-cambio').hidden = !visible; };
+  ui.pistaCambio = visible => { $('pista-cambio').hidden = !visible; document.body.classList.toggle('con-pista', !!visible); };
 
   // --- Contadores (solo suben) ---
   ui.contadores = recogidos => {
@@ -146,8 +153,14 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   ui.aviso = (titulo, texto, ms = 3800) => {
     const a = $('aviso');
     a.innerHTML = '';
-    const h = document.createElement('strong'); h.textContent = titulo; a.append(h);
-    if (texto) { const p = document.createElement('span'); p.textContent = texto; a.append(p); }
+    const fila = document.createElement('div'); fila.className = 'aviso-fila';
+    const med = document.createElement('div'); med.className = 'medallon'; med.innerHTML = ICONOS.objeto;
+    const tx = document.createElement('div'); tx.className = 'aviso-texto';
+    const h = document.createElement('strong'); h.textContent = titulo; tx.append(h);
+    if (texto) { const p = document.createElement('span'); p.textContent = texto; tx.append(p); }
+    fila.append(med, tx);
+    const cer = document.createElement('div'); cer.className = 'cerrar-aviso'; cer.textContent = 'Tocá para cerrar';
+    a.append(fila, cer);
     a.hidden = false; a.classList.remove('entra'); void a.offsetWidth; a.classList.add('entra');
     clearTimeout(avisoTimer); avisoTimer = setTimeout(() => { a.hidden = true; }, ms);
   };

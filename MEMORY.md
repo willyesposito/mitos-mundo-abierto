@@ -34,6 +34,8 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Los sprites miran a la derecha y se espejan con fx < 0:** si un sprite nuevo mira a la izquierda, queda al revés en el juego.
 - **Un ala que aletea es un SVG aparte con el origen en el hombro:** el juego carga cada SVG como imagen entera y no puede mover una parte. Va una cercana (encima del cuerpo) y una lejana (detrás, desfasada), y el aleteo es girarlas sobre ese punto.
 
+- **Íconos de interfaz con relleno en tres tonos por material (luz, base, sombra) y contorno tinta**, como los objetos del juego, nunca de trazo fino solo. Por qué: Willy pidió íconos más pulidos en la maqueta de A4 (2026-10-04).
+
 ## Proceso
 
 - **Los personajes se diseñan fuera de Code**, en otro chat de Willy. Code no los diseña ni los redibuja: en maquetas van como lugar marcado. Por qué: Willy lo pidió al arrancar el plan de arte (2026-10-04). Excepción: cuando Willy pide diseñar acá, en el lienzo de Design, y aprueba ahí; así se hicieron las alas de Pegaso y Fénix.
