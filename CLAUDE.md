@@ -41,7 +41,7 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 | Fénix | Luz: tocar brilla y enciende braseros; mantener vuela como Pegaso | llama |
 | Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
 
-Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Los personajes se dibujan por código: base compartida más un rasgo propio. El arte definitivo lo resuelve Claude Design más adelante.
+Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Los personajes tienen una base compartida más un rasgo propio. El arte pasa a sprites embebidos (D16, `plan-arte.md`); hasta que cada paso de ese plan se integre, sigue el dibujo por código.
 
 ## Mapa de archivos
 
@@ -67,6 +67,7 @@ Código en la raíz, datos en `datos/`.
 | `DECISIONS.md` | Decisiones tomadas, con el porqué. Solo se agregan entradas |
 | `MEMORY.md` | Reglas aprendidas de diseño, técnica y proceso. Se anota ante cada corrección de Willy |
 | `plan-etapa-1.md` | Diseño y contenido de la etapa 1: fichas, catálogo, desafíos y sesiones |
+| `plan-arte.md` | Plan de arte con sprites embebidos: requisitos, canon visual y pasos A0 a A6 |
 | `.claude/agents/programador.md` | Subagente (Sonnet 5.5) que programa los encargos que escribe Opus |
 | `sw.js` | Service worker. **Subir `VERSION` en cada deploy real** |
 | `herramientas/probar.js` | No es parte del juego. Juega el juego en un navegador sin pantalla, con teclado y toques, y verifica todo |
