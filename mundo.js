@@ -16,6 +16,8 @@ const COYOTE = 0.12;
 const BUFFER = 0.14;
 const MEDIO = 0.27;         // semiancho de la caja del personaje
 const VUELO_MAX = 2.9;
+// D21: Fénix llega a una terraza (1) con margen y nunca a un techo (2): un techo bloquea si z + PASO < 2
+const VUELO_MAX_FENIX = 1.6;
 const VUELO_ACEL = 18;
 const VUELO_VEL = 3.4;
 const PLANEO_CAIDA = 2.3;
@@ -307,7 +309,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       // Golpear una fuente: un címbalo suena para siempre una vez que lo golpea quien corresponde
       if (!f.activa && f.modo === 'golpe' && j.estado === 'jugando') {
         const d = Math.hypot(f.x - j.x, f.y - j.y);
-        const vuelaAhora = j.personaje === 'pegaso' || (j.personaje === 'fenix' && j.planeo);
+        const vuelaAhora = j.personaje === 'pegaso' || (j.personaje === 'fenix' && j.planeo && f.zBase <= VUELO_MAX_FENIX - 0.5);
         const golpe = f.golpea === 'volar' ? (vuelaAhora && d < 0.8 && Math.abs(j.z - f.zBase) < 1)
           : f.golpea === 'pegaso' ? (j.personaje === 'pegaso' && d < 0.8 && Math.abs(j.z - f.zBase) < 1)
           : f.golpea === 'minotauro' ? (j.personaje === 'minotauro' && !!j.embiste && d < 1.3) : false;
@@ -501,7 +503,8 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       if (!vuela) j.vz -= GRAVEDAD * dt;
       if (j.planeo && !vuela) j.vz = Math.max(j.vz, -PLANEO_CAIDA);
       j.z += j.vz * dt;
-      if (vuela && j.z >= VUELO_MAX) { j.z = VUELO_MAX; j.vz = Math.min(j.vz, 0); }
+      const tope = j.personaje === 'fenix' ? VUELO_MAX_FENIX : VUELO_MAX;
+      if (vuela && j.z >= tope) { j.z = tope; j.vz = Math.min(j.vz, 0); }
       const g = suelo(j.x, j.y);
       if (j.vz <= 0 && j.z <= g && g > ABISMO) {
         j.z = g; j.vz = 0; j.enSuelo = true; j.planeo = false;
