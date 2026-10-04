@@ -53,7 +53,7 @@ Cada paso termina cuando se cumple su criterio, no cuando está la hoja. El orde
 
 ### A2. Los cinco personajes, quietos y caminando
 - **Qué:** base compartida más rasgo propio (alas, cuernos, ovillo, llama, ondas de voz). Quieto y ciclo de caminar.
-- **Direcciones (D20):** cuatro. Frente, espalda y costado espejado: tres dibujos por pose.
+- **Direcciones (D22):** cuatro. Frente, espalda y costado espejado: tres dibujos por pose.
 - **Termina cuando:** la jugadora, en el celular, nombra a cada personaje sin ayuda.
 
 ### A3. Movimiento y poderes

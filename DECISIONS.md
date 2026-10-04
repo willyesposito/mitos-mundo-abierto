@@ -121,7 +121,19 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Por qué:** sus fichas dicen "Caballo con alas" y "Ave de plumas rojas y doradas"; la figura humana contradecía el texto del juego.
 - **Descartado:** base humana compartida para los cinco.
 
-### D20. Cuatro direcciones por personaje
+### D20. Alas separadas y Fénix de perfil
+- **Estado:** tomada
+- **Decisión:** las alas de Pegaso y Fénix son piezas SVG aparte (cercana y lejana), con el origen en el hombro, y el aleteo se hace por código. Fénix pasa a ave de perfil con cola larga y cresta que cae hacia atrás, sin las tres puntas. Las alas son una sola forma por pieza, sin plumas dibujadas. Las alas de fuego de Fénix al volar usan estas mismas piezas. Completa D19.
+- **Por qué:** el aleteo necesita el ala separada del cuerpo, y el diseño anterior de Fénix no era el que se buscaba.
+- **Descartado:** versión de fuego aparte para el vuelo; alas con filas de plumas (se veían recargadas).
+
+### D21. Fénix vuela hasta terrazas, Pegaso hasta techos
+- **Estado:** tomada
+- **Decisión:** el vuelo de Fénix llega a la altura de una terraza (nivel 1) y no a un techo (nivel 2). Pegaso sigue llegando a techos.
+- **Por qué:** Willy pidió que Pegaso tenga cosas para hacer que Fénix no. Con tres niveles, la única división que separa a los dos es terraza contra techo.
+- **Descartado:** el mismo vuelo para los dos.
+
+### D22. Cuatro direcciones por personaje
 - **Estado:** tomada (Willy, 2026-10-04)
 - **Decisión:** cada personaje tiene cuatro direcciones: frente (abajo), espalda (arriba) y costado. El costado mira a la derecha y se espeja para la izquierda, así que son tres dibujos por pose (quieto y caminar).
 - **Por qué:** caminando hacia arriba se tiene que ver la espalda, no la cara. Ocho direcciones duplican el trabajo de diseño y en el celular casi no se notan.

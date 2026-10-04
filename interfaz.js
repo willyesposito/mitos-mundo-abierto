@@ -33,7 +33,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     const cx = c.getContext('2d');
     alTenerSprites(() => {
       cx.clearRect(0, 0, c.width, c.height);
-      dibujarPersonaje(cx, p, { x: 56, y: 104, fx: 0, fy: 1, t: 0.3, caminando: false, volando: false, escala: 2.3, paso: 0 });
+      dibujarPersonaje(cx, p, { x: 56, y: 104, fx: 0, fy: 1, t: 0, caminando: false, volando: false, escala: 2.3, paso: 0 });
     });
     c.style.width = '52px'; c.style.height = '52px';
     const n = document.createElement('span'); n.textContent = p.nombre;
@@ -96,7 +96,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     alTenerSprites(() => {
       if (fichaId !== id) return;
       cx.clearRect(0, 0, c.width, c.height);
-      dibujarPersonaje(cx, p, { x: 84, y: 156, fx: 0, fy: 1, t: 0.3, caminando: false, volando: false, escala: 3.4, paso: 0 });
+      dibujarPersonaje(cx, p, { x: 84, y: 156, fx: 0, fy: 1, t: 0, caminando: false, volando: false, escala: 3.4, paso: 0 });
     });
     $('ficha-nombre').textContent = p.nombre;
     $('ficha-texto').textContent = p.ficha.texto;
