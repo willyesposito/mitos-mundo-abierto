@@ -38,7 +38,17 @@ function dibujarMundo(ctx, m, v, personajes) {
   const items = [];
   for (const e of m.empujables) items.push({ fila: Math.round(e.py), prof: e.py, tipo: 'empujable', e });
   for (const c of m.coleccionables) if (!c.recogido) items.push({ fila: Math.floor(c.y), prof: c.y, tipo: 'objeto', c });
-  items.push({ fila: Math.floor(j.y), prof: j.y, tipo: 'jugador' });
+  for (const b of m.braseros) items.push({ fila: b.y, prof: b.y + 0.5, tipo: 'brasero', b });
+  for (const f of m.fuentes) items.push({ fila: f.ty, prof: f.y, tipo: 'fuente', f });
+  // Las argollas y las sogas se dibujan después de todas las baldosas por las que pasan
+  for (const s of m.sogas) {
+    const maxFila = Math.max(s.a[1], s.b[1]);
+    items.push({ fila: maxFila, prof: -1, tipo: 'soga', s });
+    for (const p of [s.a, s.b]) items.push({ fila: p[1], prof: p[1] + 0.3, tipo: 'argolla', s, p });
+  }
+  let filaJ = Math.floor(j.y);
+  for (const s of m.sogas) if (s.tendida && s.casillas.some(c => c.x === Math.floor(j.x) && c.y === Math.floor(j.y))) filaJ = Math.max(filaJ, s.a[1], s.b[1]);
+  items.push({ fila: filaJ, prof: filaJ > Math.floor(j.y) ? 999 : j.y, tipo: 'jugador' });
   items.sort((a, b) => a.fila - b.fila || a.prof - b.prof);
 
   let k = 0;
@@ -55,6 +65,7 @@ function dibujarMundo(ctx, m, v, personajes) {
   for (const c of m.coleccionables) if (!c.recogido) dibujarObjeto(ctx, m, c, false);
   if (j.estado !== 'cayendo' || j.z > -1.2) dibujarJugador(ctx, m, personajes, false);
   ctx.globalAlpha = 1;
+  dibujarOndas(ctx, m);
 
   if (m.velo > 0) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -74,7 +85,7 @@ function dibujarTile(ctx, m, x, y) {
   if (h > hs) {
     const alto = (h - hs) * LH;
     const fy = py + TH;
-    if (c === '#' || c === 'b' || c === 'M' || c === 'G') caraPared(ctx, c, px, fy, alto);
+    if (c === '#' || c === 'b' || c === 'M' || c === 'G' || c === 'D' || c === 'O') caraPared(ctx, c, px, fy, alto, m, x, y);
     else if (c === 'A') caraLisa(ctx, px, fy, alto, COL.oxidoOscuro, COL.egeo);
     else if (c === 'a') caraLisa(ctx, px, fy, alto, COL.calSombra, COL.oxido);
     else { ctx.fillStyle = '#9b7a45'; ctx.fillRect(px, fy, TW, alto); }
@@ -82,7 +93,7 @@ function dibujarTile(ctx, m, x, y) {
 
   switch (c) {
     case '~': dibujarAgua(ctx, m, x, y, px, py); break;
-    case '#': case 'b': case 'M': case 'G':
+    case '#': case 'b': case 'M': case 'G': case 'D': case 'O':
       ctx.fillStyle = COL.paredTope; ctx.fillRect(px, py, TW, TH);
       ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(px, py, TW, 4);
       break;
@@ -111,7 +122,7 @@ function caraLisa(ctx, px, fy, alto, base, banda) {
   ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(px, fy + alto - 4, TW, 4);
 }
 
-function caraPared(ctx, c, px, fy, alto) {
+function caraPared(ctx, c, px, fy, alto, m, x, y) {
   ctx.fillStyle = COL.pared; ctx.fillRect(px, fy, TW, alto);
   ctx.fillStyle = COL.paredLinea;
   for (let yy = fy + LH / 2; yy < fy + alto; yy += LH / 2) ctx.fillRect(px, yy, TW, 1.5);
@@ -129,7 +140,38 @@ function caraPared(ctx, c, px, fy, alto) {
     for (let n = 0; n < 4; n++) { const bx = px + 7 + n * 10; ctx.beginPath(); ctx.moveTo(bx, fy + 3); ctx.lineTo(bx, fy + alto - 3); ctx.stroke(); }
     ctx.beginPath(); ctx.moveTo(px + 3, fy + alto * 0.45); ctx.lineTo(px + TW - 3, fy + alto * 0.45); ctx.stroke();
   }
+  else if (c === 'D') {
+    // Puerta del sol: disco solar con rayos
+    ctx.fillStyle = '#3b2b1d'; ctx.fillRect(px + 2, fy + 2, TW - 4, alto - 4);
+    const cx = px + TW / 2, cy = fy + Math.min(alto * 0.5, 40);
+    ctx.strokeStyle = COL.ocre; ctx.fillStyle = COL.ocre; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    for (let n = 0; n < 12; n++) { const a = n * Math.PI / 6; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * 12, cy + Math.sin(a) * 12); ctx.lineTo(cx + Math.cos(a) * 18, cy + Math.sin(a) * 18); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff3c8'; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+  } else if (c === 'O') {
+    // Puerta de sonido: lleva el color y el símbolo del sonido al que responde
+    const p = m.puertasSonido.find(q => q.x === x && q.y === y), snd = p && m.sonidos[p.sonido];
+    ctx.fillStyle = '#3b2b1d'; ctx.fillRect(px + 2, fy + 2, TW - 4, alto - 4);
+    if (snd) {
+      ctx.fillStyle = snd.color; ctx.fillRect(px + 5, fy + 5, TW - 10, alto - 10);
+      const cx = px + TW / 2, cy = fy + Math.min(alto * 0.5, 40);
+      ctx.fillStyle = '#fffaf0'; ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 2;
+      simbolo(ctx, snd.simbolo, cx, cy, 11);
+      ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2;
+      for (const r of [17, 22]) { ctx.beginPath(); ctx.arc(cx, cy, r, -0.7, 0.7); ctx.stroke(); }
+    }
+  }
   ctx.fillStyle = 'rgba(0,0,0,.14)'; ctx.fillRect(px, fy + alto - 5, TW, 5);
+}
+
+// Símbolos de los sonidos (se ven aunque el volumen esté en cero). Rellena y contornea con el estilo actual.
+export function simbolo(ctx, id, cx, cy, r) {
+  ctx.beginPath();
+  if (id === 'circulo') ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  else if (id === 'triangulo') { ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy + r * 0.8); ctx.lineTo(cx - r, cy + r * 0.8); ctx.closePath(); }
+  else if (id === 'cuadrado') ctx.rect(cx - r * 0.85, cy - r * 0.85, r * 1.7, r * 1.7);
+  else { ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy); ctx.closePath(); }
+  ctx.fill(); ctx.stroke();
 }
 
 function dibujarAgua(ctx, m, x, y, px, py) {
@@ -156,6 +198,10 @@ function dibujarPlaca(ctx, m, x, y, px, py) {
 // ---------- Objetos y personajes ----------
 function dibujarItem(ctx, m, it, personajes) {
   if (it.tipo === 'empujable') dibujarEmpujable(ctx, it.e);
+  else if (it.tipo === 'brasero') dibujarBrasero(ctx, m, it.b);
+  else if (it.tipo === 'fuente') dibujarFuente(ctx, m, it.f);
+  else if (it.tipo === 'soga') dibujarSoga(ctx, it.s);
+  else if (it.tipo === 'argolla') dibujarArgolla(ctx, it.s, it.p);
   else if (it.tipo === 'objeto') dibujarObjeto(ctx, m, it.c, true);
   else dibujarJugador(ctx, m, personajes, true);
 }
@@ -192,6 +238,126 @@ function dibujarEmpujable(ctx, e) {
   }
 }
 
+function dibujarBrasero(ctx, m, b) {
+  const cx = b.x * TW + TW / 2, by = b.y * TH + TH - 6 - b.zBase * LH;
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(cx, by + 1, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
+  if (b.encendido) {
+    const g = ctx.createRadialGradient(cx, by - 24, 2, cx, by - 24, 38);
+    g.addColorStop(0, 'rgba(255,190,80,.55)'); g.addColorStop(1, 'rgba(255,190,80,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, by - 24, 38, 0, Math.PI * 2); ctx.fill();
+  }
+  // pie y cuenco de bronce
+  ctx.fillStyle = '#6b4a2b'; ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - 7, by); ctx.lineTo(cx + 7, by); ctx.lineTo(cx + 3, by - 14); ctx.lineTo(cx - 3, by - 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#c28a3c';
+  ctx.beginPath(); ctx.moveTo(cx - 15, by - 24); ctx.lineTo(cx + 15, by - 24); ctx.quadraticCurveTo(cx + 13, by - 10, cx, by - 10); ctx.quadraticCurveTo(cx - 13, by - 10, cx - 15, by - 24); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if (b.encendido) {
+    for (const [dx, h, c] of [[-6, 14, '#e8892a'], [0, 22, '#ffb23c'], [6, 14, '#e8892a']]) {
+      const wob = Math.sin(m.t * 9 + dx) * 2;
+      ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(cx + dx - 5, by - 24); ctx.quadraticCurveTo(cx + dx + wob, by - 24 - h * 1.5, cx + dx + 5, by - 24); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  } else {
+    ctx.fillStyle = '#4a3226'; ctx.beginPath(); ctx.ellipse(cx, by - 24, 11, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(244,236,216,.6)'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.arc(cx, by - 34, 7, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);   // llama sin encender
+  }
+}
+
+function dibujarFuente(ctx, m, f) {
+  const snd = m.sonidos[f.sonido];
+  const cx = f.tx * TW + TW / 2, by = f.ty * TH + TH - 6 - f.zBase * LH;
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(cx, by + 1, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+  const vib = f.activa ? Math.sin(m.t * 30) * 1.2 : 0;
+  if (f.modo === 'sola') {
+    // caracola: espiral
+    ctx.fillStyle = '#f0d9c0';
+    ctx.beginPath(); ctx.ellipse(cx + vib, by - 12, 14, 11, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + 2 + vib, by - 12, 6, 0.3, 4.6); ctx.stroke();
+    ctx.fillStyle = '#e8a79a'; ctx.beginPath(); ctx.moveTo(cx - 8, by - 4); ctx.quadraticCurveTo(cx - 20, by - 8, cx - 16, by - 18); ctx.lineTo(cx - 8, by - 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else {
+    // címbalo de bronce sobre un pie
+    ctx.fillStyle = '#6b4a2b'; ctx.fillRect(cx - 2, by - 20, 4, 20); ctx.strokeRect(cx - 2, by - 20, 4, 20);
+    ctx.fillStyle = '#c28a3c';
+    ctx.beginPath(); ctx.ellipse(cx + vib, by - 26, 15, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e0b03a'; ctx.beginPath(); ctx.arc(cx + vib, by - 28, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  // insignia del sonido: color y símbolo (apagada y sin brillo hasta que suene)
+  const ix = cx, iy = by - 50 - Math.sin(m.t * 3) * (f.activa ? 2 : 0);
+  ctx.globalAlpha = f.activa ? 1 : 0.55;
+  ctx.fillStyle = snd.color; ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(ix, iy, 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#fffaf0'; ctx.lineWidth = 1.5; simbolo(ctx, snd.simbolo, ix, iy, 6.5);
+  ctx.globalAlpha = 1;
+  if (f.activa) {
+    ctx.strokeStyle = snd.color; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    for (let n = 0; n < 3; n++) {
+      const q = ((m.t / 1.3) + n / 3) % 1;
+      ctx.globalAlpha = (1 - q) * 0.8;
+      ctx.beginPath(); ctx.ellipse(cx, by - 14, 14 + q * 34, 8 + q * 20, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+function dibujarArgolla(ctx, s, p) {
+  const h = p === s.a ? s.ha : s.hb;
+  const cx = p[0] * TW + TW / 2, cy = p[1] * TH + TH / 2 - h * LH;
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(cx, cy + 6, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#7a5236'; ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 2;
+  ctx.fillRect(cx - 3, cy - 4, 6, 10); ctx.strokeRect(cx - 3, cy - 4, 6, 10);
+  ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(cx, cy - 12, 8, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = s.tendida ? '#e6b45a' : '#c28a3c'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, cy - 12, 8, 0, Math.PI * 2); ctx.stroke();
+}
+
+function dibujarSoga(ctx, s) {
+  if (!s.tendida) {
+    // Aún sin tender: una línea punteada tenue sugiere hacia dónde va
+    ctx.strokeStyle = 'rgba(244,236,216,.35)'; ctx.lineWidth = 2; ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.moveTo(s.a[0] * TW + TW / 2, s.a[1] * TH + TH / 2 - s.ha * LH - 12); ctx.lineTo(s.b[0] * TW + TW / 2, s.b[1] * TH + TH / 2 - s.hb * LH - 12); ctx.stroke();
+    ctx.setLineDash([]);
+    return;
+  }
+  const pt = (c, dx = 0) => [c.x * TW + TW / 2 + dx, c.y * TH + TH / 2 - c.h * LH];
+  const ini = s.casillas[0], fin = s.casillas[s.casillas.length - 1];
+  const vertical = s.a[0] === s.b[0];
+  ctx.lineCap = 'round';
+  const [x0, y0] = pt(ini), [x1, y1] = pt(fin);
+  if (s.ha === s.hb) {
+    // puente: tablones entre dos sogas
+    const n = s.casillas.length * 3;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, px = x0 + (x1 - x0) * t, py = y0 + (y1 - y0) * t;
+      ctx.fillStyle = i % 2 ? '#b98a52' : '#a5763f'; ctx.strokeStyle = '#4a3226'; ctx.lineWidth = 1.5;
+      if (vertical) { ctx.fillRect(px - 15, py - 4, 30, 8); ctx.strokeRect(px - 15, py - 4, 30, 8); }
+      else { ctx.fillRect(px - 5, py - 12, 10, 24); ctx.strokeRect(px - 5, py - 12, 10, 24); }
+    }
+    ctx.strokeStyle = '#8f3a24'; ctx.lineWidth = 3;
+    for (const o of vertical ? [[-15, 0], [15, 0]] : [[0, -12], [0, 12]]) { ctx.beginPath(); ctx.moveTo(x0 + o[0], y0 + o[1]); ctx.lineTo(x1 + o[0], y1 + o[1]); ctx.stroke(); }
+  } else {
+    // escala: dos sogas con peldaños
+    const n = s.casillas.length * 2;
+    ctx.strokeStyle = '#8f3a24'; ctx.lineWidth = 3.5;
+    for (const o of [-9, 9]) { ctx.beginPath(); ctx.moveTo(x0 + o, y0 - 10); ctx.lineTo(x1 + o, y1 - 10); ctx.stroke(); }
+    ctx.strokeStyle = '#d6b27a'; ctx.lineWidth = 3;
+    for (let i = 0; i <= n; i++) { const t = i / n, px = x0 + (x1 - x0) * t, py = y0 + (y1 - y0) * t - 10; ctx.beginPath(); ctx.moveTo(px - 9, py); ctx.lineTo(px + 9, py); ctx.stroke(); }
+  }
+}
+
+function dibujarOndas(ctx, m) {
+  // Las ondas del eco se ven por encima de todo: atraviesan paredes
+  for (const o of m.ondas) {
+    const k = o.t / o.dur, r = (0.2 + k * 0.8) * o.alcance;
+    ctx.strokeStyle = o.color; ctx.lineWidth = 4;
+    for (let n = 0; n < 3; n++) {
+      const kk = Math.max(0, k - n * 0.12); if (kk <= 0) continue;
+      ctx.globalAlpha = (1 - kk) * 0.8;
+      ctx.beginPath(); ctx.ellipse(o.x * TW, o.y * TH - o.z * LH, (0.2 + kk * 0.8) * o.alcance * TW, (0.2 + kk * 0.8) * o.alcance * TH, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
 function dibujarObjeto(ctx, m, c, conSombra) {
   const gx = c.x * TW, gy = c.y * TH - c.zBase * LH;
   const bob = Math.sin(m.t * 2.6 + c.x) * 0.1;
@@ -218,6 +384,12 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
       ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.ellipse(gx, gy, 14, 6.5, 0, 0, Math.PI * 2); ctx.stroke();
     }
+  }
+  if (j.brillo > 0) {
+    const r = 30 + (1 - j.brillo) * 40, py = j.y * TH - Math.max(j.z, -3) * LH - 20;
+    const gr = ctx.createRadialGradient(gx, py, 4, gx, py, r);
+    gr.addColorStop(0, `rgba(255,220,120,${0.7 * j.brillo})`); gr.addColorStop(1, 'rgba(255,200,90,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(gx, py, r, 0, Math.PI * 2); ctx.fill();
   }
   const p = personajes[j.personaje];
   if (!p) return;
@@ -251,6 +423,17 @@ export function dibujarPersonaje(ctx, p, o) {
   if (p.rasgo === 'ovillo' && !mirandoAtras) { /* el ovillo va al frente */ }
   if (p.rasgo === 'llama') {
     ctx.fillStyle = 'rgba(255,170,60,.22)'; ctx.beginPath(); ctx.arc(0, -22 - bob, 20, 0, Math.PI * 2); ctx.fill();
+    if (volando) {
+      // alas de fuego al volar
+      const aleteo = Math.sin(t * 20) * 0.6;
+      for (const s of [-1, 1]) {
+        ctx.save(); ctx.translate(s * 7, -20 - bob); ctx.rotate(s * (0.5 + aleteo));
+        ctx.fillStyle = '#ffb23c'; ctx.strokeStyle = '#e8892a';
+        ctx.beginPath(); ctx.ellipse(s * 9, -8, 7, 15, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+      ctx.strokeStyle = contorno;
+    }
   }
 
   // Piernas

@@ -1,9 +1,52 @@
 {
   "personajes": [
-    { "id": "pegaso",    "nombre": "Pegaso",    "color": "#f4ecd8", "rasgo": "alas",    "poder": { "id": "volar",    "nombre": "Volar",    "activo": true  } },
-    { "id": "minotauro", "nombre": "Minotauro", "color": "#8a5a3c", "rasgo": "cuernos", "poder": { "id": "embestir", "nombre": "Embestir", "activo": true  } },
-    { "id": "ariadna",   "nombre": "Ariadna",   "color": "#b5482e", "rasgo": "ovillo",  "poder": { "id": "hilo",     "nombre": "Hilo",     "activo": false } },
-    { "id": "fenix",     "nombre": "Fénix",     "color": "#e8892a", "rasgo": "llama",   "poder": { "id": "luz",      "nombre": "Luz",      "activo": false } },
-    { "id": "eco",       "nombre": "Eco",       "color": "#1f6f9c", "rasgo": "voz",     "poder": { "id": "voz",      "nombre": "Voz",      "activo": false } }
+    { "id": "pegaso", "nombre": "Pegaso", "color": "#f4ecd8", "rasgo": "alas",
+      "poder": {"id": "volar", "nombre": "Volar", "activo": true},
+      "ficha": {
+        "texto": "Caballo con alas. Nació cuando el héroe Perseo venció a Medusa. De un golpe de casco hizo brotar una fuente en el monte Helicón, la fuente de las Musas. Llevó los rayos de Zeus y hoy es una constelación.",
+        "poder": [
+          "Mantener el botón para subir a terrazas y techos. No atraviesa paredes. No empuja ni rompe."
+        ],
+        "senal": "Algo visible sobre una terraza o un techo." } },
+    { "id": "minotauro", "nombre": "Minotauro", "color": "#8a5a3c", "rasgo": "cuernos",
+      "poder": {"id": "embestir", "nombre": "Embestir", "activo": true},
+      "ficha": {
+        "texto": "Su nombre era Asterión, que quiere decir \"el estrellado\". Era hijo de la reina Pasífae, medio hermano de Ariadna, y tenía cabeza de toro. El rey Minos le encargó a Dédalo un laberinto para encerrarlo. Teseo entró con el hilo de Ariadna, lo venció y encontró la salida.",
+        "poder": [
+          "Empujar bloques y vasijas sobre baldosas; embestir para romper muros agrietados. No sube a terrazas por sí solo."
+        ],
+        "senal": "Baldosas, bloques, vasijas, grietas." } },
+    { "id": "ariadna", "nombre": "Ariadna", "color": "#b5482e", "rasgo": "ovillo",
+      "poder": {"id": "hilo", "nombre": "Hilo", "activo": true},
+      "ficha": {
+        "texto": "Hija del rey Minos de Creta. Dédalo le contó el secreto del laberinto, y ella le dio a Teseo un ovillo de hilo para encontrar el camino de vuelta. Después vivió en la isla de Naxos y se casó con el dios Dioniso, que puso su corona entre las estrellas.",
+        "poder": [
+          "Parada junto a una argolla de bronce, el botón tiende una soga hasta otra argolla a la vista, en línea recta y hasta 5 casillas. La soga queda para siempre y la usan todos los personajes:",
+          "- entre suelo y terraza, es una escala: se sube caminando contra ella;",
+          "- entre dos puntos de la misma altura, es un puente.",
+          "Las argollas están puestas en el mapa; la soga no se tiende en cualquier lugar."
+        ],
+        "senal": "Pares de argollas de bronce." } },
+    { "id": "fenix", "nombre": "Fénix", "color": "#e8892a", "rasgo": "llama",
+      "poder": {"id": "luz", "nombre": "Luz", "activo": true},
+      "ficha": {
+        "texto": "Ave de plumas rojas y doradas. Heródoto cuenta que vive en Arabia y que cada quinientos años viaja a Heliópolis, la ciudad del Sol, en Egipto. Aclara que él nunca la vio, solo pinturas. Ovidio cuenta que al final de su vida arma un nido de especias en una palmera y que de ahí nace un fénix nuevo. Lo de renacer entre llamas lo agregaron relatos posteriores.",
+        "poder": [
+          "Tocar el botón la hace brillar y enciende los braseros cercanos. Un brasero encendido no se apaga más. Una puerta del sol (disco solar en la pared) se abre cuando están encendidos todos los braseros enlazados a ella.",
+          "Mantener el botón la hace volar, igual que a Pegaso."
+        ],
+        "senal": "Braseros apagados y discos de sol." } },
+    { "id": "eco", "nombre": "Eco", "color": "#1f6f9c", "rasgo": "voz",
+      "poder": {"id": "voz", "nombre": "Voz", "activo": true},
+      "ficha": {
+        "texto": "Ninfa de los montes. Hablaba tanto que la diosa Hera la castigó: desde entonces solo puede repetir las últimas palabras que escucha. Se enamoró de Narciso, que no le hizo caso, y se fue apagando hasta que de ella quedó solo la voz. Por eso, en los montes y las cuevas, todavía contesta.",
+        "poder": [
+          "Eco guarda un solo sonido, el último que escuchó. Escucha un sonido acercándose a algo que suena. Con el botón lo repite, y su eco se multiplica: llega hasta 6 casillas y atraviesa paredes. Si alcanza un mecanismo que responde a ese sonido, el mecanismo se abre y queda abierto.",
+          "Fuentes de sonido:",
+          "- algunas suenan solas mientras ella esté cerca (la caracola del puerto);",
+          "- otras hay que hacerlas sonar con otro personaje (un címbalo de bronce que golpea el Minotauro o al que llega Pegaso). Una vez que sonó, sigue vibrando para siempre.",
+          "Cada sonido tiene un color y un símbolo; el mecanismo que le responde lleva el mismo."
+        ],
+        "senal": "Objetos con ondas y puertas con el símbolo de un sonido." } }
   ]
 }

@@ -37,9 +37,9 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 |---|---|---|
 | Pegaso | Volar a terrazas y techos (mantener el botón) | alas |
 | Minotauro | Fuerza: empujar bloques y vasijas; embestir para romper muros agrietados | cuernos |
-| Ariadna | Hilo (sesión siguiente) | ovillo |
-| Fénix | Luz (sesión siguiente) | llama |
-| Eco | Voz (sesión siguiente) | ondas de voz |
+| Ariadna | Hilo: tender sogas entre argollas (escala o puente, hasta 5 casillas) | ovillo |
+| Fénix | Luz: tocar brilla y enciende braseros; mantener vuela como Pegaso | llama |
+| Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
 
 Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Los personajes se dibujan por código: base compartida más un rasgo propio. El arte definitivo lo resuelve Claude Design más adelante.
 
@@ -57,13 +57,14 @@ Código en la raíz, datos en `datos/`.
 | `controles.js` | Joystick, botones, teclado |
 | `nucleo.js` | Guardado local con varios perfiles (clave `mitos-mundo-abierto-v1`): objetos y estado del mundo por mapa |
 | `iconos.js` | Íconos de interfaz |
+| `sonido.js` | Audio sintetizado (Web Audio), un extra: todo lo que suena también se ve |
 | `datos/personajes.json` | Elenco y poderes |
 | `datos/coleccionables.json` | Catálogo de objetos y zonas. El catálogo real lo define Chat |
 | `datos/mapa-pruebas.json` | Campo de pruebas. Leyenda abajo |
 | `sw.js` | Service worker. **Subir `VERSION` en cada deploy real** |
 | `herramientas/probar.js` | No es parte del juego. Juega el juego en un navegador sin pantalla, con teclado y toques, y verifica todo |
 
-Leyenda del mapa: `.` suelo, `,` baldosa (única donde se puede empujar), `~` agua, `a` terraza (1), `A` techo (2), `#` pared, `b` parapeto bajo, `M` muro agrietado, `G` reja, `p` placa, `B` bloque, `V` vasija, `S` inicio. Las filas deben tener el mismo largo.
+Leyenda del mapa: `.` suelo, `,` baldosa (única donde se puede empujar), `~` agua, `a` terraza (1), `A` techo (2), `#` pared, `b` parapeto bajo, `M` muro agrietado, `G` reja, `p` placa, `B` bloque, `V` vasija, `S` inicio, `D` puerta del sol, `O` puerta de sonido. Braseros, soles, fuentes de sonido, puertas de sonido y sogas (argollas) van en listas del JSON del mapa, no en letras. Las filas deben tener el mismo largo.
 
 ## Flujo
 

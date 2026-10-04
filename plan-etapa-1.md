@@ -70,7 +70,7 @@ Las argollas están puestas en el mapa; la soga no se tiende en cualquier lugar.
 
 **Poder, Luz:** el botón la hace brillar y enciende los braseros cercanos. Un brasero encendido no se apaga más. Una puerta del sol (disco solar en la pared) se abre cuando están encendidos todos los braseros enlazados a ella. Técnicamente es el mismo mecanismo que placa → reja, con braseros en lugar de placas.
 
-**No vuela** (D2), para que subir siga siendo de Pegaso.
+**Vuela como Pegaso** (D2): mantener el botón vuela; tocar brilla y enciende.
 
 **Señal en el mapa:** braseros apagados y discos de sol.
 
@@ -196,7 +196,7 @@ Cada sesión termina cuando `node herramientas/probar.js` pasa **y** Willy lo pr
 ## Decisiones pendientes
 
 - **D1. Alcance de la etapa:** primer mapa con los cinco poderes; laberinto y cueva a la etapa 2. Recomendado: sí.
-- **D2. ¿Fénix vuela o planea?** Recomendado: no, para que subir siga siendo de Pegaso. Riesgo: que la jugadora diga "es un pájaro".
+- **D2. ¿Fénix vuela o planea?** Resuelta: vuela igual que Pegaso (mantener = volar, tocar = brillar).
 - **D3. Eco con audio o solo visual.** Resuelta: con sonido (audio sintetizado). La señal visual se mantiene, premisa 4.
 - **D4. Distancia de la soga de Ariadna.** Recomendado: hasta 5 casillas, en línea recta, solo entre argollas.
 - **D5. Cómo termina la ficha del Minotauro.** Opciones: "Teseo lo venció" (recomendado: la esencia está y no hay detalle), "Asterión no volvió a salir" (más velado), o cortar en el encierro.

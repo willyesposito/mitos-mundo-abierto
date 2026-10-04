@@ -112,6 +112,24 @@ button { font-family: inherit; cursor: pointer; }
 .pj.activo { border-color: var(--ocre); background: rgba(217,164,65,.22); color: var(--cal); }
 .pj.activo canvas { background: rgba(217,164,65,.35); }
 
+#botones-hud { display: flex; gap: 8px; }
+#contadores { position: relative; }
+#chip-eco { position: absolute; top: calc(100% + 4px); left: 0; border-color: var(--eco, var(--oxido)); }
+#chip-eco .chip-icono { width: 24px; height: 24px; }
+
+/* ---- Fichas de personaje ---- */
+.tarjeta.ficha { text-align: left; padding-bottom: 22px; }
+.tarjeta.ficha::after { display: none; }
+.tarjeta.ficha .cerrar { position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; padding: 0; font-size: 30px; line-height: 1; }
+#ficha-retrato { display: block; margin: 0 auto 4px; width: 84px; height: 84px; background: rgba(217,164,65,.3); border-radius: 50%; }
+.tarjeta.ficha h2 { text-align: center; }
+.tarjeta.ficha h3 { margin: 14px 0 4px; font-size: 18px; color: var(--egeo); }
+.tarjeta.ficha p, .tarjeta.ficha li { margin: 0 0 8px; font-size: 16px; line-height: 1.4; }
+.tarjeta.ficha ul { margin: 0 0 8px; padding-left: 20px; list-style: disc; display: block; }
+#ficha-senal { font-style: italic; color: var(--oxido-oscuro); }
+.fila-ficha { display: flex; gap: 8px; margin-top: 8px; }
+.fila-ficha .boton-grande { margin-top: 0; font-size: 16px; }
+
 /* ---- Pantallas ---- */
 .pantalla {
   position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 18px;

@@ -21,10 +21,17 @@ const VUELO_VEL = 3.4;
 const PLANEO_CAIDA = 2.3;
 const EMPUJE_ESPERA = 0.22;
 const EMPUJE_DURACION = 0.2;
+const TAP_MAX = 0.2;        // Fénix: un toque más corto que esto brilla; mantener más tiempo vuela
+const RADIO_BRILLO = 2.2;   // alcance de la luz de Fénix sobre los braseros
+const RADIO_OIDO = 2.6;     // distancia a la que Eco escucha una fuente de sonido
+const ALCANCE_ECO = 6;      // casillas que llega el eco repetido (atraviesa paredes)
+const RADIO_ARGOLLA = 1.3;  // distancia a la argolla para tender la soga
+const TOL_SOGA = 0.55;      // cuánto se puede subir de golpe sobre una soga
+const MAX_SOGA = 5;
 
 export function alturaCelda(c) {
   switch (c) {
-    case '#': case 'b': case 'M': case 'G': return ALTURA_PARED;
+    case '#': case 'b': case 'M': case 'G': case 'D': case 'O': return ALTURA_PARED;
     case '~': return ABISMO;
     case 'a': return 1;
     case 'A': return 2;
@@ -78,6 +85,47 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
     if (abierto) celdas[e.abre[1]][e.abre[0]] = '.';
     return { placa: e.placa, abre: e.abre, abierto };
   });
+  // Fénix: braseros y puertas del sol
+  const brasasGuardadas = new Set(guardado.braseros || []);
+  const braseros = (mapa.braseros || []).map(b => ({ x: b.x, y: b.y, encendido: brasasGuardadas.has(b.x + ',' + b.y), zBase: alturaCelda(celdas[b.y][b.x]) }));
+  const solesAbiertos = new Set(guardado.soles || []);
+  const soles = (mapa.soles || []).map(s => {
+    const lista = s.braseros.map(([x, y]) => braseros.find(b => b.x === x && b.y === y)).filter(Boolean);
+    const abierto = solesAbiertos.has(s.abre.join(',')) || (lista.length > 0 && lista.every(b => b.encendido));
+    if (abierto) celdas[s.abre[1]][s.abre[0]] = '.';
+    return { braseros: lista, abre: s.abre, abierto };
+  });
+
+  // Eco: fuentes de sonido y puertas que responden a un sonido
+  const sonidos = mapa.sonidos || {};
+  const fuentesVibrando = new Set(guardado.fuentes || []);
+  const fuentes = (mapa.fuentes || []).filter(f => sonidos[f.sonido]).map(f => ({
+    x: f.x + 0.5, y: f.y + 0.5, tx: f.x, ty: f.y, sonido: f.sonido, modo: f.modo, golpea: f.golpea || null,
+    zBase: alturaCelda(celdas[f.y][f.x]),
+    activa: f.modo === 'sola' || fuentesVibrando.has(f.x + ',' + f.y), oida: false, fase: 0,
+  }));
+  const puertasAbiertas = new Set(guardado.puertas || []);
+  const puertasSonido = (mapa.puertasSonido || []).filter(p => sonidos[p.sonido] && celdas[p.y][p.x] === 'O').map(p => {
+    const abierta = puertasAbiertas.has(p.x + ',' + p.y);
+    if (abierta) celdas[p.y][p.x] = '.';
+    return { x: p.x, y: p.y, sonido: p.sonido, abierta };
+  });
+
+  // Ariadna: sogas entre argollas. Solo en línea recta y de hasta MAX_SOGA casillas.
+  const cuerdas = new Map();   // casilla -> altura por la que se camina
+  const sogasTendidas = new Set(guardado.sogas || []);
+  const sogas = (mapa.sogas || []).map(s => {
+    const [ax, ay] = s.a, [bx, by] = s.b;
+    const n = Math.abs(bx - ax) + Math.abs(by - ay);
+    const ha = alturaCelda(celdas[ay][ax]), hb = alturaCelda(celdas[by][bx]);
+    if ((ax !== bx && ay !== by) || n < 1 || n > MAX_SOGA || Math.abs(hb - ha) / n > TOL_SOGA) return null;
+    const casillas = [];
+    for (let i = 0; i <= n; i++) casillas.push({ x: ax + Math.sign(bx - ax) * i, y: ay + Math.sign(by - ay) * i, h: ha + (hb - ha) * i / n });
+    return { a: s.a, b: s.b, ha, hb, casillas, tendida: false };
+  }).filter(Boolean);
+  function tenderEn(s) { s.tendida = true; for (const c of s.casillas) cuerdas.set(c.x + ',' + c.y, c.h); }
+  for (const s of sogas) if (sogasTendidas.has(s.a.join(','))) tenderEn(s);
+
   const coleccionables = (mapa.objetos || []).filter(o => o.tipo === 'coleccionable').map(o => ({
     id: o.id, x: o.x + 0.5, y: o.y + 0.5,
     zBase: alturaCelda(celdas[o.y][o.x]),
@@ -85,14 +133,14 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
   }));
 
   const m = {
-    cols, rows, celdas, empujables, coleccionables, enlaces,
+    cols, rows, celdas, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], eventos: [], t: 0, velo: 0,
     jugador: {
       x: mapa.inicio[0], y: mapa.inicio[1], z: 0, vz: 0,
       enSuelo: true, coyote: 0, buffer: 0, planeo: false,
       fx: 0, fy: 1, camina: false, paso: 0,
       personaje: 'pegaso', embiste: null, embCool: 0,
-      empuje: { e: null, t: 0 }, pistaCool: 0,
+      empuje: { e: null, t: 0 }, pistaCool: 0, tap: false, poderT: 0, brillo: 0, ecoCool: 0,
       seguro: { x: mapa.inicio[0], y: mapa.inicio[1], z: 0 },
       estado: 'jugando', estadoT: 0,
     },
@@ -107,6 +155,12 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
       muros: [...rotos],
       rejas: enlaces.filter(l => l.abierto).map(l => l.abre.join(',')),
       empujables: empuj,
+      braseros: braseros.filter(b => b.encendido).map(b => b.x + ',' + b.y),
+      soles: soles.filter(s => s.abierto).map(s => s.abre.join(',')),
+      fuentes: fuentes.filter(f => f.modo === 'golpe' && f.activa).map(f => f.tx + ',' + f.ty),
+      puertas: puertasSonido.filter(p => p.abierta).map(p => p.x + ',' + p.y),
+      eco: m.eco,
+      sogas: sogas.filter(s => s.tendida).map(s => s.a.join(',')),
     };
   }
 
@@ -117,6 +171,8 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
 
   function alturaTile(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return ALTURA_PARED;
+    const hc = cuerdas.get(tx + ',' + ty);
+    if (hc !== undefined) return hc;
     const h = alturaCelda(celdas[ty][tx]);
     if (h <= ABISMO) return ABISMO;
     const e = empujableEn(tx, ty);
@@ -126,9 +182,14 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
   function suelo(x, y) { return alturaTile(Math.floor(x), Math.floor(y)); }
 
   function libre(x, y, z) {
+    // Sobre una soga se camina por su carril: se mide solo el centro y se tolera un desnivel de escala.
+    const hc = cuerdas.get(Math.floor(x) + ',' + Math.floor(y));
+    if (hc !== undefined) return hc <= z + TOL_SOGA;
     for (const cx of [x - MEDIO, x + MEDIO])
-      for (const cy of [y - MEDIO, y + MEDIO])
-        if (alturaTile(Math.floor(cx), Math.floor(cy)) > z + PASO) return false;
+      for (const cy of [y - MEDIO, y + MEDIO]) {
+        const tx = Math.floor(cx), ty = Math.floor(cy);
+        if (alturaTile(tx, ty) > z + (cuerdas.has(tx + ',' + ty) ? TOL_SOGA : PASO)) return false;
+      }
     return true;
   }
 
@@ -150,7 +211,8 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
     const j = m.jugador;
     if (j.estado !== 'jugando' || j.personaje === id) return;
     j.personaje = id;
-    j.embiste = null;
+    j.embiste = null; j.tap = false; j.poderT = 0;
+    for (const f of fuentes) f.oida = false;   // al volver a Eco, vuelve a escuchar lo que tiene cerca
     chispas(j.x, j.y, j.z + 0.6, '#f4ecd8', 14, 2.4);
     m.eventos.push({ tipo: 'cambio', id });
   }
@@ -182,6 +244,109 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
       const e = empujableEn(l.placa[0], l.placa[1]);
       if (e && e.t >= 1) abrirReja(l);
     }
+  }
+
+  // --- Fénix ---
+  function brillar() {
+    const j = m.jugador;
+    j.brillo = 1;
+    chispas(j.x, j.y, j.z + 0.8, '#ffd36a', 16, 2.2);
+    m.eventos.push({ tipo: 'brillo' });
+    for (const b of braseros) {
+      if (b.encendido) continue;
+      if (Math.hypot(b.x + 0.5 - j.x, b.y + 0.5 - j.y) < RADIO_BRILLO && Math.abs(j.z - b.zBase) < 1.5) {
+        b.encendido = true;
+        chispas(b.x + 0.5, b.y + 0.5, b.zBase + 0.6, '#ff9a3c', 22, 2.4);
+        m.eventos.push({ tipo: 'brasero' });
+      }
+    }
+  }
+
+  // --- Eco ---
+  function escuchar() {
+    const j = m.jugador;
+    for (const f of fuentes) {
+      const cerca = f.activa && Math.hypot(f.x - j.x, f.y - j.y) < RADIO_OIDO;
+      if (cerca && !f.oida && m.eco !== f.sonido) {
+        m.eco = f.sonido;
+        m.ondas.push({ x: j.x, y: j.y, z: j.z, color: sonidos[f.sonido].color, t: 0, dur: 0.6, alcance: 1.6 });
+        m.eventos.push({ tipo: 'escucha', id: f.sonido });
+      }
+      f.oida = cerca;
+    }
+  }
+  function repetir() {
+    const j = m.jugador;
+    if (!m.eco) {
+      if (j.pistaCool <= 0) { j.pistaCool = 6; m.eventos.push({ tipo: 'pista', texto: 'Eco todavía no escuchó ningún sonido. Acercate a algo que suene.' }); }
+      return;
+    }
+    if (j.ecoCool > 0) return;
+    j.ecoCool = 0.8;
+    m.ondas.push({ x: j.x, y: j.y, z: j.z, color: sonidos[m.eco].color, t: 0, dur: 0.9, alcance: ALCANCE_ECO });
+    m.eventos.push({ tipo: 'eco', id: m.eco });
+    for (const p of puertasSonido) {
+      if (p.abierta || p.sonido !== m.eco) continue;
+      if (Math.hypot(p.x + 0.5 - j.x, p.y + 0.5 - j.y) <= ALCANCE_ECO) {
+        p.abierta = true; celdas[p.y][p.x] = '.';
+        chispas(p.x + 0.5, p.y + 0.5, 0.8, sonidos[p.sonido].color, 24, 2.6);
+        m.eventos.push({ tipo: 'puerta' });
+      }
+    }
+  }
+  function actualizarFuentes(dt) {
+    const j = m.jugador;
+    for (const f of fuentes) {
+      // Golpear una fuente: un címbalo suena para siempre una vez que lo golpea quien corresponde
+      if (!f.activa && f.modo === 'golpe' && j.estado === 'jugando') {
+        const d = Math.hypot(f.x - j.x, f.y - j.y);
+        const golpe = f.golpea === 'pegaso' ? (j.personaje === 'pegaso' && d < 0.8 && Math.abs(j.z - f.zBase) < 1)
+          : f.golpea === 'minotauro' ? (j.personaje === 'minotauro' && !!j.embiste && d < 1.3) : false;
+        if (golpe) {
+          f.activa = true;
+          chispas(f.x, f.y, f.zBase + 0.6, sonidos[f.sonido].color, 22, 2.6);
+          m.eventos.push({ tipo: 'golpe', id: f.sonido });
+        }
+      }
+      // Latido de las fuentes que suenan, para quien esté cerca (solo se oye; se ve siempre)
+      if (f.activa) {
+        const fase = Math.floor(m.t / 2.6);
+        if (fase !== f.fase) { f.fase = fase; if (Math.hypot(f.x - j.x, f.y - j.y) < 7) m.eventos.push({ tipo: 'resuena', id: f.sonido }); }
+      }
+    }
+  }
+  function actualizarMecanismos(dt) {
+    for (const s of soles) {
+      if (s.abierto || !s.braseros.length || !s.braseros.every(b => b.encendido)) continue;
+      s.abierto = true; celdas[s.abre[1]][s.abre[0]] = '.';
+      chispas(s.abre[0] + 0.5, s.abre[1] + 0.5, 0.8, '#ffd36a', 26, 2.8);
+      m.eventos.push({ tipo: 'sol' });
+    }
+    for (const o of m.ondas) o.t += dt;
+    m.ondas = m.ondas.filter(o => o.t < o.dur);
+    m.jugador.brillo = Math.max(0, m.jugador.brillo - dt / 0.9);
+    m.jugador.ecoCool = Math.max(0, m.jugador.ecoCool - dt);
+    actualizarFuentes(dt);
+  }
+
+  // --- Ariadna ---
+  function tender() {
+    const j = m.jugador;
+    let mejor = null, dm = RADIO_ARGOLLA;
+    for (const s of sogas) {
+      if (s.tendida) continue;
+      for (const [p, h] of [[s.a, s.ha], [s.b, s.hb]]) {
+        const d = Math.hypot(p[0] + 0.5 - j.x, p[1] + 0.5 - j.y);
+        if (d < dm && Math.abs(j.z - h) < 1) { dm = d; mejor = s; }
+      }
+    }
+    if (!mejor) {
+      if (j.pistaCool <= 0) { j.pistaCool = 6; m.eventos.push({ tipo: 'pista', texto: 'Ariadna tiende la soga parada junto a una argolla de bronce.' }); }
+      return;
+    }
+    tenderEn(mejor);
+    for (const c of mejor.casillas) chispas(c.x + 0.5, c.y + 0.5, c.h + 0.4, '#b5482e', 6, 1.6);
+    m.eventos.push({ tipo: 'soga' });
   }
 
   function actualizarParticulas(dt) {
@@ -235,6 +400,7 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
     const saltoPulsado = entrada.saltoPulsado, poderPulsado = entrada.poderPulsado;
     entrada.saltoPulsado = false; entrada.poderPulsado = false;
     actualizarEmpujables(dt);
+    actualizarMecanismos(dt);
     actualizarParticulas(dt);
 
     if (j.estado === 'volviendo') {
@@ -262,7 +428,7 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
       vx = em.dx * VEL_EMBESTIDA; vy = em.dy * VEL_EMBESTIDA;
       const sx = j.x + em.dx * (MEDIO + 0.2), sy = j.y + em.dy * (MEDIO + 0.2);
       const tx = Math.floor(sx), ty = Math.floor(sy);
-      if (celdas[ty] && celdas[ty][tx] === 'M' && j.z < 0.5) romperMuro(tx, ty);
+      if (celdas[ty] && celdas[ty][tx] === 'M' && j.z - suelo(j.x, j.y) < 0.5) romperMuro(tx, ty);
       em.t -= dt;
       if (em.t <= 0) j.embiste = null;
     }
@@ -298,8 +464,18 @@ export function crearMundo(mapa, recogidos, guardado = {}) {
       m.eventos.push({ tipo: 'pista', texto: 'Pesa muchísimo. Quizás alguien más fuerte pueda moverlo.' });
     }
 
+    // Poderes de toque: Fénix (tocar brilla, mantener vuela), Eco (repetir) y Ariadna (tender)
+    if (control && j.personaje === 'fenix') {
+      if (poderPulsado) { j.tap = true; j.poderT = 0; }
+      if (entrada.poderMantenido) { j.poderT += dt; if (j.poderT > TAP_MAX) j.tap = false; }
+      else { if (j.tap) brillar(); j.tap = false; j.poderT = 0; }
+    } else { j.tap = false; j.poderT = 0; }
+    if (control && j.personaje === 'eco') { escuchar(); if (poderPulsado) repetir(); }
+    if (control && j.personaje === 'ariadna' && poderPulsado) tender();
+
     // Vertical: salto, vuelo, caída
-    const vuela = control && j.personaje === 'pegaso' && entrada.poderMantenido;
+    const vuela = control && entrada.poderMantenido &&
+      (j.personaje === 'pegaso' || (j.personaje === 'fenix' && j.poderT > TAP_MAX));
     const g0 = suelo(j.x, j.y);
     if (j.enSuelo) {
       if (g0 < j.z - 0.02) { j.enSuelo = false; j.coyote = COYOTE; }

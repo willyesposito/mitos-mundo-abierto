@@ -3,6 +3,7 @@ import { crearMundo, TW, TH, LH } from './mundo.js';
 import { crearDibujo } from './dibujo.js';
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
+import { crearSonido } from './sonido.js';
 import { actualizarPerfil, registrarObjeto, guardarMundo } from './nucleo.js';
 
 const $ = id => document.getElementById(id);
@@ -18,6 +19,8 @@ async function arrancar() {
   dibujo.usarPersonajes(personajes);
   const ui = crearInterfaz({ personajes, catalogo, mapa });
 
+  const sonido = crearSonido(mapa.sonidos);
+  for (const t of ['pointerdown', 'keydown']) document.addEventListener(t, sonido.despertar, { capture: true });
   let mundo = null, perfil = null, corriendo = false, ultimo = 0;
   const vista = { W: 0, H: 0, dpr: 1, esc: 1, camX: 0, camY: 0, focoY: 0 };
 
@@ -30,6 +33,7 @@ async function arrancar() {
       elegirPersonaje(personajes[k].id);
     },
     alMenu() { if (!mundo) return; ui.menuAbierto() ? ui.cerrarMenu() : abrirMenu(); },
+    alFicha() { if (!mundo) return; ui.fichaAbierta() ? ui.cerrarMenu() : (ui.menuAbierto() || (corriendo = false, entrada.x = entrada.y = 0, ui.abrirFicha())); },
   });
 
   function elegirPersonaje(id) {
@@ -40,19 +44,21 @@ async function arrancar() {
 
   function abrirMenu() { corriendo = false; ui.abrirMenu(perfil.objetos); }
   ui.alCerrarMenu = () => { if (mundo) reanudar(); };
+  ui.alAbrirFicha = () => { corriendo = false; entrada.x = entrada.y = 0; entrada.poderMantenido = false; };
   ui.alCambiarPerfil = () => { corriendo = false; mundo = null; entrada.x = entrada.y = 0; ui.mostrarPerfiles(iniciar); };
 
   function iniciar(p) {
     perfil = p;
     mundo = crearMundo(mapa, perfil.objetos, (perfil.mundos || {})[mapa.id]);
     mundo.jugador.personaje = personajes.some(x => x.id === perfil.personaje) ? perfil.personaje : 'pegaso';
+    ui.sonidoEco(mundo.eco);
     ui.marcarPersonaje(mundo.jugador.personaje);
     ui.contadores(perfil.objetos);
     ui.pistaCambio(!perfil.vistoCambio);
     ui.recogidosMenu = perfil.objetos;
     ajustar(); centrarCamara(true);
     reanudar();
-    if (new URLSearchParams(location.search).has('prueba')) window.__mundo = mundo;
+    if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sonidos = sonido.registro; }
   }
 
   function reanudar() { if (corriendo || !mundo) return; corriendo = true; ultimo = performance.now(); requestAnimationFrame(bucle); }
@@ -60,7 +66,7 @@ async function arrancar() {
   function procesarEventos() {
     let cambioMundo = false;
     for (const e of mundo.eventos.splice(0)) {
-      if (e.tipo === 'muro' || e.tipo === 'reja' || e.tipo === 'empuje') cambioMundo = true;
+      if (['muro', 'reja', 'empuje', 'brasero', 'sol', 'golpe', 'puerta', 'escucha', 'soga'].includes(e.tipo)) cambioMundo = true;
       if (e.tipo === 'objeto') {
         registrarObjeto(perfil, e.id);
         ui.contadores(perfil.objetos); ui.pulsarContadores(); ui.avisoObjeto(e.id);
@@ -68,7 +74,16 @@ async function arrancar() {
         ui.marcarPersonaje(e.id);
         actualizarPerfil(perfil, { personaje: e.id, vistoCambio: true });
         ui.pistaCambio(false);
-      } else if (e.tipo === 'reja') ui.aviso('¡Se abrió una reja!', '', 2600);
+      } else if (e.tipo === 'reja') { ui.aviso('¡Se abrió una reja!', '', 2600); sonido.tocar('abre'); }
+      else if (e.tipo === 'brillo') sonido.tocar('brillo');
+      else if (e.tipo === 'brasero') { ui.aviso('¡Se encendió un brasero!', '', 2200); sonido.tocar('brasero'); }
+      else if (e.tipo === 'sol') { ui.aviso('¡Se abrió la puerta del sol!', '', 2800); sonido.tocar('abre'); }
+      else if (e.tipo === 'escucha') { ui.sonidoEco(e.id); ui.aviso(`Eco escuchó: ${ui.nombreSonido(e.id)}`, 'Solo guarda el último sonido que escucha.', 2800); sonido.tocar('escucha', e.id); }
+      else if (e.tipo === 'eco') sonido.tocar('eco', e.id);
+      else if (e.tipo === 'golpe') { ui.aviso(`¡Sonó: ${ui.nombreSonido(e.id)}!`, 'Va a seguir vibrando.', 3000); sonido.tocar('golpe', e.id); }
+      else if (e.tipo === 'resuena') sonido.tocar('resuena', e.id);
+      else if (e.tipo === 'puerta') { ui.aviso('¡Se abrió una puerta!', '', 2600); sonido.tocar('abre'); }
+      else if (e.tipo === 'soga') { ui.aviso('¡Se tendió una soga!', 'Queda para siempre y la usan todos.', 3000); sonido.tocar('soga'); }
       else if (e.tipo === 'pista') ui.aviso(e.texto, '', 3600);
     }
     if (cambioMundo) guardarMundo(perfil, mapa.id, mundo.estado());
