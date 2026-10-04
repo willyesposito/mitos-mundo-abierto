@@ -1,15 +1,10 @@
 # Memoria — Mitos: mundo abierto
 
-Leer al inicio de cada sesión. `CLAUDE.md` define el proyecto; acá va lo aprendido. Ante cualquier corrección de Willy sobre formato, criterio o reglas, anotar la norma antes de cerrar.
+Leer al inicio de cada sesión. `CLAUDE.md` define el proyecto; acá va lo aprendido. Las decisiones tomadas van en `DECISIONS.md`, el estado de las sesiones en `ROADMAP.md`.
 
-## Decisiones de arranque (2026-10)
+Ante cualquier corrección de Willy sobre formato, criterio o reglas, anotar la norma antes de cerrar, con el porqué en la misma línea: sin el porqué, la próxima sesión no sabe cuándo aplicarla ni cuándo no. Una norma que cambia se corrige en su línea; no se agrega otra al lado.
 
-- Repo propio, separado de Mundo de Mitos, para no heredar sus reglas (hub, estados de publicación, versión del service worker).
-- Todo dibujado por código, sin imágenes. Cambiarlo a spritesheet después es barato.
-- Varios perfiles locales (hasta 5), con clave de guardado propia.
-- Título provisorio "Mitos: mundo abierto". Vive en `index.html`, `manifest.webmanifest`, `interfaz.js` (pantalla de perfiles) y `README.md`.
-- La primera sesión construyó un **campo de pruebas** antes del puerto, la plaza y el palacio, para validar movimiento, salto, vuelo, empujar, embestir, coleccionables y guardado en un solo lugar.
-- El catálogo de coleccionables es de marcador ("Objeto de prueba N"). El real lo define Chat.
+Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, título provisorio, campo de pruebas) pasaron a `DECISIONS.md`, D9 a D13. El catálogo de marcador se reemplazó por el real.
 
 ## Reglas aprendidas de diseño y técnica
 
@@ -32,3 +27,8 @@ Leer al inicio de cada sesión. `CLAUDE.md` define el proyecto; acá va lo apren
 - **Fuente que se activa al llegar volando:** `golpea: "volar"` en una fuente `golpe` (vale Pegaso o Fénix en vuelo). Queda vibrando y se guarda.
 - **Pared `b` (parapeto bajo) bloquea como pared pero se dibuja baja:** sirve de pantalla delante de una puerta sin taparla. Los desafíos de a dos se verifican con cada personaje solo, en orden que no gaste el paso propio (Fénix y Ariadna al final).
 - **Muro agrietado sobre una terraza:** al romperse queda a ras de suelo, así que lo que está detrás debe estar a nivel 0.
+- **`probar.js` tarda varios minutos.** Con un límite de 120 s se cortó a mitad ("Target page, context or browser has been closed"); sin límite dio 142 chequeos OK y ninguna falla (observado el 2026-10-03). No correrlo con un límite de tiempo corto.
+
+## Proceso
+
+- **El subagente no ve la conversación.** Un encargo incompleto produce trabajo equivocado: cada encargo trae los archivos a tocar, las reglas que aplican, las decisiones ya tomadas, qué queda fuera y el criterio de terminado.
