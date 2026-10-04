@@ -27,7 +27,7 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Descartado:** Eco solo visual.
 
 ### D4. Soga de Ariadna: hasta 5 casillas, en línea recta, entre argollas
-- **Estado:** vigente sin confirmar (así está en `CLAUDE.md` y en el código)
+- **Estado:** tomada (confirmada por Willy el 2026-10-04)
 - **Decisión:** la soga solo se tiende entre argollas puestas en el mapa, en línea recta y hasta 5 casillas.
 - **Por qué:** era la opción recomendada en el plan; la restricción a argollas evita que la soga se tienda en cualquier lugar.
 - **Descartado:** soga libre en cualquier punto.
@@ -131,9 +131,9 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 
 ### D21. Un solo mundo continuo
 - **Estado:** tomada
-- **Decisión:** puerto, plaza y palacio pasan a ser zonas de un mismo mapa continuo, sin pasos ni cambios de pantalla entre ellas. Reemplaza a D7.
+- **Decisión:** puerto, plaza y palacio pasan a ser zonas de un mismo mapa continuo, sin pasos ni cambios de pantalla entre ellas, de sur a norte como se conectan hoy. El progreso ya guardado de cada mapa (muros, rejas, empujables, braseros, sogas, sonidos) se traslada al mapa unido: nada de lo abierto vuelve a cerrarse. Reemplaza a D7.
 - **Por qué:** la idea del juego es un mundo abierto; los mapas separados lo cortaban.
-- **Descartado:** mapas separados con paso entre ellos (D7).
+- **Descartado:** mapas separados con paso entre ellos (D7); reiniciar los mecanismos al unir, porque choca con "nada se cierra".
 
 ### D22. Cuatro direcciones por personaje
 - **Estado:** tomada (resuelta por Willy en otro chat)

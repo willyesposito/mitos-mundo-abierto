@@ -18,7 +18,7 @@ Se cierra con el criterio de terminado de `CLAUDE.md`.
 - [x] **S5 Fichas y catálogo**: construida. Decisiones: D5, D6.
 - [x] **S6 Puerto y plaza**: construida. Decisión: D7.
 - [x] **S7 Palacio en terrazas**: construida. Sin decisión nueva. Falta probarla en el celular.
-- [ ] **S7b Un solo mundo**: pendiente. Decisión: D21. Falta decidir qué pasa con el progreso ya guardado.
+- [ ] **S7b Un solo mundo**: pendiente. Decisión: D21 (el progreso guardado se traslada).
 - [ ] **S8 Cierre de etapa**: pendiente. Decisión: D8 (esconder el campo de pruebas).
 
 Siguiente: S7b.
@@ -38,7 +38,6 @@ Plan en `plan-arte.md`. Decisiones: D16 a D20 y D22. Orden de inicio a definir p
 ## Abierto
 
 - Validar S1 a S6 en el celular con la jugadora, siguiendo la lista de observación del final de `plan-etapa-1.md`.
-- Confirmar D4: está vigente en el código pero sin confirmación de Willy registrada.
 
 ## Fuera de la etapa 1
 
