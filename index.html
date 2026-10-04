@@ -17,8 +17,12 @@
   <div id="contadores">
     <div class="chip"><span class="chip-icono" data-icono="espiral"></span><span id="zona-nombre"></span> <b id="zona-n">0/0</b></div>
     <div class="chip"><span class="chip-icono" data-icono="objeto"></span>Total <b id="total-n">0/0</b></div>
+    <div class="chip" id="chip-eco" hidden><span class="chip-icono" id="eco-simbolo"></span><span id="eco-texto"></span></div>
   </div>
-  <button id="btn-menu" class="boton-redondo" aria-label="Menú"></button>
+  <div id="botones-hud">
+    <button id="btn-menu" class="boton-redondo" aria-label="Menú"></button>
+    <button id="btn-ficha" class="boton-redondo" aria-label="Ver la ficha del personaje"></button>
+  </div>
 </div>
 
 <div id="aviso" role="status" aria-live="polite" hidden></div>
@@ -51,12 +55,29 @@
   </div>
 </section>
 
+<section id="pantalla-ficha" class="pantalla" hidden>
+  <div class="tarjeta ficha" role="dialog" aria-labelledby="ficha-nombre">
+    <button id="ficha-cerrar" class="boton-redondo cerrar" aria-label="Cerrar la ficha">&times;</button>
+    <canvas id="ficha-retrato" width="168" height="168" aria-hidden="true"></canvas>
+    <h2 id="ficha-nombre"></h2>
+    <p id="ficha-texto"></p>
+    <h3 id="ficha-poder-titulo"></h3>
+    <div id="ficha-poder"></div>
+    <p id="ficha-senal"></p>
+    <div class="fila-ficha">
+      <button id="ficha-anterior" class="boton-grande claro">Anterior</button>
+      <button id="ficha-siguiente" class="boton-grande claro">Siguiente</button>
+    </div>
+  </div>
+</section>
+
 <section id="pantalla-menu" class="pantalla" hidden>
   <div class="tarjeta">
     <h2 id="menu-titulo">Pausa</h2>
     <div id="menu-principal">
       <button id="menu-seguir" class="boton-grande">Seguir jugando</button>
       <button id="menu-objetos" class="boton-grande claro">Mis objetos</button>
+      <button id="menu-pruebas" class="boton-grande claro">Campo de pruebas</button>
       <button id="menu-perfiles" class="boton-grande claro">Cambiar de perfil</button>
     </div>
     <div id="menu-lista" hidden>

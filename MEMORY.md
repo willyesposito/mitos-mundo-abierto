@@ -20,3 +20,11 @@ Leer al inicio de cada sesión. `CLAUDE.md` define el proyecto; acá va lo apren
 - **El mundo se guarda por perfil y por mapa** en `perfil.mundos[idMapa]`, con una clave por mecanismo (`muros`, `rejas`, `empujables`). Los empujables se identifican por su casilla original del mapa, así que mover un `B` o `V` en el JSON de un mapa ya jugado deja huérfano su guardado. Un poder nuevo con estado (braseros, sogas, sonidos) suma su propia clave en `estado()` de `mundo.js` y su evento en `procesarEventos`.
 - Al restaurar, una reja guardada como abierta se abre sin evento: si no, al volver aparecería otra vez el aviso.
 - Para probar toques reales con dos dedos usar CDP: en `touchEnd`, `touchPoints` son los puntos que se sueltan, no los que quedan.
+- **Poderes de toque y mantenido (Fénix):** un toque corto (menos de 0,2 s) brilla y mantener vuela; se decide al soltar, y el toque dentro de un mismo cuadro cuenta.
+- **Sogas:** el carril de una soga se camina midiendo solo el centro, con tolerancia de desnivel; la escala necesita al menos 2 casillas entre argollas (cada paso sube menos de 0,55).
+- **Un muro agrietado se rompe estando en el piso de su casilla vecina**, no solo a ras de suelo: sirve en terrazas.
+- **Eco escucha al entrar en alcance** (no mientras está cerca), así guarda lo último que oyó; al cambiar a Eco se reinicia.
+- **El pseudoelemento `::after` de `.tarjeta` tapa botones**: en tarjetas con botones abajo ocultarlo.
+- **Catálogo real con `"ubicado": false`** no cuenta en contadores hasta que esté puesto en un mapa.
+- **Varios mapas:** el perfil guarda `mapa`, `llegada` (dónde aparece al recargar) y `eco` (el sonido de Eco viaja entre mapas). Todos los mapas deben declarar los mismos `sonidos`, o el sonido guardado se pierde al cruzar. El campo de pruebas no se guarda como mapa actual: recargar desde ahí vuelve a la partida.
+- Recintos con pared de 3 no se sobrevuelan (vuelo máx. 2,9): sirven para que un desafío sea exclusivo de su personaje.

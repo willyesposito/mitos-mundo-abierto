@@ -26,7 +26,7 @@ export function crearPerfil(nombre) {
   if (!nombre || datos.perfiles.length >= MAX_PERFILES) return null;
   const p = {
     id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-    nombre, objetos: {}, mundos: {}, personaje: 'pegaso', vistoCambio: false,
+    nombre, objetos: {}, mundos: {}, personaje: 'pegaso', vistoCambio: false, mapa: 'puerto', llegada: null, eco: null,
   };
   datos.perfiles.push(p);
   guardar();

@@ -1,5 +1,5 @@
 // Joystick táctil, botones y teclado. Todo termina en un único objeto `entrada`.
-export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, alCambiar, alMenu }) {
+export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, alCambiar, alMenu, alFicha }) {
   const entrada = { x: 0, y: 0, saltoPulsado: false, poderPulsado: false, poderMantenido: false };
 
   // --- Joystick ---
@@ -60,6 +60,7 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
     else if (/^Digit[1-5]$/.test(ev.code)) alCambiar(Number(ev.code.slice(5)) - 1);
     else if (ev.code === 'KeyC') alCambiar(-1);
     else if (ev.code === 'Escape') alMenu();
+    else if (ev.code === 'KeyI' && alFicha) alFicha();
     else { teclas.add(ev.code); recalcular(); if (ev.code.startsWith('Arrow')) ev.preventDefault(); }
   });
   addEventListener('keyup', ev => {
