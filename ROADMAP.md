@@ -4,7 +4,7 @@ Estado de las sesiones. El contenido de cada una (fichas, catálogo, desafíos) 
 
 Estados: **pendiente**, **construida** (`probar.js` pasa) y **validada** (la jugadora lo usó en el celular). Solo Willy marca "validada".
 
-Última verificación: 2026-10-04, `probar.js` con 173 chequeos OK y ninguna falla.
+Última verificación: 2026-10-04, `probar.js` con 186 chequeos OK y ninguna falla.
 
 ## Etapa 1: primer mapa completo (puerto, plaza, palacio)
 
@@ -30,7 +30,7 @@ Plan en `plan-arte.md`. Decisiones: D16 a D19. Orden de inicio a definir por Wil
 - [x] **A1 Dirección de arte**: construida y aprobada por Willy. Decisión: D17. Resultado en `plan-arte.md`.
 - [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y direcciones. Cuatro direcciones (D20); los diseños salen del chat de diseño de Willy.
 - [ ] **A3 Movimiento y poderes**: pendiente.
-- [ ] **A4 Interfaz**: en curso. Maqueta en el lienzo de Design "Mitos: interfaz" (privado de Willy), esperando aprobación antes de programar.
+- [x] **A4 Interfaz**: construida. Maqueta aprobada en el lienzo de Design "Mitos: interfaz" (privado de Willy). Íconos en tres tonos, tira con insignia de rasgo, aviso con medallón, pista con velo y ficha nueva. Falta que la jugadora lo pruebe en el celular.
 - [ ] **A5 Escenario y mecanismos**: pendiente.
 - [ ] **A6 Coleccionables y ambiente**: pendiente.
 
