@@ -26,7 +26,7 @@ export function crearPerfil(nombre) {
   if (!nombre || datos.perfiles.length >= MAX_PERFILES) return null;
   const p = {
     id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-    nombre, objetos: {}, personaje: 'pegaso', vistoCambio: false,
+    nombre, objetos: {}, mundos: {}, personaje: 'pegaso', vistoCambio: false,
   };
   datos.perfiles.push(p);
   guardar();
@@ -43,6 +43,13 @@ export function registrarObjeto(perfil, id) {
   perfil.objetos[id] = true;   // un objeto encontrado queda para siempre
   guardar();
   return true;
+}
+
+// Estado de un mapa (muros rotos, rejas abiertas, objetos movidos), por perfil y por mapa.
+export function guardarMundo(perfil, mapaId, estado) {
+  if (!perfil.mundos) perfil.mundos = {};
+  perfil.mundos[mapaId] = estado;
+  guardar();
 }
 
 export function actualizarPerfil(perfil, cambios) {

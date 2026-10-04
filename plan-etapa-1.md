@@ -119,7 +119,7 @@ Cada desafío usa un par distinto y entre los tres aparecen los cinco personajes
 
 ## Catálogo de coleccionables
 
-Siete en total. Todo lo que dicen es arqueología o testimonio antiguo verificable; donde los estudiosos no están de acuerdo, el texto lo dice.
+Siete en total, aprobado. Todo lo que dicen es arqueología o testimonio antiguo verificable; donde los estudiosos no están de acuerdo, el texto lo dice.
 
 | id | Zona | Desafío | Nombre | Texto |
 |---|---|---|---|---|
@@ -137,15 +137,15 @@ Zonas para `coleccionables.json`: `puerto` (Puerto), `plaza` (Plaza central), `p
 
 Cada sesión termina cuando `node herramientas/probar.js` pasa **y** Willy lo probó en el celular. La sesión 0 no es de Code.
 
-### Sesión 0: prueba con la jugadora (sin Code)
+### Sesión 0: prueba con la jugadora (sin Code) · hecha
 - **Alcance:** jugar el campo de pruebas actual en un celular real.
 - **Terminado:** observaciones anotadas fuera del repo (ver lista al final).
 - **Decisión previa:** ninguna.
 
-### Sesión 1: el mundo se guarda
+### Sesión 1: el mundo se guarda · falta probar en el celular
 - **Alcance:** guardar por perfil y por mapa los muros rotos, las rejas abiertas y la posición de bloques y vasijas. Formato pensado para sumar braseros, sogas y sonidos sin migrar de nuevo. Más los arreglos puntuales que salgan de la sesión 0, si son chicos.
 - **Terminado:** en `probar.js`, romper un muro, abrir una reja, mover un bloque, recargar: todo sigue igual. En el celular, lo mismo cerrando y abriendo la app.
-- **Decisión previa:** si los perfiles guardados hoy se pueden borrar (son de prueba) o hay que conservarlos.
+- **Decisión previa:** resuelta, los perfiles de prueba se pueden borrar. Igual no hizo falta: los perfiles viejos cargan con el mundo intacto.
 
 ### Sesión 2: poder de Fénix
 - **Alcance:** braseros (apagado y encendido, permanente), puertas del sol enlazadas a uno o varios braseros, en el campo de pruebas.
@@ -197,10 +197,10 @@ Cada sesión termina cuando `node herramientas/probar.js` pasa **y** Willy lo pr
 
 - **D1. Alcance de la etapa:** primer mapa con los cinco poderes; laberinto y cueva a la etapa 2. Recomendado: sí.
 - **D2. ¿Fénix vuela o planea?** Recomendado: no, para que subir siga siendo de Pegaso. Riesgo: que la jugadora diga "es un pájaro".
-- **D3. Eco con audio o solo visual.** Recomendado: visual obligatorio, audio sintetizado como extra. Decidir según si juega con sonido (sesión 0).
+- **D3. Eco con audio o solo visual.** Resuelta: con sonido (audio sintetizado). La señal visual se mantiene, premisa 4.
 - **D4. Distancia de la soga de Ariadna.** Recomendado: hasta 5 casillas, en línea recta, solo entre argollas.
 - **D5. Cómo termina la ficha del Minotauro.** Opciones: "Teseo lo venció" (recomendado: la esencia está y no hay detalle), "Asterión no volvió a salir" (más velado), o cortar en el encierro.
-- **D6. ¿Hace falta explicar por qué el Minotauro anda libre?** Recomendado: no poner nada y ver si ella pregunta.
+- **D6. ¿Hace falta explicar por qué el Minotauro anda libre?** Resuelta: no. En la prueba no preguntó.
 - **D7. Mapa continuo o zonas separadas con paso entre ellas.** Recomendado: zonas separadas, más simple de construir y de probar.
 - **D8. Campo de pruebas.** Recomendado: accesible desde el menú durante la etapa 1, retirado al cerrarla.
 

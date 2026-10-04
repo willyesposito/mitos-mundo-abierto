@@ -17,4 +17,6 @@ Leer al inicio de cada sesión. `CLAUDE.md` define el proyecto; acá va lo apren
 - **Empujar solo sobre baldosas `,`**, con anillo de suelo común alrededor de cada zona de baldosas: así un bloque nunca queda trabado en una esquina sin salida.
 - **Los saltos no alcanzan una terraza completa** (apex 0.71 niveles): subir a terrazas y techos es del vuelo. Las paredes miden 3 y el vuelo llega a 2.9, así que ningún poder las salta.
 - Playwright vive fuera del repo (`/opt/node22/lib/node_modules/playwright`); `herramientas/probar.js` ya busca esa ruta.
+- **El mundo se guarda por perfil y por mapa** en `perfil.mundos[idMapa]`, con una clave por mecanismo (`muros`, `rejas`, `empujables`). Los empujables se identifican por su casilla original del mapa, así que mover un `B` o `V` en el JSON de un mapa ya jugado deja huérfano su guardado. Un poder nuevo con estado (braseros, sogas, sonidos) suma su propia clave en `estado()` de `mundo.js` y su evento en `procesarEventos`.
+- Al restaurar, una reja guardada como abierta se abre sin evento: si no, al volver aparecería otra vez el aviso.
 - Para probar toques reales con dos dedos usar CDP: en `touchEnd`, `touchPoints` son los puntos que se sueltan, no los que quedan.
