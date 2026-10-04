@@ -42,3 +42,4 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 
 - **Los personajes se diseñan fuera de Code**, en otro chat de Willy. Code no los diseña ni los redibuja: en maquetas van como lugar marcado. Por qué: Willy lo pidió al arrancar el plan de arte (2026-10-04). Excepción: cuando Willy pide diseñar acá, en el lienzo de Design, y aprueba ahí; así se hicieron las alas de Pegaso y Fénix.
 - **El subagente no ve la conversación.** Un encargo incompleto produce trabajo equivocado: cada encargo trae los archivos a tocar, las reglas que aplican, las decisiones ya tomadas, qué queda fuera y el criterio de terminado.
+- **La corrida completa de `probar.js` es para cerrar etapas; por cambio va `--rapido` (D26).** Por qué: Willy pidió acortar la verificación el 2026-10-04 después de ver que cada delegación corría dos veces los 10 minutos. Si Willy vuelve a quejarse del tiempo o del contexto, avisarle el gasto en una línea.
