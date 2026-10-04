@@ -203,6 +203,14 @@ async function main() {
   s = await est();
   ok(s.recogidos.length === 3 && (await page.textContent('#total-n')) === '3/3', 'los objetos siguen recogidos y no reaparecen');
   ok(s.pj === 'minotauro', 'recuerda el último personaje elegido');
+  // El mundo queda como lo dejó: nada se cierra ni se arma de nuevo
+  ok((await celda(11, 5)) === '.', 'tras recargar, el muro sigue roto');
+  ok((await abiertas())[0] === true && (await celda(15, 13)) === '.', 'tras recargar, la reja sigue abierta');
+  b = [await bloque()];
+  ok(b[0][0] === 16 && b[0][1] === 16, `tras recargar, el bloque sigue sobre la placa (${b[0]})`);
+  const vas = await page.evaluate(() => window.__mundo.empujables.filter(e => e.tipo === 'vasija').map(e => e.tx + ',' + e.ty).sort().join(' '));
+  ok(vas === '13,15 17,15', `las vasijas que no se movieron siguen en su lugar (${vas})`);
+  ok(!(await page.isVisible('#aviso')), 'al volver no aparece de nuevo el aviso de la reja');
   await foto('15-recargado');
 
   // 10. Varios perfiles
@@ -210,6 +218,12 @@ async function main() {
   await page.fill('#nombre-nuevo', 'Otra'); await page.click('#form-nuevo button[type=submit]');
   await page.waitForFunction(() => window.__mundo && window.__mundo.coleccionables.every(c => !c.recogido)); await espera(200);
   ok((await page.textContent('#total-n')) === '0/3', 'un perfil nuevo arranca en 0/3 y el otro no se toca');
+  ok((await celda(11, 5)) === 'M' && (await abiertas())[0] === false, 'un perfil nuevo arranca con el muro entero y la reja cerrada');
+  b = [await bloque()];
+  ok(b[0][0] === 14 && b[0][1] === 17, `un perfil nuevo arranca con el bloque en su lugar (${b[0]})`);
+  await page.click('#btn-menu'); await page.click('#menu-perfiles');
+  await page.click('.perfil'); await page.waitForFunction(() => window.__mundo); await espera(300);
+  ok((await celda(11, 5)) === '.' && (await abiertas())[0] === true, 'el primer perfil conserva su mundo después de usar otro');
 
   // 11. Sin conexión
   await page.evaluate(() => navigator.serviceWorker.ready); await espera(500);

@@ -32,7 +32,8 @@ export function alturaCelda(c) {
   }
 }
 
-export function crearMundo(mapa, recogidos) {
+// `guardado` es el estado del mapa para este perfil (ver `estado()` abajo). Puede venir vacío.
+export function crearMundo(mapa, recogidos, guardado = {}) {
   const filas = mapa.filas;
   const rows = filas.length, cols = filas[0].length;
   const celdas = [], empujables = [];
@@ -42,6 +43,7 @@ export function crearMundo(mapa, recogidos) {
       let c = filas[y][x];
       if (c === 'B' || c === 'V') {
         empujables.push({
+          origen: x + ',' + y,   // identifica al objeto en el guardado aunque se mueva
           tipo: c === 'B' ? 'bloque' : 'vasija',
           tx: x, ty: y, ox: x, oy: y, px: x, py: y, t: 1,
           alto: c === 'B' ? 0.9 : 1.1,
@@ -52,7 +54,30 @@ export function crearMundo(mapa, recogidos) {
     }
   }
 
-  const enlaces = (mapa.enlaces || []).map(e => ({ placa: e.placa, abre: e.abre, abierto: false }));
+  // Lo que la jugadora cambió en este mapa queda como lo dejó: nada se cierra ni se arma de nuevo.
+  const rotos = new Set();
+  for (const k of guardado.muros || []) {
+    const [x, y] = k.split(',').map(Number);
+    if (celdas[y] && celdas[y][x] === 'M') { celdas[y][x] = '.'; rotos.add(k); }
+  }
+  const movidos = guardado.empujables || {};
+  const ubicar = (e, x, y) => { e.tx = e.ox = e.px = x; e.ty = e.oy = e.py = y; };
+  for (const e of empujables) {
+    const pos = movidos[e.origen];
+    const c = pos && celdas[pos[1]] && celdas[pos[1]][pos[0]];
+    if (c === ',' || c === 'p') ubicar(e, pos[0], pos[1]);
+  }
+  // Si el mapa cambió y dos quedan en la misma baldosa, el que se había movido vuelve a su lugar original
+  const movido = e => e.origen !== e.tx + ',' + e.ty;
+  let choque;
+  while ((choque = empujables.find(e => movido(e) && empujables.some(o => o !== e && o.tx === e.tx && o.ty === e.ty))))
+    ubicar(choque, ...choque.origen.split(',').map(Number));
+  const rejasAbiertas = new Set(guardado.rejas || []);
+  const enlaces = (mapa.enlaces || []).map(e => {
+    const abierto = rejasAbiertas.has(e.abre.join(','));
+    if (abierto) celdas[e.abre[1]][e.abre[0]] = '.';
+    return { placa: e.placa, abre: e.abre, abierto };
+  });
   const coleccionables = (mapa.objetos || []).filter(o => o.tipo === 'coleccionable').map(o => ({
     id: o.id, x: o.x + 0.5, y: o.y + 0.5,
     zBase: alturaCelda(celdas[o.y][o.x]),
@@ -71,8 +96,19 @@ export function crearMundo(mapa, recogidos) {
       seguro: { x: mapa.inicio[0], y: mapa.inicio[1], z: 0 },
       estado: 'jugando', estadoT: 0,
     },
-    suelo, alturaTile, actualizar, cambiarPersonaje,
+    suelo, alturaTile, actualizar, cambiarPersonaje, estado,
   };
+
+  // Estado persistente del mapa. Una clave por mecanismo: los poderes nuevos suman la suya.
+  function estado() {
+    const empuj = {};
+    for (const e of empujables) if (movido(e)) empuj[e.origen] = [e.tx, e.ty];
+    return {
+      muros: [...rotos],
+      rejas: enlaces.filter(l => l.abierto).map(l => l.abre.join(',')),
+      empujables: empuj,
+    };
+  }
 
   function empujableEn(tx, ty) {
     for (const e of empujables) if (e.tx === tx && e.ty === ty) return e;
@@ -121,6 +157,7 @@ export function crearMundo(mapa, recogidos) {
 
   function romperMuro(tx, ty) {
     celdas[ty][tx] = '.';
+    rotos.add(tx + ',' + ty);
     chispas(tx + 0.5, ty + 0.5, 0.8, '#cbb994', 26, 3.2);
     m.eventos.push({ tipo: 'muro' });
   }
@@ -170,6 +207,7 @@ export function crearMundo(mapa, recogidos) {
     if (alturaCelda(c) !== alturaCelda(celdas[e.ty][e.tx])) return false;
     e.ox = e.tx; e.oy = e.ty; e.tx = tx; e.ty = ty; e.t = 0;
     chispas(e.ox + 0.5, e.oy + 0.5, 0.1, '#cbb994', 5, 1.2);
+    m.eventos.push({ tipo: 'empuje' });
     return true;
   }
 

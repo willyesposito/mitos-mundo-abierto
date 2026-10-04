@@ -3,7 +3,7 @@ import { crearMundo, TW, TH, LH } from './mundo.js';
 import { crearDibujo } from './dibujo.js';
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
-import { actualizarPerfil, registrarObjeto } from './nucleo.js';
+import { actualizarPerfil, registrarObjeto, guardarMundo } from './nucleo.js';
 
 const $ = id => document.getElementById(id);
 const pedir = u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
@@ -44,7 +44,7 @@ async function arrancar() {
 
   function iniciar(p) {
     perfil = p;
-    mundo = crearMundo(mapa, perfil.objetos);
+    mundo = crearMundo(mapa, perfil.objetos, (perfil.mundos || {})[mapa.id]);
     mundo.jugador.personaje = personajes.some(x => x.id === perfil.personaje) ? perfil.personaje : 'pegaso';
     ui.marcarPersonaje(mundo.jugador.personaje);
     ui.contadores(perfil.objetos);
@@ -58,7 +58,9 @@ async function arrancar() {
   function reanudar() { if (corriendo || !mundo) return; corriendo = true; ultimo = performance.now(); requestAnimationFrame(bucle); }
 
   function procesarEventos() {
+    let cambioMundo = false;
     for (const e of mundo.eventos.splice(0)) {
+      if (e.tipo === 'muro' || e.tipo === 'reja' || e.tipo === 'empuje') cambioMundo = true;
       if (e.tipo === 'objeto') {
         registrarObjeto(perfil, e.id);
         ui.contadores(perfil.objetos); ui.pulsarContadores(); ui.avisoObjeto(e.id);
@@ -69,6 +71,7 @@ async function arrancar() {
       } else if (e.tipo === 'reja') ui.aviso('¡Se abrió una reja!', '', 2600);
       else if (e.tipo === 'pista') ui.aviso(e.texto, '', 3600);
     }
+    if (cambioMundo) guardarMundo(perfil, mapa.id, mundo.estado());
   }
 
   function ajustar() {

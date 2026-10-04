@@ -55,7 +55,7 @@ Código en la raíz, datos en `datos/`.
 | `dibujo.js` | Render en canvas y personajes |
 | `interfaz.js` | HUD, avisos, tira de personajes, perfiles, menú |
 | `controles.js` | Joystick, botones, teclado |
-| `nucleo.js` | Guardado local con varios perfiles (clave `mitos-mundo-abierto-v1`) |
+| `nucleo.js` | Guardado local con varios perfiles (clave `mitos-mundo-abierto-v1`): objetos y estado del mundo por mapa |
 | `iconos.js` | Íconos de interfaz |
 | `datos/personajes.json` | Elenco y poderes |
 | `datos/coleccionables.json` | Catálogo de objetos y zonas. El catálogo real lo define Chat |
