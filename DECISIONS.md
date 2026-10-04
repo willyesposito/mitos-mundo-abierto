@@ -122,5 +122,7 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Descartado:** base humana compartida para los cinco.
 
 ### D20. Cuatro direcciones por personaje
-- **Decisión (Willy, 2026-10-04):** cada personaje tiene cuatro direcciones: frente (abajo), espalda (arriba) y costado. El costado mira a la derecha y se espeja para la izquierda, así que son tres dibujos por pose (quieto y caminar).
+- **Estado:** tomada (Willy, 2026-10-04)
+- **Decisión:** cada personaje tiene cuatro direcciones: frente (abajo), espalda (arriba) y costado. El costado mira a la derecha y se espeja para la izquierda, así que son tres dibujos por pose (quieto y caminar).
 - **Por qué:** caminando hacia arriba se tiene que ver la espalda, no la cara. Ocho direcciones duplican el trabajo de diseño y en el celular casi no se notan.
+- **Descartado:** dos direcciones espejadas y ocho direcciones.
