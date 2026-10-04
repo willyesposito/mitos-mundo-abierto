@@ -61,8 +61,8 @@ Código en la raíz, datos en `datos/`.
 | `sonido.js` | Audio sintetizado (Web Audio), un extra: todo lo que suena también se ve |
 | `datos/personajes.json` | Elenco y poderes |
 | `datos/coleccionables.json` | Catálogo de objetos y zonas. El catálogo real lo define Chat |
-| `datos/mapa-mundo.json` | El mundo: puerto (inicio, abajo), plaza y palacio en terrazas (arriba) en un solo mapa continuo (D22). `zonas` dice qué filas son de cada zona, su desplazamiento y su inicio. La plaza tiene un desafío por poder; el palacio, tres desafíos de a dos. Declara una vez el catálogo de `sonidos` |
-| `datos/mapa-puerto.json`, `mapa-plaza.json`, `mapa-palacio.json` | Los mapas separados de antes de D22. Ya no los carga el juego |
+| `datos/mapa-mundo.json` | El mundo: puerto (inicio, abajo), plaza y palacio en terrazas (arriba) en un solo mapa continuo (D23). `zonas` dice qué filas son de cada zona, su desplazamiento y su inicio. La plaza tiene un desafío por poder; el palacio, tres desafíos de a dos. Declara una vez el catálogo de `sonidos` |
+| `datos/mapa-puerto.json`, `mapa-plaza.json`, `mapa-palacio.json` | Los mapas separados de antes de D23. Ya no los carga el juego |
 | `datos/mapa-pruebas.json` | Campo de pruebas, se abre desde el menú. Leyenda abajo |
 | `ROADMAP.md` | Estado de las sesiones de la etapa. Se actualiza al cerrar cada sesión |
 | `DECISIONS.md` | Decisiones tomadas, con el porqué. Solo se agregan entradas |
