@@ -477,6 +477,20 @@ async function main() {
   await elegir('pegaso'); await tp(14.5, 20.5);
   await poner(new Set(['KeyE', 'ArrowUp'])); await espera(1000); await poner(new Set(['KeyE'])); await espera(300); await soltarTodo(); await espera(1500);
   s = await est(); ok(s.enSuelo && Math.abs(s.z - 1) < 0.05 && s.y < 20, `Pegaso vuela a la terraza baja (z=${s.z.toFixed(2)})`);
+  // D21: Fénix vuela hasta terrazas, no hasta techos; Pegaso llega a techos
+  await elegir('fenix'); await tp(14.5, 20.5);
+  await poner(new Set(['KeyE', 'ArrowUp'])); await espera(1000); await poner(new Set(['KeyE'])); await espera(300); await soltarTodo(); await espera(1500);
+  s = await est(); ok(s.enSuelo && Math.abs(s.z - 1) < 0.05 && s.y < 20, `Fénix volando sube a una terraza (z=${s.z.toFixed(2)})`);
+  await tp(17.5, 17.5);
+  let zMax = 0;
+  await poner(new Set(['KeyE', 'ArrowRight']));
+  for (let i = 0; i < 40; i++) { await espera(40); zMax = Math.max(zMax, (await est()).z); }
+  s = await est(); await soltarTodo(); await espera(1500);
+  ok(zMax <= 1.61 && zMax > 1.2 && s.x < 18, `Fénix volando no se sube a un techo (z máx. ${zMax.toFixed(2)}, x=${s.x.toFixed(2)})`);
+  s = await est(); ok(s.z < 0.1, 'Fénix vuelve al suelo al soltar junto al techo');
+  await elegir('pegaso'); await tp(17.5, 17.5);
+  await poner(new Set(['KeyE'])); await espera(1500); await poner(new Set(['KeyE', 'ArrowRight'])); await espera(250); await poner(new Set(['KeyE'])); await espera(100); await soltarTodo(); await espera(1500);
+  s = await est(); ok(s.enSuelo && Math.abs(s.z - 2) < 0.05 && s.x > 18, `Pegaso volando sí sube a un techo (z=${s.z.toFixed(2)}, x=${s.x.toFixed(2)})`);
   await foto('28-terrazas');
   await elegir('ariadna'); await tp(14.5, 22.5); await tocar('KeyE');
   ok(await page.evaluate(() => window.__mundo.sogas[0].tendida), 'Ariadna tiende la soga entre las argollas de la plaza');
@@ -598,7 +612,8 @@ async function main() {
   }
   await M(() => { window.__mundo.fuentes[0].activa = false; });
   await elegir('fenix'); await volarAlCimbalo();
-  ok((await pal()).fuente, 'Fénix, que vuela igual, también hace sonar el címbalo');
+  ok(!(await pal()).fuente, 'Fénix no llega al techo (D21): el címbalo solo lo hace sonar Pegaso');
+  await elegir('pegaso'); await volarAlCimbalo();
   intentosPal++;
   ok(intentosPal === 15 && logrosPal === 0 && (await pal()).got === 0, `ningún personaje solo resuelve un desafío del palacio (${intentosPal} intentos)`);
 
