@@ -4,7 +4,7 @@ Estado de las sesiones. El contenido de cada una (fichas, catálogo, desafíos) 
 
 Estados: **pendiente**, **construida** (`probar.js` pasa) y **validada** (la jugadora lo usó en el celular). Solo Willy marca "validada".
 
-Última verificación: 2026-10-03, `probar.js` con 142 chequeos OK y ninguna falla.
+Última verificación: 2026-10-04, `probar.js` con 173 chequeos OK y ninguna falla.
 
 ## Etapa 1: primer mapa completo (puerto, plaza, palacio)
 
