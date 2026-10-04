@@ -1,6 +1,6 @@
 // Todo lo que es DOM: contadores, avisos, tira de personajes, perfiles y menú.
 import { ICONOS, simboloSvg } from './iconos.js';
-import { dibujarPersonaje } from './dibujo.js';
+import { dibujarPersonaje, alTenerSprites } from './dibujo.js';
 import { listarPerfiles, crearPerfil, borrarPerfil, MAX_PERFILES } from './nucleo.js';
 
 const $ = id => document.getElementById(id);
@@ -29,7 +29,10 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     b.className = 'pj'; b.dataset.id = p.id; b.setAttribute('aria-label', p.nombre);
     const c = document.createElement('canvas'); c.width = 112; c.height = 112;
     const cx = c.getContext('2d');
-    dibujarPersonaje(cx, p, { x: 56, y: 104, fx: 0, fy: 1, t: 0.3, caminando: false, volando: false, escala: 2.3, paso: 0 });
+    alTenerSprites(() => {
+      cx.clearRect(0, 0, c.width, c.height);
+      dibujarPersonaje(cx, p, { x: 56, y: 104, fx: 0, fy: 1, t: 0.3, caminando: false, volando: false, escala: 2.3, paso: 0 });
+    });
     c.style.width = '52px'; c.style.height = '52px';
     const n = document.createElement('span'); n.textContent = p.nombre;
     b.append(c, n); tira.append(b);
@@ -88,7 +91,11 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     fichaId = id;
     const c = $('ficha-retrato'), cx = c.getContext('2d');
     cx.clearRect(0, 0, c.width, c.height);
-    dibujarPersonaje(cx, p, { x: 84, y: 156, fx: 0, fy: 1, t: 0.3, caminando: false, volando: false, escala: 3.4, paso: 0 });
+    alTenerSprites(() => {
+      if (fichaId !== id) return;
+      cx.clearRect(0, 0, c.width, c.height);
+      dibujarPersonaje(cx, p, { x: 84, y: 156, fx: 0, fy: 1, t: 0.3, caminando: false, volando: false, escala: 3.4, paso: 0 });
+    });
     $('ficha-nombre').textContent = p.nombre;
     $('ficha-texto').textContent = p.ficha.texto;
     $('ficha-poder-titulo').textContent = 'Poder: ' + p.poder.nombre;

@@ -1,6 +1,6 @@
 // Arranque y bucle principal.
 import { crearMundo, TW, TH, LH } from './mundo.js';
-import { crearDibujo } from './dibujo.js';
+import { crearDibujo, estadoSprites } from './dibujo.js';
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
 import { crearSonido } from './sonido.js';
@@ -64,7 +64,7 @@ async function arrancar() {
     ajustar(); centrarCamara(true);
     exponer();
   }
-  function exponer() { if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sonidos = sonido.registro; } }
+  function exponer() { if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sprites = estadoSprites; window.__sonidos = sonido.registro; } }
 
   // Cambio de mapa. `id` nulo es volver al mapa de la partida desde el campo de pruebas.
   function cambiarMapa(id, llegada) {

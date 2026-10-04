@@ -29,6 +29,7 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Muro agrietado sobre una terraza:** al romperse queda a ras de suelo, así que lo que está detrás debe estar a nivel 0.
 - **`probar.js` tarda varios minutos.** Con un límite de 120 s se cortó a mitad ("Target page, context or browser has been closed"); sin límite dio 173 chequeos OK y ninguna falla (observado el 2026-10-04). No correrlo con un límite de tiempo corto.
 - **Ambiente (flora, fauna, detalles):** decorado o vivo, nunca requisito ni recompensa, no se guarda en el perfil. Cada personaje tiene su propia reacción con el poder. Mezcla base arqueológica minoica y mitos; el mito se cuenta con la reacción, sin texto. Diseño en `diseno-ambiente.md`.
+- **Los sprites miran a la derecha y se espejan con fx < 0:** si un sprite nuevo mira a la izquierda, queda al revés en el juego.
 
 ## Proceso
 
