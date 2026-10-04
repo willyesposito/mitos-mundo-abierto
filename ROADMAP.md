@@ -27,7 +27,7 @@ Siguiente: S8.
 Plan en `plan-arte.md`. Decisión: D16. Orden de inicio a definir por Willy.
 
 - [ ] **A0 Prueba de tubería**: pendiente.
-- [ ] **A1 Dirección de arte**: pendiente. Hoja de estilo y maqueta del puerto en el lienzo de Design, esperando la aprobación de Willy.
+- [x] **A1 Dirección de arte**: construida y aprobada por Willy. Decisión: D17. Resultado en `plan-arte.md`.
 - [ ] **A2 Personajes quietos y caminando**: pendiente.
 - [ ] **A3 Movimiento y poderes**: pendiente.
 - [ ] **A4 Interfaz**: pendiente.

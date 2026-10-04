@@ -41,6 +41,15 @@ Cada paso termina cuando se cumple su criterio, no cuando está la hoja. El orde
 ### A1. Dirección de arte
 - **Qué:** hoja de estilo: paleta cerrada, grosor de línea, tratamiento de luz y sombra, cómo se ven los tres niveles de altura.
 - **Termina cuando:** Willy aprueba una maqueta de una pantalla del puerto a tamaño real del celular.
+- **Resultado (aprobado 2026-10-04):** hoja de estilo, maqueta del puerto y 17 piezas del escenario en el lienzo de Design "Mitos: dirección de arte" (privado de Willy). Decisión: D17. Lo que vale para los pasos que siguen:
+  - **Paleta cerrada:** cal `#f4ecd8`, cal sombra `#cbb994`, arena `#e6c88a` y `#e2c383`, ocre `#d9a441`, óxido `#b5482e`, óxido oscuro `#8f3a24`, egeo `#1f6f9c`, agua `#2d79a8`, espuma `#7fb8d8`, piedra `#a9764a`, piedra tope `#7a5236`, tinta `#3b2b1d`. Bronce `#a8742e` con luz `#e6b866`. Cada material usa tres tonos (luz, base, sombra) derivados de su color.
+  - **Oro pálido `#fff3c8` reservado para mecanismos:** argolla, placa, brasero, fuente de sonido, coleccionable, puerta del sol. Los destellos del ambiente (agua) van en blanco azulado.
+  - **Línea:** contorno tinta de 2 px a tamaño real solo en personajes y objetos; las baldosas se separan por tono y junta.
+  - **Fresco con volumen:** color plano por zonas, sin degradés. Bisel de luz arriba y a la izquierda, sombra abajo; textura de grano, mortero y desgaste.
+  - **Luz cenital pareja:** cara sur un paso más oscura que el tope, franja de sombra al pie. Sombra del personaje aparte, elipse que se achica con la altura.
+  - **Niveles:** suelo en losas de arena trabadas (una losa mide casilla y media, no marca la grilla); terraza en losas de yeso con friso rojo de espirales; techo en losas rojas con bandas egeo de olas y cuernos de consagración.
+  - **Baldosa empujable:** cuadrada, de una casilla, con marco propio, para no confundirse con el suelo.
+  - **Siluetas detrás de paredes:** relleno cal al 35 % y contorno cal punteado, generadas por código desde el mismo sprite.
 
 ### A2. Los cinco personajes, quietos y caminando
 - **Qué:** base compartida más rasgo propio (alas, cuernos, ovillo, llama, ondas de voz). Quieto y ciclo de caminar.

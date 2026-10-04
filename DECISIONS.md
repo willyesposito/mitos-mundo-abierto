@@ -102,3 +102,9 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** personajes, escenario e interfaz pasan de dibujo por código a sprites guardados en el repo y cacheados por el service worker. Plan en `plan-arte.md`. Reemplaza a D10.
 - **Por qué:** el dibujo por código limita el detalle del arte definitivo, y los sprites siguen funcionando sin conexión.
 - **Descartado:** seguir dibujando por código; imágenes remotas.
+
+### D17. Fresco con volumen como dirección de arte
+- **Estado:** tomada
+- **Decisión:** el arte es fresco minoico de color plano por zonas, con tres tonos por material, bisel, textura y desgaste, sobre la paleta cerrada de `plan-arte.md` (A1). El oro pálido queda reservado a los mecanismos.
+- **Por qué:** Willy pidió una propuesta más realista y trabajada que el fresco plano de partida, y la aprobó así.
+- **Descartado:** fresco plano sin volumen (primera versión de la hoja); degradés.
