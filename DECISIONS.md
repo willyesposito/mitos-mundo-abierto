@@ -64,7 +64,7 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Por qué:** para no heredar sus reglas (hub, estados de publicación, versión del service worker).
 
 ### D10. Todo dibujado por código
-- **Estado:** tomada
+- **Estado:** reemplazada por D16
 - **Decisión:** personajes y mapa sin imágenes; el arte definitivo se resuelve después.
 - **Por qué:** cambiarlo a spritesheet más adelante es barato.
 
@@ -94,3 +94,11 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** Opus confirma con Willy el alcance y el criterio al empezar la sesión y después trabaja hasta terminar. Frena solo por una decisión de Willy o antes de un paso riesgoso.
 - **Por qué:** el plan ya trae alcance y criterio por sesión, y confirmar paso por paso corta el trabajo a la mitad.
 - **Descartado:** confirmar y esperar en cada paso.
+
+## Arte (2026-10-03)
+
+### D16. Sprites embebidos en el repo
+- **Estado:** tomada
+- **Decisión:** personajes, escenario e interfaz pasan de dibujo por código a sprites guardados en el repo y cacheados por el service worker. Plan en `plan-arte.md`. Reemplaza a D10.
+- **Por qué:** el dibujo por código limita el detalle del arte definitivo, y los sprites siguen funcionando sin conexión.
+- **Descartado:** seguir dibujando por código; imágenes remotas.

@@ -22,6 +22,18 @@ Se cierra con el criterio de terminado de `CLAUDE.md`.
 
 Siguiente: S8.
 
+## Arte: sprites embebidos
+
+Plan en `plan-arte.md`. Decisión: D16. Orden de inicio a definir por Willy.
+
+- [ ] **A0 Prueba de tubería**: pendiente.
+- [ ] **A1 Dirección de arte**: pendiente.
+- [ ] **A2 Personajes quietos y caminando**: pendiente.
+- [ ] **A3 Movimiento y poderes**: pendiente.
+- [ ] **A4 Interfaz**: pendiente.
+- [ ] **A5 Escenario y mecanismos**: pendiente.
+- [ ] **A6 Coleccionables y ambiente**: pendiente.
+
 ## Abierto
 
 - Validar S1 a S6 en el celular con la jugadora, siguiendo la lista de observación del final de `plan-etapa-1.md`.
