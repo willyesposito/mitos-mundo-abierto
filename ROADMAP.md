@@ -31,7 +31,7 @@ Plan en `plan-arte.md`. Decisiones: D16 a D20. Orden de inicio a definir por Wil
 - [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y direcciones.
 - [ ] **A3 Movimiento y poderes**: pendiente. Aleteo de Pegaso y Fénix hecho (D20); faltan las ondas de Eco y las señales de los demás poderes.
 - [ ] **A4 Interfaz**: pendiente.
-- [ ] **A5 Escenario y mecanismos**: pendiente.
+- [x] **A5 Escenario y mecanismos**: construida (`probar.js`: 193 OK tras unir con el aleteo). Decisión: D17. Falta la animación de la reja al abrirse y ver techo, reja y puerta de sonido en el celular.
 - [ ] **A6 Coleccionables y ambiente**: pendiente.
 
 ## Abierto

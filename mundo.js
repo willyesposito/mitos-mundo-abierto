@@ -63,6 +63,8 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     }
   }
 
+  const origen = celdas.map(f => f.slice());   // para el dibujo: qué había antes de abrir o romper (solo lectura)
+
   // Lo que la jugadora cambió en este mapa queda como lo dejó: nada se cierra ni se arma de nuevo.
   const rotos = new Set();
   for (const k of guardado.muros || []) {
@@ -136,7 +138,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
 
   const m = {
     id: mapa.id, barcas: mapa.barcas || [], salidas: new Map(), saliendo: false,
-    cols, rows, celdas, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
+    cols, rows, celdas, origen, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], eventos: [], t: 0, velo: 0,
     jugador: {
       x: arranque[0], y: arranque[1], z: 0, vz: 0,

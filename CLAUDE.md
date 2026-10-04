@@ -38,7 +38,7 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 | Pegaso | Volar a terrazas y techos (mantener el botón) | alas |
 | Minotauro | Fuerza: empujar bloques y vasijas; embestir para romper muros agrietados | cuernos |
 | Ariadna | Hilo: tender sogas entre argollas (escala o puente, hasta 5 casillas) | ovillo |
-| Fénix | Luz: tocar brilla y enciende braseros; mantener vuela como Pegaso | llama |
+| Fénix | Luz: tocar brilla y enciende braseros; mantener vuela, pero solo hasta terrazas (los techos son de Pegaso, D21) | llama |
 | Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
 
 Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave de perfil con cola larga; sus alas son piezas aparte que aletean por código (D20). Minotauro, Ariadna y Eco tienen cuerpo humano (D19). El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
