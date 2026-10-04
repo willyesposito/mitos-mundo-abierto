@@ -28,9 +28,9 @@ Plan en `plan-arte.md`. Decisiones: D16 a D19. Orden de inicio a definir por Wil
 
 - [x] **A0 Prueba de tubería**: construida. Decisiones: D18, D19. Cinco personajes quietos en SVG. Falta que Willy lo vea en el celular, a tamaño real y sin conexión.
 - [x] **A1 Dirección de arte**: construida y aprobada por Willy. Decisión: D17. Resultado en `plan-arte.md`.
-- [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y direcciones.
+- [ ] **A2 Personajes quietos y caminando**: pendiente. Poses quietas de los cinco hechas en A0; faltan caminar y direcciones. Cuatro direcciones (D20); los diseños salen del chat de diseño de Willy.
 - [ ] **A3 Movimiento y poderes**: pendiente.
-- [ ] **A4 Interfaz**: pendiente.
+- [ ] **A4 Interfaz**: en curso. Maqueta en el lienzo de Design "Mitos: interfaz" (privado de Willy), esperando aprobación antes de programar.
 - [ ] **A5 Escenario y mecanismos**: pendiente.
 - [ ] **A6 Coleccionables y ambiente**: pendiente.
 

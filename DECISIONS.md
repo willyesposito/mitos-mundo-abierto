@@ -120,3 +120,7 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** Pegaso se dibuja como caballo alado y Fénix como ave. Minotauro, Ariadna y Eco conservan cuerpo humano. Cada uno se reconoce por su silueta, no por una base compartida.
 - **Por qué:** sus fichas dicen "Caballo con alas" y "Ave de plumas rojas y doradas"; la figura humana contradecía el texto del juego.
 - **Descartado:** base humana compartida para los cinco.
+
+### D20. Cuatro direcciones por personaje
+- **Decisión (Willy, 2026-10-04):** cada personaje tiene cuatro direcciones: frente (abajo), espalda (arriba) y costado. El costado mira a la derecha y se espeja para la izquierda, así que son tres dibujos por pose (quieto y caminar).
+- **Por qué:** caminando hacia arriba se tiene que ver la espalda, no la cara. Ocho direcciones duplican el trabajo de diseño y en el celular casi no se notan.
