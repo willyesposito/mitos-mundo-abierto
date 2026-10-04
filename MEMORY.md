@@ -31,6 +31,8 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Ambiente (flora, fauna, detalles):** decorado o vivo, nunca requisito ni recompensa, no se guarda en el perfil. Cada personaje tiene su propia reacción con el poder. Mezcla base arqueológica minoica y mitos; el mito se cuenta con la reacción, sin texto. Diseño en `diseno-ambiente.md`.
 - **Los sprites miran a la derecha y se espejan con fx < 0:** si un sprite nuevo mira a la izquierda, queda al revés en el juego.
 
+- **Íconos de interfaz con relleno y contorno tinta**, como los objetos del juego, no de trazo fino solo. Por qué: Willy pidió íconos más pulidos en la maqueta de A4 (2026-10-04).
+
 ## Proceso
 
 - **Los personajes se diseñan fuera de Code**, en otro chat de Willy. Code no los diseña ni los redibuja: en maquetas van como lugar marcado. Por qué: Willy lo pidió al arrancar el plan de arte (2026-10-04).
