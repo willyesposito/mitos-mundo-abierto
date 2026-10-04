@@ -119,6 +119,8 @@ Hecho lo pedido y verificado, parar y reportar. Lo extra (funciones, tests, arch
 
 La primera frase dice qué pasó. El detalle viene después y solo si hace falta. Los documentos del repo llevan lo que la tarea necesita, sin secciones de relleno.
 
+Cada respuesta cierra con una línea `Título: MAM …` para que Willy ponga nombre al chat y no se pierda. Empieza por `MAM`, sigue con el número de decisión que se toca (por ejemplo `D26`) o, si no hay, con pocas palabras del foco trabajado. Ejemplo: `Título: MAM D26 verificación en dos velocidades`.
+
 ### Al cerrar una sesión
 
 - `ROADMAP.md`: marcar la sesión como *construida*. *Validada* la marca solo Willy, cuando la jugadora lo usó.
