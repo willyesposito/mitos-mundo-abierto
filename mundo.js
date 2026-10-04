@@ -305,7 +305,9 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       // Golpear una fuente: un címbalo suena para siempre una vez que lo golpea quien corresponde
       if (!f.activa && f.modo === 'golpe' && j.estado === 'jugando') {
         const d = Math.hypot(f.x - j.x, f.y - j.y);
-        const golpe = f.golpea === 'pegaso' ? (j.personaje === 'pegaso' && d < 0.8 && Math.abs(j.z - f.zBase) < 1)
+        const vuelaAhora = j.personaje === 'pegaso' || (j.personaje === 'fenix' && j.planeo);
+        const golpe = f.golpea === 'volar' ? (vuelaAhora && d < 0.8 && Math.abs(j.z - f.zBase) < 1)
+          : f.golpea === 'pegaso' ? (j.personaje === 'pegaso' && d < 0.8 && Math.abs(j.z - f.zBase) < 1)
           : f.golpea === 'minotauro' ? (j.personaje === 'minotauro' && !!j.embiste && d < 1.3) : false;
         if (golpe) {
           f.activa = true;

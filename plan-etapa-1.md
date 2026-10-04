@@ -147,32 +147,32 @@ Cada sesión termina cuando `node herramientas/probar.js` pasa **y** Willy lo pr
 - **Terminado:** en `probar.js`, romper un muro, abrir una reja, mover un bloque, recargar: todo sigue igual. En el celular, lo mismo cerrando y abriendo la app.
 - **Decisión previa:** resuelta, los perfiles de prueba se pueden borrar. Igual no hizo falta: los perfiles viejos cargan con el mundo intacto.
 
-### Sesión 2: poder de Fénix
+### Sesión 2: poder de Fénix · falta probar en el celular
 - **Alcance:** braseros (apagado y encendido, permanente), puertas del sol enlazadas a uno o varios braseros, en el campo de pruebas.
 - **Terminado:** en `probar.js`, Fénix enciende dos braseros, la puerta se abre, se recarga y sigue abierta; ningún otro personaje enciende braseros.
 - **Decisión previa:** D2.
 
-### Sesión 3: poder de Eco
+### Sesión 3: poder de Eco · falta probar en el celular
 - **Alcance:** fuentes de sonido (sola y activada por otro personaje), un único sonido guardado visible en la interfaz, repetir con alcance a través de paredes, mecanismos por símbolo, todo visible sin audio. Audio solo si D3 lo pide, sintetizado en el navegador sin archivos.
 - **Terminado:** en `probar.js`, Eco guarda el sonido A, guarda el B (el A se pierde, porque ella solo repite lo último), repite B a través de una pared y abre su puerta; la puerta de A no se abre con B. Probado en el celular con el volumen en cero.
 - **Decisión previa:** D3.
 
-### Sesión 4: poder de Ariadna
+### Sesión 4: poder de Ariadna · falta probar en el celular
 - **Alcance:** argollas, soga escala (suelo a terraza) y soga puente (misma altura), permanentes, usables por los cinco.
 - **Terminado:** en `probar.js`, Ariadna tiende una escala, el Minotauro sube por ella y embiste un muro en la terraza; se recarga y la soga sigue.
 - **Decisión previa:** D4.
 
-### Sesión 5: fichas y catálogo
+### Sesión 5: fichas y catálogo · falta probar en el celular
 - **Alcance:** cargar las fichas de este documento (texto y poder) accesibles desde la tira de personajes, y el catálogo real en `coleccionables.json`.
 - **Terminado:** las cinco fichas se abren en el celular y se leen sin cortarse; ningún texto en inglés.
 - **Decisión previa:** D5 y D6.
 
-### Sesión 6: puerto y plaza
+### Sesión 6: puerto y plaza · falta probar en el celular
 - **Alcance:** los dos mapas, el paso entre ellos y los cuatro coleccionables de esas zonas.
 - **Terminado:** en `probar.js`, un recorrido completo desde el inicio que junta los cuatro con los personajes correctos, y verifica que ningún desafío de la plaza se puede resolver con otro personaje.
 - **Decisión previa:** D7.
 
-### Sesión 7: palacio
+### Sesión 7: palacio · falta probar en el celular
 - **Alcance:** el palacio en terrazas con los tres desafíos de a dos.
 - **Terminado:** en `probar.js`, los tres desafíos resueltos en secuencia, y verificado que ninguno se resuelve con un solo personaje.
 - **Decisión previa:** ninguna nueva.

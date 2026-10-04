@@ -61,6 +61,7 @@ Código en la raíz, datos en `datos/`.
 | `datos/personajes.json` | Elenco y poderes |
 | `datos/coleccionables.json` | Catálogo de objetos y zonas. El catálogo real lo define Chat |
 | `datos/mapa-puerto.json`, `datos/mapa-plaza.json` | Puerto (inicio) y plaza. Cada mapa trae `salidas` (celdas que llevan a otro mapa) y `entradas` (dónde se aparece viniendo de cada mapa). Los dos comparten el catálogo de `sonidos` |
+| `datos/mapa-palacio.json` | Palacio en terrazas (se entra desde la plaza por el norte): almacenes, terraza de los frescos y sala de los címbalos, tres desafíos de a dos. Mismo catálogo de `sonidos` |
 | `datos/mapa-pruebas.json` | Campo de pruebas, se abre desde el menú. Leyenda abajo |
 | `sw.js` | Service worker. **Subir `VERSION` en cada deploy real** |
 | `herramientas/probar.js` | No es parte del juego. Juega el juego en un navegador sin pantalla, con teclado y toques, y verifica todo |

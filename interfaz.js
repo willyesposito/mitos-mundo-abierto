@@ -14,6 +14,8 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
 
   // Solo cuentan los objetos que ya están puestos en algún mapa
   const contables = catalogo.objetos.filter(o => o.ubicado !== false);
+  // La partida cuenta puerto, plaza y palacio; el campo de pruebas cuenta aparte (su total es el de su zona)
+  const partida = contables.filter(o => o.zona !== 'pruebas');
   document.querySelectorAll('[data-icono]').forEach(el => { el.innerHTML = ICONOS[el.dataset.icono]; });
   $('btn-menu').innerHTML = ICONOS.menu;
   $('btn-ficha').innerHTML = ICONOS.info;
@@ -121,12 +123,13 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
 
   // --- Contadores (solo suben) ---
   ui.contadores = recogidos => {
-    const total = contables.length;
-    const enTotal = contables.filter(o => recogidos[o.id]).length;
+    const total = partida.length;
+    const enTotal = partida.filter(o => recogidos[o.id]).length;
     const deZona = contables.filter(o => o.zona === mapa.zona);
     const enZona = deZona.filter(o => recogidos[o.id]).length;
     $('zona-n').textContent = `${enZona}/${deZona.length}`;
     $('total-n').textContent = `${enTotal}/${total}`;
+    $('total-n').closest('.chip').style.display = mapa.zona === 'pruebas' ? 'none' : '';
   };
   ui.pulsarContadores = () => {
     const el = $('contadores'); el.classList.remove('pulso'); void el.offsetWidth; el.classList.add('pulso');
@@ -160,10 +163,10 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     for (const p of perfiles) {
       const li = document.createElement('li');
       const b = document.createElement('button'); b.className = 'boton-grande perfil';
-      const hechos = contables.filter(o => p.objetos[o.id]).length;
+      const hechos = partida.filter(o => p.objetos[o.id]).length;
       b.innerHTML = '<span class="nombre"></span><small></small>';
       b.querySelector('.nombre').textContent = p.nombre;
-      b.querySelector('small').textContent = `${hechos}/${contables.length} objetos`;
+      b.querySelector('small').textContent = `${hechos}/${partida.length} objetos`;
       b.addEventListener('click', () => { pantallaPerfiles.hidden = true; ui.alElegirPerfil(p); });
       const x = document.createElement('button'); x.className = 'borrar'; x.textContent = 'Borrar'; x.setAttribute('aria-label', `Borrar perfil ${p.nombre}`);
       x.addEventListener('click', () => {
