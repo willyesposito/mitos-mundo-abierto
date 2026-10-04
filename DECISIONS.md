@@ -120,3 +120,9 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** Pegaso se dibuja como caballo alado y Fénix como ave. Minotauro, Ariadna y Eco conservan cuerpo humano. Cada uno se reconoce por su silueta, no por una base compartida.
 - **Por qué:** sus fichas dicen "Caballo con alas" y "Ave de plumas rojas y doradas"; la figura humana contradecía el texto del juego.
 - **Descartado:** base humana compartida para los cinco.
+
+### D20. Alas separadas y Fénix de perfil
+- **Estado:** tomada
+- **Decisión:** las alas de Pegaso y Fénix son piezas SVG aparte (cercana y lejana), con el origen en el hombro, y el aleteo se hace por código. Fénix pasa a ave de perfil con cola larga y cresta que cae hacia atrás, sin las tres puntas. Las alas son una sola forma por pieza, sin plumas dibujadas. Las alas de fuego de Fénix al volar usan estas mismas piezas. Completa D19.
+- **Por qué:** el aleteo necesita el ala separada del cuerpo, y el diseño anterior de Fénix no era el que se buscaba.
+- **Descartado:** versión de fuego aparte para el vuelo; alas con filas de plumas (se veían recargadas).

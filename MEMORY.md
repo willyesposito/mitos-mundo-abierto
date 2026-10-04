@@ -30,8 +30,9 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **`probar.js` tarda varios minutos.** Con un límite de 120 s se cortó a mitad ("Target page, context or browser has been closed"); sin límite dio 173 chequeos OK y ninguna falla (observado el 2026-10-04). No correrlo con un límite de tiempo corto.
 - **Ambiente (flora, fauna, detalles):** decorado o vivo, nunca requisito ni recompensa, no se guarda en el perfil. Cada personaje tiene su propia reacción con el poder. Mezcla base arqueológica minoica y mitos; el mito se cuenta con la reacción, sin texto. Diseño en `diseno-ambiente.md`.
 - **Los sprites miran a la derecha y se espejan con fx < 0:** si un sprite nuevo mira a la izquierda, queda al revés en el juego.
+- **Un ala que aletea es un SVG aparte con el origen en el hombro:** el juego carga cada SVG como imagen entera y no puede mover una parte. Va una cercana (encima del cuerpo) y una lejana (detrás, desfasada), y el aleteo es girarlas sobre ese punto.
 
 ## Proceso
 
-- **Los personajes se diseñan fuera de Code**, en otro chat de Willy. Code no los diseña ni los redibuja: en maquetas van como lugar marcado. Por qué: Willy lo pidió al arrancar el plan de arte (2026-10-04).
+- **Los personajes se diseñan fuera de Code**, en otro chat de Willy. Code no los diseña ni los redibuja: en maquetas van como lugar marcado. Por qué: Willy lo pidió al arrancar el plan de arte (2026-10-04). Excepción: cuando Willy pide diseñar acá, en el lienzo de Design, y aprueba ahí; así se hicieron las alas de Pegaso y Fénix.
 - **El subagente no ve la conversación.** Un encargo incompleto produce trabajo equivocado: cada encargo trae los archivos a tocar, las reglas que aplican, las decisiones ya tomadas, qué queda fuera y el criterio de terminado.
