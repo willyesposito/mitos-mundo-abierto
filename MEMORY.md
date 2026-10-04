@@ -28,3 +28,7 @@ Leer al inicio de cada sesión. `CLAUDE.md` define el proyecto; acá va lo apren
 - **Catálogo real con `"ubicado": false`** no cuenta en contadores hasta que esté puesto en un mapa.
 - **Varios mapas:** el perfil guarda `mapa`, `llegada` (dónde aparece al recargar) y `eco` (el sonido de Eco viaja entre mapas). Todos los mapas deben declarar los mismos `sonidos`, o el sonido guardado se pierde al cruzar. El campo de pruebas no se guarda como mapa actual: recargar desde ahí vuelve a la partida.
 - Recintos con pared de 3 no se sobrevuelan (vuelo máx. 2,9): sirven para que un desafío sea exclusivo de su personaje.
+- **Contador de partida:** cuenta solo puerto, plaza y palacio (7). El campo de pruebas cuenta aparte: en él se oculta el chip Total y la zona muestra 0/3 o 3/3.
+- **Fuente que se activa al llegar volando:** `golpea: "volar"` en una fuente `golpe` (vale Pegaso o Fénix en vuelo). Queda vibrando y se guarda.
+- **Pared `b` (parapeto bajo) bloquea como pared pero se dibuja baja:** sirve de pantalla delante de una puerta sin taparla. Los desafíos de a dos se verifican con cada personaje solo, en orden que no gaste el paso propio (Fénix y Ariadna al final).
+- **Muro agrietado sobre una terraza:** al romperse queda a ras de suelo, así que lo que está detrás debe estar a nivel 0.

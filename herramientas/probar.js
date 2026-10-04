@@ -209,15 +209,15 @@ async function main() {
   await foto('14-final');
 
   // 9. Contadores y guardado
-  ok((await page.textContent('#total-n')) === '3/7' && (await page.textContent('#zona-n')) === '3/3', 'el contador de la zona llega a 3/3 y el total a 3/7');
+  ok((await page.textContent('#zona-n')) === '3/3' && !(await page.isVisible('#total-n')), 'en el campo de pruebas el contador de la zona llega a 3/3 y el total de la partida no se muestra');
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
   const lista = await page.textContent('#lista-perfiles');
-  ok(lista.includes('Prueba') && lista.includes('3/7'), 'tras recargar, el perfil conserva 3/7 objetos');
+  ok(lista.includes('Prueba') && lista.includes('0/7'), 'los objetos de prueba no suman a la partida (0/7 en el perfil)');
   await page.click('.perfil'); await page.waitForFunction(() => window.__mundo); await espera(300);
   ok(await page.evaluate(() => window.__mundo.id) === 'puerto', 'tras recargar desde el campo de pruebas, se vuelve al mapa de la partida');
   await entrarPruebas();
   s = await est();
-  ok(s.recogidos.length === 3 && (await page.textContent('#total-n')) === '3/7', 'los objetos siguen recogidos y no reaparecen');
+  ok(s.recogidos.length === 3 && (await page.textContent('#zona-n')) === '3/3', 'los objetos de prueba siguen recogidos y no reaparecen');
   ok(s.pj === 'minotauro', 'recuerda el último personaje elegido');
   // El mundo queda como lo dejó: nada se cierra ni se arma de nuevo
   ok((await celda(11, 5)) === '.', 'tras recargar, el muro sigue roto');
@@ -530,6 +530,117 @@ async function main() {
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
   await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(400);
   ok((await idMapa()) === 'plaza', 'recargar desde el campo de pruebas devuelve a la plaza: el campo de pruebas no es el inicio');
+
+  // 18. Sesión 7: palacio en terrazas (tres desafíos de a dos, desde la plaza)
+  await elegir('minotauro'); await tp(11.5, 4.5); await espera(200);
+  await hasta('ArrowUp', () => window.__mundo.id === 'palacio', 6000); await espera(700);
+  s = await est();
+  ok((await idMapa()) === 'palacio' && s.y > 36 && (await page.textContent('#zona-nombre')) === 'Palacio' && (await page.textContent('#zona-n')) === '0/3', `la rampa norte de la plaza lleva al palacio, a su entrada sur (y=${s.y.toFixed(1)})`);
+  await foto('33-palacio-entrada');
+  const pal = () => page.evaluate(() => { const m = window.__mundo; const v = m.empujables[0];
+    return { D: m.celdas[33][17], G: m.celdas[29][19], M: m.celdas[17][8], O: m.celdas[10][17], sogas: m.sogas[0].tendida, fuente: m.fuentes[0].activa,
+      br: m.braseros.filter(b => b.encendido).length, vas: v.tx + ',' + v.ty, got: m.coleccionables.filter(c => c.recogido).length }; });
+  const ningunObjeto = async () => (await pal()).got === 0;
+  const mantener = async (teclas, ms) => { await poner(new Set(teclas)); await espera(ms); await soltarTodo(); await espera(150); };
+  let intentosPal = 0, logrosPal = 0;
+
+  // Almacenes: con uno solo no se resuelve (Fénix abre la puerta del sol, pero no mueve la vasija)
+  for (const pj of ['pegaso', 'minotauro', 'ariadna', 'eco', 'fenix']) {
+    await elegir(pj);
+    await tp(3.5, 32.5); await tocar('KeyE'); await tp(9.5, 32.5); await tocar('KeyE'); await espera(200);
+    await tp(17.5, 35.5);
+    if (pj === 'minotauro') { await poner(new Set(['ArrowUp'])); await espera(40); await page.keyboard.press('KeyE'); await espera(700); await soltarTodo(); }
+    else await mantener(pj === 'pegaso' || pj === 'fenix' ? ['KeyE', 'ArrowUp'] : ['ArrowUp'], 1600);
+    await espera(1200);
+    s = await est(); const p = await pal();
+    if (pj === 'fenix') {
+      ok(p.br === 2 && p.D === '.' && s.y < 33, 'Fénix sola enciende los dos braseros y entra por la puerta del sol del depósito');
+      await tp(14.5, 29.5); await mantener(['ArrowRight'], 1200);
+      ok((await pal()).vas === '15,29' && (await pal()).G === 'G', 'pero adentro Fénix sola no mueve la vasija y la reja sigue cerrada');
+    } else ok(p.br === 0 && p.D === 'D' && s.y > 33, `${pj} solo no abre el depósito (ni volando ni embistiendo)`);
+    intentosPal++; if (!(await ningunObjeto())) logrosPal++;
+  }
+
+  // Terraza de los frescos: con uno solo no se rompe el muro (Ariadna tiende la soga y sube, pero no rompe)
+  for (const pj of ['pegaso', 'minotauro', 'fenix', 'eco', 'ariadna']) {
+    await elegir(pj);
+    await tp(8.5, 23.5); await espera(150);
+    if (pj === 'ariadna') { await tp(8.5, 24.5); await tocar('KeyE'); await tp(8.5, 23.5); }
+    await mantener(pj === 'pegaso' || pj === 'fenix' ? ['KeyE', 'ArrowUp'] : ['ArrowUp'], 2200);
+    await espera(1000); s = await est();
+    if (pj === 'minotauro' || pj === 'ariadna') { await poner(new Set(['ArrowUp'])); await espera(40); await page.keyboard.press('KeyE'); await espera(700); await soltarTodo(); await espera(200); }
+    s = await est(); const p = await pal();
+    if (pj === 'ariadna') ok(p.sogas && s.z > 0.9 && s.y < 21 && p.M === 'M', `Ariadna sola tiende la escala y sube a la terraza, pero el muro sigue entero (z=${s.z.toFixed(2)})`);
+    else if (pj === 'pegaso' || pj === 'fenix') ok(p.M === 'M' && !p.sogas && s.y > 16.9, `${pj} sube volando a la terraza pero no rompe ni pasa el muro`);
+    else ok(p.M === 'M' && !p.sogas && s.z < 0.1 && s.y > 21.5, `${pj} solo no llega a la terraza ni rompe el muro`);
+    intentosPal++; if (!(await ningunObjeto())) logrosPal++;
+  }
+  await foto('34-frescos');
+
+  // Sala de los címbalos: con uno solo no se abre la puerta de bronce
+  const volarAlCimbalo = async () => {
+    await tp(4.5, 7.5); await poner(new Set(['KeyE'])); await espera(900);
+    await poner(new Set(['KeyE', 'ArrowUp']));
+    const t0 = Date.now(); while (Date.now() - t0 < 1500 && !(await M(() => window.__mundo.fuentes[0].activa))) await espera(20);
+    await soltarTodo(); await espera(1500);
+  };
+  await M(() => { window.__mundo.eco = 'caracola'; });
+  for (const pj of ['minotauro', 'ariadna', 'eco', 'pegaso']) {
+    await elegir(pj);
+    await tp(4.5, 8.5);
+    if (pj === 'pegaso') await volarAlCimbalo();
+    else { await mantener(['ArrowUp'], 600); await tocar('KeyE'); await espera(300); }
+    await tp(17.5, 13.5); await tocar('KeyE'); await espera(300);
+    const p = await pal();
+    if (pj === 'pegaso') ok(p.fuente && p.O === 'O', 'Pegaso solo hace sonar el címbalo en el techo, pero no abre la puerta de bronce');
+    else ok(!p.fuente && p.O === 'O' && (await M(() => window.__mundo.eco)) === 'caracola', `${pj} solo no hace sonar el címbalo ni abre la puerta de bronce`);
+    intentosPal++; if (!(await ningunObjeto())) logrosPal++;
+  }
+  await M(() => { window.__mundo.fuentes[0].activa = false; });
+  await elegir('fenix'); await volarAlCimbalo();
+  ok((await pal()).fuente, 'Fénix, que vuela igual, también hace sonar el címbalo');
+  intentosPal++;
+  ok(intentosPal === 15 && logrosPal === 0 && (await pal()).got === 0, `ningún personaje solo resuelve un desafío del palacio (${intentosPal} intentos)`);
+
+  // Soluciones en pareja
+  await elegir('minotauro'); await tp(14.5, 29.5);
+  await hasta('ArrowRight', () => window.__mundo.celdas[29][19] === '.', 4000); await espera(200);
+  ok((await pal()).vas === '17,29' && (await pal()).G === '.', 'Almacenes: el Minotauro empuja la vasija a la placa y se abre la reja');
+  await tp(18.5, 29.5); await ir(21.5, 29.5, { orden: 'x', tol: 0.15 }); await espera(300);
+  ok((await objetosPlaza()).includes('tablilla-arcilla'), 'Fénix y el Minotauro consiguen la tablilla de arcilla');
+  await foto('35-almacenes');
+  await tp(8.5, 23.5); await ir(8.5, 19.0, { orden: 'y', tol: 0.12 }); await ir(8.5, 18.4, { orden: 'y', tol: 0.1 }); await espera(200); s = await est();
+  ok(s.z > 0.95, `Frescos: el Minotauro sube por la escala de Ariadna (z=${s.z.toFixed(2)})`);
+  await embestir(); await espera(300);
+  ok((await pal()).M === '.', 'el Minotauro rompe el muro agrietado de la terraza');
+  await ir(8.5, 14.5, { orden: 'y', tol: 0.15 }); await espera(300);
+  ok((await objetosPlaza()).includes('hacha-doble'), 'Ariadna y el Minotauro consiguen el hacha doble');
+  await foto('36-frescos-hacha');
+  await elegir('eco'); await tp(4.5, 8.5); await espera(400);
+  ok((await M(() => window.__mundo.eco)) === 'cimbalo' && (await page.textContent('#eco-texto')).includes('Címbalo'), 'Címbalos: Eco escucha el címbalo que hizo sonar quien vuela');
+  await tp(17.5, 13.5); await tocar('KeyE'); await espera(300);
+  ok((await pal()).O === '.', 'Eco repite el címbalo y la puerta de bronce se abre');
+  await foto('37-puerta-bronce');
+  await tp(17.5, 11.5); await ir(17.5, 5.5, { orden: 'y', tol: 0.15 }); await espera(300);
+  ok((await objetosPlaza()).includes('figura-serpientes'), 'Pegaso y Eco consiguen la figura con serpientes');
+  await foto('38-figura');
+  ok((await page.textContent('#zona-n')) === '3/3' && (await page.textContent('#total-n')) === '7/7', 'el palacio queda en 3/3 y la partida en 7/7');
+
+  // El campo de pruebas cuenta aparte
+  await entrarPruebas();
+  ok((await page.textContent('#zona-n')) === '0/3' && !(await page.isVisible('#total-n')), 'el campo de pruebas cuenta aparte (0/3) y no muestra el total de la partida');
+  await page.click('#btn-menu'); await page.click('#menu-pruebas'); await page.waitForFunction(() => window.__mundo.id === 'palacio'); await espera(500);
+  ok((await page.textContent('#total-n')) === '7/7', 'al volver a la partida el total sigue en 7/7');
+
+  // Recarga en el palacio: todo igual
+  await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
+  await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(500);
+  const p2 = await pal();
+  ok((await idMapa()) === 'palacio' && p2.D === '.' && p2.G === '.' && p2.M === '.' && p2.O === '.' && p2.sogas && p2.fuente && p2.br === 2 && p2.vas === '17,29' && p2.got === 3,
+    'tras recargar en el palacio todo sigue igual: puerta del sol, reja, muro, puerta de bronce, soga, címbalo y vasija');
+  ok((await page.textContent('#total-n')) === '7/7' && (await page.textContent('#zona-n')) === '3/3', 'tras recargar, la partida sigue en 7/7');
+  await tp(8.5, 24.5); await espera(900); await foto('39-palacio-medio');
+  await tp(11.5, 6.5); await espera(900); await foto('40-palacio-norte');
 
   // 11. Sin conexión
   await page.evaluate(() => navigator.serviceWorker.ready); await espera(500);

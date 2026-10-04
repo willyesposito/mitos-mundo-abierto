@@ -10,7 +10,7 @@ const $ = id => document.getElementById(id);
 const pedir = u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
 
 async function arrancar() {
-  const IDS_MAPAS = ['puerto', 'plaza', 'pruebas'];
+  const IDS_MAPAS = ['puerto', 'plaza', 'palacio', 'pruebas'];
   const [{ personajes }, catalogo, ...listaMapas] = await Promise.all([
     pedir('datos/personajes.json'), pedir('datos/coleccionables.json'), ...IDS_MAPAS.map(i => pedir(`datos/mapa-${i}.json`)),
   ]);
