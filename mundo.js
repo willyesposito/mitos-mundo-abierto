@@ -327,6 +327,8 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     if (resp.delfin) m.eventos.push({ tipo: 'ambiente', id: 'chasquido' });
     if (resp.gaviota) m.eventos.push({ tipo: 'ambiente', id: 'graznido' });
     if (resp.cabra) m.eventos.push({ tipo: 'ambiente', id: 'balido' });
+    if (resp.golondrina) m.eventos.push({ tipo: 'ambiente', id: 'canto' });
+    if (resp.abeja) m.eventos.push({ tipo: 'ambiente', id: 'zumbido' });
     for (const p of puertasSonido) {
       if (p.abierta || p.sonido !== m.eco) continue;
       if (Math.hypot(p.x + 0.5 - j.x, p.y + 0.5 - j.y) <= ALCANCE_ECO) {

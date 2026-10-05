@@ -11,6 +11,9 @@ const R_GAVIOTA = 1.7;             // la gaviota se corre si alguien pasa a esta
 const R_PEGASO = 3.2;              // las gaviotas se suman al vuelo de Pegaso a esta distancia
 const R_TORO = 3.4;                // el toro y el Minotauro se saludan a esta distancia
 const ALTO_POSTE = 1.1;            // niveles (el poste mide unos 33 px)
+const R_ABEJAS = 4.5;              // las abejas brillan con la luz de Fénix a esta distancia
+const R_CABRA_ALTA = 4;            // la cabra de la terraza sale a recibir a quien aterriza a esta distancia
+const R_PLUMAS = 3;                // las plumas se arremolinan si Pegaso o Fénix pasan volando a esta distancia
 const SIGUE_DUR = 4.5;             // cuánto acompañan las gaviotas a Pegaso
 const R_LIRIO = 1.8;               // los lirios se mecen si alguien pasa a esta distancia
 const R_OLIVO = 3.2;               // caen hojas del olivo si Pegaso vuela a esta distancia
@@ -26,15 +29,21 @@ export function crearAmbiente(lista, celdas) {
   const agua = (x, y) => { const f = celdas[Math.floor(y)]; return !!f && f[Math.floor(x)] === '~'; };
   const items = (lista || []).map((d, i) => {
     const it = { tipo: d.tipo, x: d.x + 0.5, y: d.y + 0.5, hx: d.x + 0.5, hy: d.y + 0.5, i, v: d.v || 0, mira: d.mira || 1 };
+    // Altura de la casilla donde está (terraza 1, techo 2, parapeto 0,8): lo que se posa ahí se dibuja a esa altura
+    it.z = { a: 1, A: 2, b: 0.8 }[(celdas[d.y] || [])[d.x]] || 0;
+    it.hz = d.tipo === 'golondrina' ? it.z + 0.2 : ALTO_POSTE;
     if (d.tipo === 'delfin') Object.assign(it, { salto: null, prox: 1.5 + (i * 1.7) % 5 + Math.random() * 3, listo: 0, anillos: [] });
     else if (d.tipo === 'pulpo') Object.assign(it, { esc: 0, curioso: 0, azul: 0 });
-    else if (d.tipo === 'gaviota') Object.assign(it, { estado: 'posada', t: 0, reposo: 0, px: it.x, py: it.y, pz: ALTO_POSTE, grazna: 0, vuela: false, cara: i % 2 ? -1 : 1, fase: i * 2.1 });
+    else if (d.tipo === 'gaviota' || d.tipo === 'golondrina') Object.assign(it, { estado: 'posada', t: 0, reposo: 0, px: it.x, py: it.y, pz: it.hz, grazna: 0, vuela: false, cara: i % 2 ? -1 : 1, fase: i * 2.1 });
     else if (d.tipo === 'toro') Object.assign(it, { cabeza: 0, cara: it.mira });
     else if (d.tipo === 'lirios') Object.assign(it, { agita: 0, abre: 0, abreT: 0 });
     else if (d.tipo === 'narciso') Object.assign(it, { inc: 0, incT: 0, hacia: d.hacia ? [d.hacia[0] + 0.5, d.hacia[1] + 0.5] : [it.x, it.y] });
     else if (d.tipo === 'olivo') Object.assign(it, { colision: true, hojas: [], cool: 0 });
     else if (d.tipo === 'granado') Object.assign(it, { sacude: 0, cool: 0, granada: null });
     else if (d.tipo === 'cabra') Object.assign(it, { estado: 'quieta', t: 0, reposo: 0, px: it.x, py: it.y, tx: it.x, ty: it.y, balido: 0, cara: i % 2 ? -1 : 1, mueve: false, corre: false });
+    else if (d.tipo === 'colmena') Object.assign(it, { brilla: 0, ronda: 0 });
+    else if (d.tipo === 'cabra-alta') Object.assign(it, { estado: 'quieta', px: it.x, py: it.y, lejos: 0, cara: it.mira, mueve: false, rango: d.rango || [d.x, d.y, d.x, d.y] });
+    else if (d.tipo === 'plumas') Object.assign(it, { rem: 0 });
     else if (d.tipo === 'gato') Object.assign(it, { estado: 'duerme', reposo: 0, px: it.x, py: it.y, estira: 0, sigue: 0, cara: i % 2 ? -1 : 1, mueve: false });
     return it;
   });
@@ -89,10 +98,10 @@ export function crearAmbiente(lista, celdas) {
       if (pegaso) { g.estado = 'sigue'; g.t = 0; }
       else if (g.estado === 'posada' && d < R_GAVIOTA && j.personaje !== 'pegaso') { g.estado = 'aparta'; g.t = 0; }
     }
-    let tx = g.hx, ty = g.hy, tz = ALTO_POSTE, k = 2.5;
+    let tx = g.hx, ty = g.hy, tz = g.hz, k = 2.5;
     if (g.estado === 'aparta') {
       const l = Math.hypot(g.hx - j.x, g.hy - j.y) || 1;
-      tx = g.hx + (g.hx - j.x) / l * 2.2; ty = g.hy + (g.hy - j.y) / l * 1.2 - 0.6; tz = ALTO_POSTE + 0.8;
+      tx = g.hx + (g.hx - j.x) / l * 2.2; ty = g.hy + (g.hy - j.y) / l * 1.2 - 0.6; tz = g.hz + 0.8;
       g.t += dt; if (g.t > 1.3) g.estado = 'vuelve';
     } else if (g.estado === 'sigue') {
       tx = j.x + Math.cos(g.fase + g.t * 1.6) * 1.2; ty = j.y - 0.4 + Math.sin(g.fase + g.t * 1.6) * 0.5; tz = Math.max(j.z, 0) + 1.3 + Math.sin(g.t * 3 + g.fase) * 0.15; k = 3.5;
@@ -101,8 +110,8 @@ export function crearAmbiente(lista, celdas) {
     const kk = 1 - Math.exp(-dt * k), antes = g.px;
     g.px += (tx - g.px) * kk; g.py += (ty - g.py) * kk; g.pz += (tz - g.pz) * kk;
     if (Math.abs(g.px - antes) > 0.002) g.cara = Math.sign(g.px - antes);
-    if (g.estado === 'vuelve' && Math.hypot(g.px - g.hx, g.py - g.hy) < 0.06 && Math.abs(g.pz - ALTO_POSTE) < 0.06) {
-      g.estado = 'posada'; g.px = g.hx; g.py = g.hy; g.pz = ALTO_POSTE; g.reposo = Math.max(g.reposo, 1.5);
+    if (g.estado === 'vuelve' && Math.hypot(g.px - g.hx, g.py - g.hy) < 0.06 && Math.abs(g.pz - g.hz) < 0.06) {
+      g.estado = 'posada'; g.px = g.hx; g.py = g.hy; g.pz = g.hz; g.reposo = Math.max(g.reposo, 1.5);
     }
     g.vuela = g.estado !== 'posada';
   }
@@ -188,12 +197,40 @@ export function crearAmbiente(lista, celdas) {
     if (g.estado === 'vuelve' && Math.hypot(g.px - g.hx, g.py - g.hy) < 0.05) { g.estado = 'duerme'; g.px = g.hx; g.py = g.hy; g.reposo = 2; g.mueve = false; }
   }
 
+  // --- Palacio ---
+  // La cabra de la terraza recibe a Pegaso o Fénix que aterrizan cerca: se acerca y se echa a su lado.
+  // Se mueve solo dentro de su rango (un rectángulo de la terraza lejos de los desafíos).
+  function actualizarCabraAlta(c, dt, j) {
+    const vuela = (j.personaje === 'pegaso' || j.personaje === 'fenix') && j.estado === 'jugando' && j.enSuelo && Math.abs(j.z - c.z) < 0.4;
+    const cerca = vuela && dist(j, c.px, c.py) < (c.estado === 'quieta' ? R_CABRA_ALTA : R_CABRA_ALTA + 2);
+    c.lejos = cerca ? 0 : c.lejos + dt;
+    const [x0, y0, x1, y1] = c.rango, ac = (v, a, b) => Math.max(a + 0.5, Math.min(b + 0.5, v));
+    if (c.estado === 'quieta' && cerca) c.estado = 'acerca';
+    else if ((c.estado === 'acerca' || c.estado === 'echada') && c.lejos > 2) c.estado = 'vuelve';
+    let tx = c.hx, ty = c.hy, k = 2;
+    if (c.estado === 'acerca' || c.estado === 'echada') { tx = ac(j.x - 0.9, x0, x1); ty = ac(j.y + 0.2, y0, y1); k = 2.5; }
+    const kk = 1 - Math.exp(-dt * k), ax = c.px;
+    if (c.estado !== 'echada') { c.px += (tx - c.px) * kk; c.py += (ty - c.py) * kk; }
+    c.mueve = Math.abs(c.px - ax) / dt > 0.3;
+    if (Math.abs(c.px - ax) > 0.002) c.cara = Math.sign(c.px - ax);
+    else if (c.estado === 'echada') c.cara = Math.sign(j.x - c.px) || c.cara;
+    if (c.estado === 'acerca' && Math.hypot(c.px - tx, c.py - ty) < 0.12) c.estado = 'echada';
+    if (c.estado === 'vuelve' && Math.hypot(c.px - c.hx, c.py - c.hy) < 0.05) { c.estado = 'quieta'; c.px = c.hx; c.py = c.hy; c.mueve = false; }
+  }
+  function actualizarPlumas(p, dt, j) {
+    p.rem = Math.max(0, p.rem - dt);
+    if (p.rem <= 0 && (j.personaje === 'pegaso' || j.personaje === 'fenix') && j.planeo && j.estado === 'jugando' && dist(j, p.x, p.y) < R_PLUMAS) p.rem = 2.8;
+  }
+
   function actualizar(dt, t, j) {
     let rev = 0, dirRev = j.reverenciaDir || 1;
     for (const it of items) {
       if (it.tipo === 'delfin') actualizarDelfin(it, dt, t, j);
       else if (it.tipo === 'pulpo') actualizarPulpo(it, dt, j);
-      else if (it.tipo === 'gaviota') actualizarGaviota(it, dt, j);
+      else if (it.tipo === 'gaviota' || it.tipo === 'golondrina') actualizarGaviota(it, dt, j);
+      else if (it.tipo === 'colmena') { it.brilla = Math.max(0, it.brilla - dt); it.ronda = Math.max(0, it.ronda - dt); }
+      else if (it.tipo === 'cabra-alta') actualizarCabraAlta(it, dt, j);
+      else if (it.tipo === 'plumas') actualizarPlumas(it, dt, j);
       else if (it.tipo === 'lirios') actualizarLirios(it, dt, j);
       else if (it.tipo === 'narciso') actualizarNarciso(it, dt);
       else if (it.tipo === 'olivo') actualizarOlivo(it, dt, j);
@@ -209,7 +246,7 @@ export function crearAmbiente(lista, celdas) {
   // Eco usó la voz: responden los delfines (chasquido) y las gaviotas (graznido) a su alcance.
   // Devuelve qué respondió para que el mundo avise (sonido sintetizado; siempre también se ve).
   function voz(j) {
-    const res = { delfin: false, gaviota: false, cabra: false };
+    const res = { delfin: false, gaviota: false, cabra: false, golondrina: false, abeja: false };
     for (const it of items) {
       if (dist(j, it.x, it.y) > ALCANCE_VOZ) continue;
       if (it.tipo === 'delfin') {
@@ -218,6 +255,8 @@ export function crearAmbiente(lista, celdas) {
         res.delfin = true;
       } else if (it.tipo === 'gaviota') { it.grazna = 1.2; res.gaviota = true; }
       else if (it.tipo === 'cabra') { it.balido = 1.2; res.cabra = true; }
+      else if (it.tipo === 'golondrina') { it.grazna = 1.2; res.golondrina = true; }
+      else if (it.tipo === 'colmena') { it.ronda = 3.5; res.abeja = true; }
       else if (it.tipo === 'narciso') it.incT = 3;   // solo con Eco: se inclinan hacia el agua
     }
     return res;
@@ -228,6 +267,7 @@ export function crearAmbiente(lista, celdas) {
     for (const it of items) {
       if (it.tipo === 'pulpo' && dist(j, it.x, it.y) < R_BRILLO) { it.azul = 3.5; it.curioso = 3; }
       else if (it.tipo === 'lirios' && dist(j, it.x, it.y) < R_BRILLO) it.abreT = 6;
+      else if (it.tipo === 'colmena' && dist(j, it.x, it.y) < R_ABEJAS) it.brilla = 4;
     }
   }
   // Ariadna tendió una soga: los gatos cercanos la persiguen un rato

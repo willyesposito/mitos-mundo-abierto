@@ -37,6 +37,8 @@ export function crearSonido(sonidos = {}) {
       case 'resuena': nota(s.frecuencia, { onda: s.onda, dur: 0.9, vol: 0.03 }); break;
       case 'ambiente':
         if (id === 'chasquido') for (const r of [0.3, 0.42, 0.5]) nota(2100, { dur: 0.05, vol: 0.05, retardo: r });
+        else if (id === 'canto') for (const [r, f] of [[0.3, 2600], [0.4, 3100], [0.5, 2700], [0.62, 3200]]) nota(f, { dur: 0.07, vol: 0.03, retardo: r });
+        else if (id === 'zumbido') { nota(150, { onda: 'sawtooth', dur: 0.9, vol: 0.03, retardo: 0.3 }); nota(158, { onda: 'sawtooth', dur: 0.9, vol: 0.03, retardo: 0.3 }); }
         else if (id === 'balido') for (const [r, f] of [[0.3, 430], [0.5, 400], [0.7, 440]]) nota(f, { onda: 'sawtooth', dur: 0.16, vol: 0.03, retardo: r });
         else if (id === 'graznido') { nota(620, { onda: 'sawtooth', dur: 0.14, vol: 0.035, retardo: 0.3 }); nota(520, { onda: 'sawtooth', dur: 0.2, vol: 0.035, retardo: 0.46 }); }
         break;
