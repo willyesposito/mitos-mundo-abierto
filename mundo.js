@@ -1,6 +1,8 @@
 // Reglas y física del mundo: alturas, salto, vuelo, empujar, embestir, objetos.
 // No dibuja nada y no toca el DOM. Habla con la interfaz por la cola `eventos`.
 
+import { crearAmbiente } from './ambiente.js';
+
 export const TW = 44;   // ancho de baldosa en pantalla
 export const TH = 36;   // profundidad de baldosa en pantalla
 export const LH = 30;   // píxeles por nivel de altura
@@ -138,8 +140,10 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     recogido: !!recogidos[o.id],
   }));
 
+  const amb = crearAmbiente(mapa.ambiente, celdas);   // fauna y detalles: no bloquean ni se guardan
+
   const m = {
-    id: mapa.id, barcas: mapa.barcas || [],
+    id: mapa.id, barcas: mapa.barcas || [], ambiente: amb.items, bloqueos: amb.bloqueos,
     cols, rows, celdas, origen, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], senales: [], eventos: [], t: 0, velo: 0,
     jugador: {
@@ -147,7 +151,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       enSuelo: true, coyote: 0, buffer: 0, planeo: false,
       fx: 0, fy: 1, camina: false, paso: 0,
       personaje: 'pegaso', embiste: null, embCool: 0,
-      empuje: { e: null, t: 0 }, pistaCool: 0, tap: false, poderT: 0, brillo: 0, ecoCool: 0, esfuerzo: 0, senalT: 0,
+      empuje: { e: null, t: 0 }, pistaCool: 0, tap: false, poderT: 0, brillo: 0, ecoCool: 0, esfuerzo: 0, senalT: 0, reverencia: 0, reverenciaDir: 1,
       seguro: { x: arranque[0], y: arranque[1], z: 0 },
       estado: 'jugando', estadoT: 0,
     },
@@ -178,6 +182,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
 
   function alturaTile(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return ALTURA_PARED;
+    if (amb.bloqueos.has(tx + ',' + ty)) return ALTURA_PARED;   // el olivo es el único ambiente con cuerpo
     const hc = cuerdas.get(tx + ',' + ty);
     if (hc !== undefined) return hc;
     const h = alturaCelda(celdas[ty][tx]);
@@ -284,6 +289,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     j.brillo = 1;
     chispas(j.x, j.y, j.z + 0.8, '#ffd36a', 16, 2.2);
     m.eventos.push({ tipo: 'brillo' });
+    amb.brillo(j);
     for (const b of braseros) {
       if (b.encendido) continue;
       if (Math.hypot(b.x + 0.5 - j.x, b.y + 0.5 - j.y) < RADIO_BRILLO && Math.abs(j.z - b.zBase) < 1.5) {
@@ -317,6 +323,12 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     j.ecoCool = 0.8;
     m.ondas.push({ x: j.x, y: j.y, z: j.z, color: sonidos[m.eco].color, t: 0, dur: 0.9, alcance: ALCANCE_ECO });
     m.eventos.push({ tipo: 'eco', id: m.eco });
+    const resp = amb.voz(j);
+    if (resp.delfin) m.eventos.push({ tipo: 'ambiente', id: 'chasquido' });
+    if (resp.gaviota) m.eventos.push({ tipo: 'ambiente', id: 'graznido' });
+    if (resp.cabra) m.eventos.push({ tipo: 'ambiente', id: 'balido' });
+    if (resp.golondrina) m.eventos.push({ tipo: 'ambiente', id: 'canto' });
+    if (resp.abeja) m.eventos.push({ tipo: 'ambiente', id: 'zumbido' });
     for (const p of puertasSonido) {
       if (p.abierta || p.sonido !== m.eco) continue;
       if (Math.hypot(p.x + 0.5 - j.x, p.y + 0.5 - j.y) <= ALCANCE_ECO) {
@@ -384,6 +396,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     mejor.desde = da <= db ? 0 : 1; mejor.prog = 0;
     tenderEn(mejor);
     for (const c of mejor.casillas) chispas(c.x + 0.5, c.y + 0.5, c.h + 0.4, '#b5482e', 6, 1.6);
+    amb.hilo(j);
     m.eventos.push({ tipo: 'soga' });
   }
 
@@ -441,6 +454,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     actualizarMecanismos(dt);
     actualizarParticulas(dt);
     actualizarSenales(dt);
+    amb.actualizar(dt, m.t, j);
     j.esfuerzo = Math.max(0, j.esfuerzo - dt);
 
     if (j.estado === 'volviendo') {

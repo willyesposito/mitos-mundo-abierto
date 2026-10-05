@@ -4,7 +4,7 @@ Estado de las sesiones. El contenido de cada una (fichas, catálogo, desafíos) 
 
 Estados: **pendiente**, **construida** (`probar.js` pasa) y **validada** (la jugadora lo usó en el celular). Solo Willy marca "validada".
 
-Última verificación: 2026-10-05, `probar.js` con 245 chequeos OK y ninguna falla (A6, tanda 1).
+Última verificación: 2026-10-05, `probar.js --rapido` con 67 OK y ninguna falla; la corrida completa dio 245 OK y ninguna falla (A6, tanda 4).
 
 ## Etapa 1: primer mapa completo (puerto, plaza, palacio)
 
@@ -33,7 +33,7 @@ Plan en `plan-arte.md`. Decisiones: D16 a D22. Orden de inicio a definir por Wil
 - [x] **A3 Movimiento y poderes**: construida. Decisiones: D20, D25. Aleteo de Pegaso y Fénix, más señales de los cinco poderes y de despegue y aterrizaje. Falta que la jugadora use los cinco en el celular y ninguno se vea como otro.
 - [x] **A4 Interfaz**: construida. Maqueta aprobada en el lienzo de Design "Mitos: interfaz" (privado de Willy). Íconos en tres tonos, tira con insignia de rasgo, aviso con medallón, pista con velo y ficha nueva. Falta que la jugadora lo pruebe en el celular.
 - [x] **A5 Escenario y mecanismos**: construida (`probar.js`: 193 OK tras unir con el aleteo). Decisión: D17. Falta la animación de la reja al abrirse y ver techo, reja y puerta de sonido en el celular.
-- [ ] **A6 Coleccionables y ambiente**: en curso. Decisión: D27. Tanda 1 (los 7 coleccionables con sprite propio, verificados contra fuentes) construida y en el juego. Faltan las tandas 2 a 4 (ambiente de puerto, plaza y palacio) y sus reacciones. Diseños en el lienzo de Design "Mitos: coleccionables y ambiente" (privado de Willy).
+- [x] **A6 Coleccionables y ambiente**: construida (tandas 1 a 4). Decisiones: D27, D28. Los 7 coleccionables con sprite propio y el ambiente de puerto, plaza y palacio con sus reacciones, en `ambiente.js`. Falta que la jugadora lo vea en el celular y que ninguna reacción se confunda con un desafío. Lo más flojo del dibujo: toro (cabeza chica), ánforas y hacha tallada. Diseños de los coleccionables en el lienzo de Design "Mitos: coleccionables y ambiente" (privado de Willy).
 
 ## Abierto
 

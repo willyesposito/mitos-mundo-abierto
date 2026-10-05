@@ -125,6 +125,199 @@ async function main() {
       const t = await page.evaluate(id => { const c = document.querySelector(`.pj[data-id=${id}] canvas`); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k; }, id);
       ok(n > 500 && t > 500, `se dibuja ${id} (${n} píxeles en el lienzo, ${t} en la tira)`);
     }
+    // "Mis objetos" no lista los objetos de prueba (el campo de pruebas cuenta aparte); sí lista uno real
+    const tpg = (x, y, pj) => page.evaluate(([x, y, pj]) => { const m = window.__mundo, j = m.jugador; j.x = x; j.y = y; j.z = m.suelo(x, y); j.vz = 0; j.enSuelo = true; j.planeo = false; j.estado = 'jugando'; j.seguro = { x, y, z: j.z }; if (pj) m.cambiarPersonaje(pj); }, [x, y, pj || null]);
+    const verMisObjetos = async () => { await page.click('#btn-menu'); await page.click('#menu-objetos'); const t = await page.evaluate(() => document.getElementById('lista-objetos').innerText); await page.click('#menu-volver'); await page.click('#menu-seguir'); await espera(200); return t; };
+    await tpg(11.5, 87.5, 'pegaso'); await espera(300);   // el ancla de piedra, objeto real del puerto
+    let lista = await verMisObjetos();
+    ok(/Ancla de piedra/.test(lista), 'Mis objetos lista un objeto real (el ancla de piedra)');
+    await page.click('#btn-menu'); await page.click('#menu-pruebas');
+    await page.waitForFunction(() => window.__mundo && window.__mundo.id === 'pruebas'); await espera(400);
+    ok((await page.evaluate(() => window.__mundo.ambiente.length)) === 0, 'el campo de pruebas no lleva ambiente');
+    const op = await page.evaluate(() => window.__mundo.coleccionables[0]);
+    await tpg(op.x, op.y); await espera(300);
+    ok(await page.evaluate(() => window.__mundo.coleccionables.some(c => c.recogido)), 'se juntó un objeto de prueba');
+    lista = await verMisObjetos();
+    ok(!/prueba/i.test(lista) && /Ancla de piedra/.test(lista), 'Mis objetos no lista el objeto de prueba juntado');
+    await page.click('#btn-menu'); await page.click('#menu-pruebas');
+    await page.waitForFunction(() => window.__mundo && window.__mundo.id === 'mundo'); await espera(400);
+
+    // Ambiente del puerto: existe, no bloquea, no se guarda y reacciona a cada poder
+    const amb = await page.evaluate(() => window.__mundo.ambiente.map(a => ({ tipo: a.tipo, x: a.hx, y: a.hy })));
+    const tipos = new Set(amb.map(a => a.tipo));
+    ok(['delfin', 'pulpo', 'gaviota', 'toro', 'red', 'anforas', 'concha'].every(t => tipos.has(t)), 'el puerto tiene delfines, pulpo, gaviotas, toro, redes, ánforas y conchas');
+    const PTIPOS = ['delfin', 'pulpo', 'gaviota', 'toro', 'red', 'anforas', 'concha'];
+    ok(amb.filter(a => PTIPOS.includes(a.tipo)).every(a => a.y >= 74 && a.y <= 98 && a.x >= 1), 'los elementos del puerto están en la zona del puerto');
+    ok(['lirios', 'narciso', 'estanque', 'azafran', 'olivo', 'granado', 'cabra', 'gato'].every(t => amb.some(a => a.tipo === t)), 'la plaza tiene lirios, narcisos, estanque, azafrán, olivo, granado, cabras y gatos');
+    const LTIPOS = ['lirios', 'narciso', 'estanque', 'azafran', 'olivo', 'granado', 'cabra', 'gato'];
+    const ATIPOS = ['colmena', 'cabra-alta', 'plumas', 'friso', 'hacha-tallada', 'cuernos', 'golondrina', 'laurel'];
+    ok(amb.filter(a => LTIPOS.includes(a.tipo)).every(a => Math.floor(a.y) >= 41 && Math.floor(a.y) <= 72), 'los elementos de la plaza están en la zona de la plaza (filas 41 a 72)');
+    ok(ATIPOS.every(t => amb.some(a => a.tipo === t)) && amb.filter(a => ATIPOS.includes(a.tipo)).every(a => Math.floor(a.y) <= 39), 'el palacio tiene colmenas, cabra, plumas, friso, hachas, cuernos, golondrinas y laureles, todos en las filas 0 a 39');
+    ok(amb.every(a => [...PTIPOS, ...LTIPOS, ...ATIPOS].includes(a.tipo)), 'no hay tipos de ambiente sueltos fuera de su zona');
+    // ninguno cae en una casilla de desafío (placas, braseros, fuentes, argollas, baldosas, puertas) ni a menos de una casilla y media
+    const choque = await page.evaluate(() => {
+      const m = window.__mundo, malos = [];
+      const retos = [...m.braseros.map(b => [b.x, b.y]), ...m.fuentes.map(f => [f.tx, f.ty]), ...m.sogas.flatMap(s => [s.a, s.b, ...s.casillas.map(c => [c.x, c.y])]),
+        ...m.enlaces.flatMap(e => [e.placa, e.abre]), ...m.soles.map(s => s.abre), ...m.puertasSonido.map(p => [p.x, p.y])];
+      m.origen.forEach((f, y) => f.forEach((c, x) => { if ('pGDOM,'.includes(c)) retos.push([x, y]); }));
+      for (const a of m.ambiente) {
+        if (a.y > 73) continue;
+        const c = m.origen[Math.floor(a.hy)][Math.floor(a.hx)];
+        if (!'.ab'.includes(c)) malos.push(a.tipo + ' sobre piso no común');
+        if ((a.tipo === 'colmena' || a.tipo === 'cabra-alta') && c !== 'a') malos.push(a.tipo + ' fuera de la terraza');
+        if (retos.some(([x, y]) => Math.hypot(x + 0.5 - a.hx, y + 0.5 - a.hy) < 1.5)) malos.push(a.tipo + ' junto a un desafío');
+      }
+      return malos;
+    });
+    ok(choque.length === 0, 'el ambiente de la plaza no cae en ni junto a casillas de desafío' + (choque.length ? ': ' + choque.join(', ') : ''));
+    const claves = () => page.evaluate(() => { const d = JSON.parse(localStorage.getItem('mitos-mundo-abierto-v1')), p = d.perfiles[0]; return JSON.stringify([Object.keys(p).sort(), Object.keys(p.mundos.mundo || {}).sort()]); });
+    const antesClaves = await claves();
+    const toro = amb.find(a => a.tipo === 'toro'), anf = amb.find(a => a.tipo === 'anforas');
+    // no bloquea: se camina por la casilla del toro y por la de las ánforas
+    for (const el of [toro, anf]) {
+      await tpg(el.x - 1.4, el.y, 'ariadna'); await espera(100);
+      await poner(new Set(['ArrowRight'])); await espera(700); await soltarTodo();
+      const x = await page.evaluate(() => window.__mundo.jugador.x);
+      ok(x > el.x + 0.3, `se atraviesa la casilla de ${el.tipo === 'toro' ? 'el toro' : 'las ánforas'} sin trabarse`);
+    }
+    const lee = (f) => page.evaluate(f);
+    // toro y Minotauro: bajan la cabeza a la vez; con otro personaje, nada
+    await tpg(toro.x + 2.6, toro.y, 'ariadna'); await espera(700);
+    ok((await lee(() => window.__mundo.ambiente.find(a => a.tipo === 'toro').cabeza)) < 0.1, 'el toro no reacciona a Ariadna');
+    await tpg(toro.x + 2.6, toro.y, 'minotauro');
+    await page.waitForFunction(() => window.__mundo.ambiente.find(a => a.tipo === 'toro').cabeza > 0.9 && window.__mundo.jugador.reverencia > 0.9, null, { timeout: 4000 }).then(() => ok(true, 'el toro y el Minotauro bajan la cabeza a la vez'), () => ok(false, 'el toro y el Minotauro bajan la cabeza a la vez'));
+    await tpg(toro.x + 8, toro.y - 6, 'ariadna'); await espera(900);
+    ok((await lee(() => window.__mundo.ambiente.find(a => a.tipo === 'toro').cabeza)) < 0.1, 'el toro vuelve a mirar el mar al alejarse');
+    // gaviotas: se corren con cualquiera, vuelan con Pegaso, y vuelven a su poste
+    const gav = amb.find(a => a.tipo === 'gaviota');
+    await tpg(gav.x - 0.9, gav.y + 0.2, 'ariadna');
+    await page.waitForFunction(() => window.__mundo.ambiente.some(a => a.tipo === 'gaviota' && a.estado === 'aparta'), null, { timeout: 3000 }).then(() => ok(true, 'las gaviotas se corren cuando pasa Ariadna'), () => ok(false, 'las gaviotas se corren cuando pasa Ariadna'));
+    await tpg(gav.x - 14, gav.y - 8, 'ariadna');
+    await page.waitForFunction(() => window.__mundo.ambiente.filter(a => a.tipo === 'gaviota').every(a => a.estado === 'posada'), null, { timeout: 12000 }).then(() => ok(true, 'las gaviotas vuelven a su poste'), () => ok(false, 'las gaviotas vuelven a su poste'));
+    await tpg(gav.x - 1.5, gav.y + 0.5, 'pegaso');
+    await page.waitForFunction(() => window.__mundo.ambiente.some(a => a.tipo === 'gaviota' && a.estado === 'sigue'), null, { timeout: 3000 }).then(() => ok(true, 'las gaviotas vuelan con Pegaso'), () => ok(false, 'las gaviotas vuelan con Pegaso'));
+    // delfines: saltan siguiendo a Pegaso que vuela sobre el agua
+    await tpg(18.5, 89.5, 'pegaso'); await poner(new Set(['KeyE'])); await espera(500);
+    await page.evaluate(() => { const j = window.__mundo.jugador; j.x = 17.5; j.y = 88.2; });
+    await page.waitForFunction(() => window.__mundo.ambiente.some(a => a.tipo === 'delfin' && a.salto), null, { timeout: 3000 }).then(() => ok(true, 'un delfín salta siguiendo a Pegaso sobre el agua'), () => ok(false, 'un delfín salta siguiendo a Pegaso sobre el agua'));
+    await soltarTodo();
+    // Eco: los delfines responden con un chasquido (se ve un anillo) y las gaviotas con un graznido (se ve y suena)
+    await page.evaluate(() => { window.__mundo.eco = 'caracola'; });
+    await tpg(17.5, 91.5, 'eco'); await espera(600);
+    await page.keyboard.press('KeyE'); await espera(300);
+    const resp = await lee(() => ({ anillo: window.__mundo.ambiente.some(a => a.tipo === 'delfin' && a.anillos.some(r => r.tipo === 'chasquido')), grazna: window.__mundo.ambiente.some(a => a.tipo === 'gaviota' && a.grazna > 0), sonidos: window.__sonidos.filter(x => x.startsWith('ambiente')) }));
+    ok(resp.anillo && resp.sonidos.includes('ambiente:chasquido'), 'los delfines responden a Eco con un chasquido visible');
+    ok(resp.grazna && resp.sonidos.includes('ambiente:graznido'), 'las gaviotas repiten el graznido con Eco');
+    // pulpo: se esconde al pasar y con el brillo de Fénix cambia de color
+    const pul = amb.find(a => a.tipo === 'pulpo');
+    await tpg(pul.x - 1.6, pul.y, 'ariadna');
+    await page.waitForFunction(() => window.__mundo.ambiente.find(a => a.tipo === 'pulpo').esc > 0.95, null, { timeout: 3000 }).then(() => ok(true, 'el pulpo se esconde cuando alguien pasa cerca'), () => ok(false, 'el pulpo se esconde cuando alguien pasa cerca'));
+    await tpg(pul.x - 2.5, pul.y, 'fenix'); await espera(1500);
+    await page.keyboard.press('KeyE'); await espera(300);
+    ok((await lee(() => window.__mundo.ambiente.find(a => a.tipo === 'pulpo').azul)) > 1, 'el pulpo cambia de color con el brillo de Fénix');
+    // Plaza: el olivo es el único con cuerpo y no deja nada sin recorrer
+    const plaza = amb.filter(a => !PTIPOS.includes(a.tipo)), por = t => plaza.filter(a => a.tipo === t);
+    const olivo = por('olivo')[0], cabras = por('cabra'), gatos = por('gato'), lirio = por('lirios')[0], nar = por('narciso')[0], gran = por('granado')[0], cabra = cabras[0];
+    await tpg(olivo.x - 1.4, olivo.y, 'ariadna'); await espera(100);
+    await poner(new Set(['ArrowRight'])); await espera(700); await soltarTodo();
+    ok((await page.evaluate(() => window.__mundo.jugador.x)) < olivo.x - 0.3, 'el olivo bloquea el paso');
+    await tpg(cabra.x - 1.4, cabra.y - 0.3, 'ariadna'); await espera(100);
+    await poner(new Set(['ArrowRight'])); await espera(700); await soltarTodo();
+    ok((await page.evaluate(() => window.__mundo.jugador.x)) > cabra.x + 0.3, 'se atraviesa la casilla de una cabra sin trabarse');
+    const alcance = await page.evaluate(() => {
+      const m = window.__mundo, ini = [11, 71];
+      const llega = olivos => {
+        const vis = new Set([ini.join(',')]), cola = [ini];
+        while (cola.length) {
+          const [x, y] = cola.pop();
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = x + dx, ny = y + dy, c = m.origen[ny] && m.origen[ny][nx], k = nx + ',' + ny;
+            if (!c || vis.has(k) || !'.,p'.includes(c) || (olivos && m.bloqueos.has(k))) continue;
+            vis.add(k); cola.push([nx, ny]);
+          }
+        }
+        return vis;
+      };
+      const con = llega(true), sin = llega(false);
+      return { con: con.size, sin: sin.size, bloqueadas: [...m.bloqueos].filter(k => sin.has(k)).length, desafios: [...m.braseros.map(b => [b.x, b.y]), ...m.sogas.map(s => s.a)].every(([x, y]) => con.has(x + ',' + y) || m.origen[y][x] !== '.') };
+    });
+    ok(alcance.con === alcance.sin - alcance.bloqueadas && alcance.sin > 300, `el olivo no encierra ni corta nada (${alcance.con} casillas alcanzables de ${alcance.sin})`);
+    // lirios: se mecen al pasar; con el brillo de Fénix se abren
+    await tpg(lirio.x, lirio.y + 0.9, 'ariadna'); await espera(300);
+    ok((await lee(() => window.__mundo.ambiente.find(a => a.tipo === 'lirios').agita)) > 0.9, 'los lirios se mecen cuando alguien pasa');
+    await tpg(lirio.x, lirio.y + 2.5, 'fenix'); await espera(1500);
+    await page.keyboard.press('KeyE'); await espera(900);
+    ok((await lee(() => window.__mundo.ambiente.find(a => a.tipo === 'lirios').abre)) > 0.8, 'los lirios se abren con el brillo de Fénix');
+    // narcisos: solo con la voz de Eco se inclinan hacia el estanque
+    await tpg(nar.x + 0.5, nar.y - 1.6, 'ariadna'); await espera(700);
+    await page.keyboard.press('KeyE'); await espera(500);
+    ok((await lee(() => window.__mundo.ambiente.filter(a => a.tipo === 'narciso').every(a => a.inc < 0.1))), 'los narcisos no reaccionan a otros personajes');
+    await page.evaluate(() => { window.__mundo.eco = 'caracola'; });
+    await tpg(nar.x + 0.5, nar.y - 1.6, 'eco'); await espera(600);
+    await page.keyboard.press('KeyE'); await espera(900);
+    ok((await lee(() => window.__mundo.ambiente.filter(a => a.tipo === 'narciso').every(a => a.inc > 0.8))), 'los narcisos se inclinan hacia el agua con la voz de Eco');
+    // cabras: se apartan, el Minotauro las hace correr, Eco las hace balar
+    await tpg(cabra.x, cabra.y + 1.2, 'ariadna');
+    await page.waitForFunction(() => window.__mundo.ambiente.some(a => a.tipo === 'cabra' && a.estado === 'aparta'), null, { timeout: 3000 }).then(() => ok(true, 'las cabras se apartan cuando pasa Ariadna'), () => ok(false, 'las cabras se apartan cuando pasa Ariadna'));
+    await tpg(cabra.x - 14, cabra.y - 3, 'ariadna');
+    await page.waitForFunction(() => window.__mundo.ambiente.filter(a => a.tipo === 'cabra').every(a => a.estado === 'quieta'), null, { timeout: 12000 }).then(() => ok(true, 'las cabras vuelven a su lugar'), () => ok(false, 'las cabras vuelven a su lugar'));
+    await tpg(cabra.x - 2.5, cabra.y, 'minotauro');
+    await page.waitForFunction(() => window.__mundo.ambiente.some(a => a.tipo === 'cabra' && a.estado === 'huye'), null, { timeout: 3000 }).then(() => ok(true, 'las cabras salen corriendo cuando llega el Minotauro'), () => ok(false, 'las cabras salen corriendo cuando llega el Minotauro'));
+    await tpg(cabra.x - 3, cabra.y + 3, 'eco'); await espera(600);
+    await page.keyboard.press('KeyE'); await espera(300);
+    const bal = await lee(() => ({ bala: window.__mundo.ambiente.some(a => a.tipo === 'cabra' && a.balido > 0), sonidos: window.__sonidos.filter(x => x.startsWith('ambiente')) }));
+    ok(bal.bala && bal.sonidos.includes('ambiente:balido'), 'las cabras balan en respuesta a Eco (se ve y suena)');
+    // gatos: se estiran al pasar y persiguen a Ariadna
+    const gato = gatos[1];
+    await tpg(gato.x - 14, gato.y + 8, 'pegaso');
+    await page.waitForFunction(() => window.__mundo.ambiente.filter(a => a.tipo === 'gato').every(a => a.estado === 'duerme'), null, { timeout: 15000 }).catch(() => {});
+    await tpg(gato.x - 1.0, gato.y, 'pegaso');
+    await page.waitForFunction(() => window.__mundo.ambiente.some(a => a.tipo === 'gato' && a.estira > 0), null, { timeout: 3000 }).then(() => ok(true, 'los gatos se estiran cuando alguien pasa'), async () => ok(false, 'los gatos se estiran cuando alguien pasa ' + JSON.stringify(await lee(() => window.__mundo.ambiente.filter(a => a.tipo === 'gato').map(a => [a.estado, a.estira, a.reposo, a.px, a.py, window.__mundo.jugador.x, window.__mundo.jugador.y, window.__mundo.jugador.personaje])))));
+    await tpg(gato.x - 14, gato.y + 8, 'ariadna'); await espera(300);
+    await tpg(gato.x - 2.5, gato.y, 'ariadna');
+    await page.waitForFunction(() => window.__mundo.ambiente.some(a => a.tipo === 'gato' && a.estado === 'sigue'), null, { timeout: 3000 }).then(() => ok(true, 'los gatos persiguen a Ariadna'), () => ok(false, 'los gatos persiguen a Ariadna'));
+    // olivo y Pegaso: caen hojas
+    await tpg(olivo.x - 2.2, olivo.y + 0.5, 'pegaso'); await poner(new Set(['KeyE']));
+    await page.waitForFunction(() => window.__mundo.ambiente.find(a => a.tipo === 'olivo').hojas.length > 0, null, { timeout: 3000 }).then(() => ok(true, 'caen hojas del olivo cuando Pegaso vuela cerca'), () => ok(false, 'caen hojas del olivo cuando Pegaso vuela cerca'));
+    await soltarTodo();
+    // granado y Minotauro: cae una granada que no es un objeto y desaparece sola
+    const antesObj = await lee(() => window.__mundo.coleccionables.filter(c => c.recogido).length);
+    await tpg(gran.x - 1.4, gran.y + 0.2, 'minotauro'); await espera(200);
+    await page.keyboard.press('KeyE');
+    await page.waitForFunction(() => window.__mundo.ambiente.find(a => a.tipo === 'granado').granada, null, { timeout: 2000 }).then(() => ok(true, 'el granado suelta una granada cuando el Minotauro embiste cerca'), () => ok(false, 'el granado suelta una granada cuando el Minotauro embiste cerca'));
+    await page.waitForFunction(() => !window.__mundo.ambiente.find(a => a.tipo === 'granado').granada, null, { timeout: 4000 }).then(() => ok(true, 'la granada desaparece sola'), () => ok(false, 'la granada desaparece sola'));
+    ok((await lee(() => window.__mundo.coleccionables.filter(c => c.recogido).length)) === antesObj, 'la granada no da ningún objeto');
+    // Palacio: solo el olivo tiene cuerpo; la cabra de la terraza, las abejas, las plumas y las golondrinas reaccionan
+    ok(await lee(() => [...window.__mundo.bloqueos].every(k => { const y = +k.split(',')[1]; return y >= 41 && y <= 72; })), 'ningún elemento del palacio bloquea el paso');
+    const colm = amb.filter(a => a.tipo === 'colmena'), cabA = amb.find(a => a.tipo === 'cabra-alta'), plum = amb.find(a => a.tipo === 'plumas'), gol = amb.filter(a => a.tipo === 'golondrina');
+    await tpg(colm[0].x - 1.0, colm[0].y + 0.6, 'eco'); await espera(600);
+    await page.keyboard.press('KeyE'); await espera(350);
+    const ab = await lee(() => ({ ronda: window.__mundo.ambiente.filter(a => a.tipo === 'colmena').every(a => a.ronda > 2), sonidos: window.__sonidos.filter(x => x.startsWith('ambiente')) }));
+    ok(ab.ronda && ab.sonidos.includes('ambiente:zumbido'), 'las abejas se ordenan en ronda con la voz de Eco (se ve y suena)');
+    await tpg(cabA.x + 1.5, cabA.y - 1.0, 'ariadna'); await espera(1200);
+    ok((await lee(() => window.__mundo.ambiente.find(a => a.tipo === 'cabra-alta').estado)) === 'quieta', 'la cabra de la terraza no sale a recibir a quien no vuela');
+    await tpg(cabA.x + 1.5, cabA.y - 1.0, 'pegaso');
+    await page.waitForFunction(() => window.__mundo.ambiente.find(a => a.tipo === 'cabra-alta').estado === 'echada', null, { timeout: 6000 }).then(() => ok(true, 'la cabra de la terraza se acerca y se echa cuando Pegaso aterriza cerca'), () => ok(false, 'la cabra de la terraza se acerca y se echa cuando Pegaso aterriza cerca'));
+    await tpg(colm[0].x - 1.5, colm[0].y + 1.2, 'fenix'); await espera(700);
+    await page.keyboard.press('KeyE'); await espera(300);
+    ok((await lee(() => window.__mundo.ambiente.find(a => a.tipo === 'colmena').brilla)) > 1, 'las abejas brillan con la luz de Fénix');
+    await tpg(plum.x + 1.5, plum.y, 'pegaso'); await poner(new Set(['KeyE']));
+    await page.waitForFunction(() => window.__mundo.ambiente.find(a => a.tipo === 'plumas').rem > 0, null, { timeout: 3000 }).then(() => ok(true, 'las plumas se arremolinan cuando Pegaso pasa volando'), () => ok(false, 'las plumas se arremolinan cuando Pegaso pasa volando'));
+    await soltarTodo();
+    const g0 = gol[0];
+    await tpg(g0.x + 4, g0.y + 6, 'ariadna'); await espera(200);
+    await page.waitForFunction(() => window.__mundo.ambiente.filter(a => a.tipo === 'golondrina').every(a => a.estado === 'posada'), null, { timeout: 10000 }).catch(() => {});
+    await tpg(g0.x, g0.y + 1.2, 'pegaso');
+    await page.waitForFunction(() => window.__mundo.ambiente.some(a => a.tipo === 'golondrina' && a.estado === 'sigue'), null, { timeout: 3000 }).then(() => ok(true, 'las golondrinas vuelan con Pegaso'), () => ok(false, 'las golondrinas vuelan con Pegaso'));
+    await tpg(g0.x + 4, g0.y + 6, 'eco'); await espera(300);
+    await tpg(g0.x + 2.5, g0.y + 3, 'eco'); await espera(300);
+    await page.waitForFunction(() => window.__mundo.ambiente.every(a => a.tipo !== 'golondrina' || a.estado === 'posada'), null, { timeout: 12000 }).catch(() => {});
+    await page.keyboard.press('KeyE'); await espera(300);
+    const can = await lee(() => ({ canta: window.__mundo.ambiente.some(a => a.tipo === 'golondrina' && a.grazna > 0), sonidos: window.__sonidos.filter(x => x.startsWith('ambiente')) }));
+    ok(can.canta && can.sonidos.includes('ambiente:canto'), 'las golondrinas repiten el canto con Eco (se ve y suena)');
+    // nada del ambiente se guarda
+    await tpg(11.5, 95.5, 'pegaso'); await page.click('#btn-menu'); await espera(200); await page.click('#menu-seguir'); await espera(200);
+    ok(await claves() === antesClaves && !(await page.evaluate(() => /"(delfin|gaviota|pulpo|toro|ambiente|lirios|narciso|olivo|granado|cabra|gato|colmena|golondrina|plumas|laurel)"/.test(localStorage.getItem('mitos-mundo-abierto-v1')))), 'el ambiente no suma nada al guardado del perfil');
     ok(errores.length === 0, 'sin errores en consola' + (errores.length ? ': ' + errores.join(' | ') : ''));
     await browser.close(); servidor.close();
     console.log(fallos ? `\n${fallos} verificación(es) fallaron (rápido)` : '\nTodo en orden (rápido)');
