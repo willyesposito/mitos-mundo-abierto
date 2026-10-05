@@ -160,3 +160,9 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** las señales de poder de A3 (ondas y símbolo de Eco, halo y brasas de Fénix, polvo y esfuerzo del Minotauro, soga que se desenrolla de Ariadna, ráfaga al despegar, polvo al aterrizar) se dibujan por código con la paleta de D17, en color plano y sin oro pálido. No son sprites.
 - **Por qué:** son efectos que se mueven y no tienen forma fija, y los sprites de personajes se diseñan fuera de Code.
 - **Descartado:** el brillo de Fénix con degradé (D17 los descarta).
+
+### D26. Un sprite por coleccionable, verificado contra el objeto real
+- **Estado:** tomada (Willy, 2026-10-04)
+- **Decisión:** cada objeto del catálogo se dibuja con su propio sprite (`sprites/coleccionables/<id>.svg`), en el mundo, en el medallón del aviso y en "Mis objetos". Atrás va un brillo plano de oro pálido (`brillo.svg`), sin degradé, que sigue siendo la señal de "esto se junta". Los detalles se verificaron contra fuentes de museo (Museo de Heraclión y otras). Hay tres apartamientos deliberados: la figura con serpientes lleva el corpiño cerrado (regla de suavizar), las serpientes van en bronce porque la paleta cerrada no tiene verde, y los signos de la tablilla imitan formas del lineal B sin formar un texto legible.
+- **Por qué:** un ícono genérico no enseñaba nada del objeto, y los objetos son reales: el dibujo no puede contradecir al original.
+- **Descartado:** dibujar de memoria sin verificar; sumar un verde a la paleta solo para las serpientes.

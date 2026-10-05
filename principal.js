@@ -1,6 +1,6 @@
 // Arranque y bucle principal.
 import { crearMundo, TW, TH, LH } from './mundo.js';
-import { crearDibujo, estadoSprites, dibujarPersonaje } from './dibujo.js';
+import { crearDibujo, estadoSprites, dibujarPersonaje, dibujarObjeto } from './dibujo.js';
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
 import { crearSonido } from './sonido.js';
@@ -88,7 +88,7 @@ async function arrancar() {
     ajustar(); centrarCamara(true);
     exponer();
   }
-  function exponer() { if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sprites = estadoSprites; window.__dibujarPersonaje = dibujarPersonaje; window.__sonidos = sonido.registro; } }
+  function exponer() { if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sprites = estadoSprites; window.__dibujarPersonaje = dibujarPersonaje; window.__dibujarObjeto = dibujarObjeto; window.__sonidos = sonido.registro; } }
 
   // Único cambio de mapa que queda: ir al campo de pruebas desde el menú y volver al mundo donde se estaba.
   // `id` nulo es volver al mundo desde el campo de pruebas.

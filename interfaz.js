@@ -1,6 +1,6 @@
 // Todo lo que es DOM: contadores, avisos, tira de personajes, perfiles y menú.
 import { ICONOS, simboloSvg } from './iconos.js';
-import { dibujarPersonaje, alTenerSprites } from './dibujo.js';
+import { dibujarPersonaje, alTenerSprites, tieneSpriteObjeto } from './dibujo.js';
 import { listarPerfiles, crearPerfil, borrarPerfil, MAX_PERFILES } from './nucleo.js';
 
 const $ = id => document.getElementById(id);
@@ -156,11 +156,13 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   };
 
   // --- Avisos ---
-  ui.aviso = (titulo, texto, ms = 3800) => {
+  ui.aviso = (titulo, texto, ms = 3800, spriteId = null) => {
     const a = $('aviso');
     a.innerHTML = '';
     const fila = document.createElement('div'); fila.className = 'aviso-fila';
-    const med = document.createElement('div'); med.className = 'medallon'; med.innerHTML = ICONOS.objeto;
+    const med = document.createElement('div'); med.className = 'medallon';
+    if (spriteId) { const im = document.createElement('img'); im.src = `sprites/coleccionables/${spriteId}.svg`; im.alt = ''; med.append(im); }
+    else med.innerHTML = ICONOS.objeto;
     const tx = document.createElement('div'); tx.className = 'aviso-texto';
     const h = document.createElement('strong'); h.textContent = titulo; tx.append(h);
     if (texto) { const p = document.createElement('span'); p.textContent = texto; tx.append(p); }
@@ -173,7 +175,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   $('aviso').addEventListener('click', () => { $('aviso').hidden = true; });
   ui.avisoObjeto = id => {
     const o = porObjeto[id];
-    ui.aviso('¡Encontraste un objeto!', o ? `${o.nombre}. ${o.texto}` : '', 5200);
+    ui.aviso('¡Encontraste un objeto!', o ? `${o.nombre}. ${o.texto}` : '', 5200, tieneSpriteObjeto(id) ? id : null);
   };
 
   // --- Perfiles ---
@@ -238,7 +240,9 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
       const li = document.createElement('li');
       const t = document.createElement('strong'); t.textContent = o.nombre;
       const d = document.createElement('span'); d.textContent = o.texto;
-      li.append(t, d); ul.append(li);
+      const tx = document.createElement('div'); tx.className = 'obj-texto'; tx.append(t, d);
+      if (tieneSpriteObjeto(o.id)) { const im = document.createElement('img'); im.className = 'obj-sprite'; im.src = `sprites/coleccionables/${o.id}.svg`; im.alt = ''; li.append(im); }
+      li.append(tx); ul.append(li);
     }
     $('menu-titulo').textContent = 'Mis objetos';
     $('menu-principal').hidden = true; $('menu-lista').hidden = false;
