@@ -183,7 +183,9 @@ async function main() {
   await ir(10.5, 20.9, { orden: 'y', tol: 0.15 });
   await poner(new Set(['ArrowUp'])); await espera(500);
   await foto('03-cayendo');
-  await poner(new Set(['ArrowUp'])); await espera(1400); await soltarTodo(); await espera(700);
+  await poner(new Set(['ArrowUp'])); await espera(1400); await soltarTodo();
+  // Mismo motivo que en la sesión 4: puede soltar a mitad de una caída, que dura más que 700 ms de pared
+  await page.waitForFunction(() => { const j = window.__mundo.jugador; return j.estado === 'jugando' && j.enSuelo; }, null, { timeout: 8000 }); await espera(100);
   s = await est();
   ok(s.estado === 'jugando' && s.enSuelo && s.y > 20.9, `cae al agua y reaparece en suelo firme (y=${s.y.toFixed(2)})`);
 
@@ -212,6 +214,7 @@ async function main() {
   await espera(300); await foto('07-techo');
   s = await est();
   ok(s.recogidos.includes('prueba-1'), 'recoge el objeto 1 sobre el techo');
+  ok(await page.evaluate(() => !!document.querySelector('#aviso .medallon svg') && !document.querySelector('#aviso .medallon img')), 'el aviso de un objeto de prueba conserva el ícono genérico');
   await soltarTodo(); await espera(900);
   s = await est();
   ok(s.enSuelo && Math.abs(s.z - 2) < 0.05, `aterriza en el techo (z=${s.z.toFixed(2)})`);
@@ -395,7 +398,9 @@ async function main() {
   await elegir('minotauro'); await tp(44.5, 17.5);
   await poner(new Set(['ArrowDown'])); await espera(700); await soltarTodo();
   await tp(44.5, 22.5); await espera(100);
-  await poner(new Set(['ArrowUp'])); await espera(1500); await soltarTodo(); await espera(700);
+  await poner(new Set(['ArrowUp'])); await espera(1500); await soltarTodo();
+  // Al caer sigue en 'jugando' hasta hundirse (z < -2,4), y la caída y la reaparición duran 0,6 s más: esperar a que vuelva a estar firme
+  await page.waitForFunction(() => { const j = window.__mundo.jugador; return j.estado === 'jugando' && j.enSuelo; }, null, { timeout: 8000 }); await espera(100);
   ok((await est()).y > 20.9, 'sin soga, el Minotauro no cruza el agua (reaparece al sur)');
   await elegir('pegaso'); await tp(44.5, 22.5); await tocar('KeyE'); await espera(900);
   ok(await page.evaluate(() => window.__mundo.sogas.every(s => !s.tendida)), 'Pegaso no tiende sogas');
@@ -501,8 +506,14 @@ async function main() {
   await page.click('#menu-volver'); await page.click('#menu-seguir'); await espera(200);
   ok(!ingles.test(textoMenu + ' ' + textoLista), 'el menú y la lista de objetos no tienen texto en inglés');
   // Puerto: el ancla se agarra caminando; no hay nada que resolver
+  await ir(10.5, 15.5, { orden: 'y', tol: 0.15 }); await espera(300); await foto('26-objeto-en-el-mundo');
   await ir(10.5, 13.5, { orden: 'y', tol: 0.15 }); await espera(300);
   ok((await est()).recogidos.includes('ancla-piedra') && (await chip()) === 'Puerto 1/1', 'Pegaso agarra el ancla de piedra caminando por el muelle');
+  ok(await page.evaluate(async () => { const im = document.querySelector('#aviso .medallon img'); if (!im) return false; await new Promise(r => setTimeout(r, 150)); return im.getAttribute('src') === 'sprites/coleccionables/ancla-piedra.svg' && im.naturalWidth > 0 && !document.querySelector('#aviso .medallon svg'); }), 'el aviso al juntar el ancla muestra su sprite en el medallón');
+  await foto('27-aviso-objeto');
+  await page.click('#btn-menu'); await page.click('#menu-objetos');
+  ok(await page.evaluate(() => { const im = document.querySelector('#lista-objetos li img.obj-sprite'); return !!im && im.getAttribute('src') === 'sprites/coleccionables/ancla-piedra.svg' && im.naturalWidth > 0 && im.getBoundingClientRect().width >= 40; }), 'la lista Mis objetos muestra el sprite del ancla junto al nombre');
+  await page.click('#menu-volver'); await page.click('#menu-seguir'); await espera(200);
   // Eco escucha la caracola
   await elegir('eco');
   await ir(10.5, 15.5, { orden: 'y', tol: 0.15 }); await ir(5.5, 15.5, { orden: 'x', tol: 0.15 }); await espera(300);
@@ -761,6 +772,19 @@ async function main() {
     ok(quieto < vuela, `quieto, ${id} casi no cambia (${quieto} píxeles contra ${vuela} volando)`);
   }
   ok(sp.listos && sp.fallidos.length === 0 && Object.keys(sp.escenario).length === sp.esperados && sp.esperados > 40 && Object.values(sp.escenario).every(d => d[0] > 0 && d[1] > 0), `los ${sp.esperados} sprites del escenario cargan y se rasterizan (fallidos: ${sp.fallidos.join(',') || 'ninguno'})`);
+  const OBJ_SPRITES = ['ancla-piedra', 'tablero-juego', 'fresco-delfines', 'riton-toro', 'tablilla-arcilla', 'hacha-doble', 'figura-serpientes'];
+  ok(['brillo', ...OBJ_SPRITES].every(n => sp.escenario[n] && sp.escenario[n][0] > 0), 'los ocho sprites de coleccionables (siete objetos y el brillo) cargan y se rasterizan');
+  // Cada objeto se dibuja con su propio sprite; uno de prueba usa el genérico
+  const huella = await page.evaluate(ids => {
+    const dib = id => {
+      const c = document.createElement('canvas'); c.width = 80; c.height = 80; const cx = c.getContext('2d'); cx.translate(40, 40);
+      window.__dibujarObjeto(cx, { t: 0 }, { x: 0, y: 0, zBase: 0, id });
+      return Array.from(cx.getImageData(0, 0, 80, 80).data).join(',');
+    };
+    const r = {}; for (const id of [...ids, 'prueba-1', 'prueba-2']) r[id] = dib(id); return r;
+  }, OBJ_SPRITES);
+  ok(new Set(OBJ_SPRITES.map(id => huella[id])).size === OBJ_SPRITES.length && OBJ_SPRITES.every(id => huella[id] !== huella['prueba-1']), 'cada objeto del mundo se dibuja con su propio sprite, distinto del genérico y de los demás');
+  ok(huella['prueba-1'] === huella['prueba-2'] && /[1-9]/.test(huella['prueba-1']), 'un objeto de prueba sigue usando el sprite genérico');
   // En el mundo: con cada personaje el canvas difiere del que no dibuja ninguno
   await tp(8.5, 24.5); await espera(900);
   const tomar = id => page.evaluate(async id => {
@@ -849,6 +873,7 @@ async function main() {
   const trozo = (desde, hasta) => fuenteDibujo.slice(fuenteDibujo.indexOf(desde), fuenteDibujo.indexOf(hasta));
   ok(!/createRadialGradient|createLinearGradient/.test(trozo('function dibujarJugador', '// ---------- Sprites') + trozo('function dibujarOndas', 'function dibujarObjeto') + trozo('function dibujarSoga', 'function dibujarOndas')),
     'dibujo.js: el brillo de Fénix, las ondas, las señales y la soga no usan degradés');
+  ok(!/createRadialGradient|createLinearGradient/.test(trozo('function dibujarObjeto', 'function silueta')), 'dibujarObjeto no usa degradés');
   ok(!/#fff3c8/i.test(trozo('function dibujarSenales', 'function dibujarObjeto')) && !/COL\.oro/.test(trozo('function dibujarJugador', '// ---------- Sprites') + trozo('function dibujarOndas', 'function dibujarObjeto')), 'las señales de poder no usan el oro pálido reservado a mecanismos');
 
   // Ariadna: la soga se desenrolla (visual) pero se puede pisar desde el primer instante
@@ -932,6 +957,7 @@ async function main() {
   await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(500);
   const spOff = await page.evaluate(() => window.__sprites());
   ok(spOff.listos && IDS.every(id => spOff.imagenes[id] && spOff.imagenes[id][0] > 0), 'sin conexión el juego arranca y los cinco sprites cargan');
+  ok(['brillo', ...OBJ_SPRITES].every(n => spOff.escenario[n] && spOff.escenario[n][0] > 0), 'sin conexión los ocho sprites de coleccionables cargan');
   ok(ALAS.every(id => spOff.imagenes[id] && spOff.imagenes[id][0] > 0), 'sin conexión las cuatro alas cargan');
   const tiraOff = await page.evaluate(() => { const c = document.querySelector('.pj[data-id=eco] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; });
   ok(tiraOff > 500, 'sin conexión la tira muestra los sprites');

@@ -430,16 +430,20 @@ function dibujarSenales(ctx, m) {
   ctx.globalAlpha = 1;
 }
 
-function dibujarObjeto(ctx, m, c) {
+// Sprite propio de cada objeto del catálogo; los de prueba usan el genérico
+const OBJETOS = ['ancla-piedra', 'tablero-juego', 'fresco-delfines', 'riton-toro', 'tablilla-arcilla', 'hacha-doble', 'figura-serpientes'];
+export const tieneSpriteObjeto = id => OBJETOS.includes(id);
+const spriteObjeto = id => OBJETOS.includes(id) ? id : 'coleccionable';
+
+export function dibujarObjeto(ctx, m, c) {
   const gx = c.x * TW, gy = c.y * TH - c.zBase * LH;
   const bob = Math.sin(m.t * 2.6 + c.x) * 0.1;
   const sy = gy - (0.7 + bob) * LH;
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(gx, gy, 9, 4, 0, 0, Math.PI * 2); ctx.fill();
   const pulso = 1 + Math.sin(m.t * 4 + c.x) * 0.06;
-  const g = ctx.createRadialGradient(gx, sy, 2, gx, sy, 24 * pulso);
-  g.addColorStop(0, 'rgba(255,243,200,.65)'); g.addColorStop(1, 'rgba(255,243,200,0)');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(gx, sy, 24 * pulso, 0, Math.PI * 2); ctx.fill();
-  pintar(ctx, 'coleccionable', gx, sy);
+  const b = ras.brillo;
+  if (b) ctx.drawImage(b.c, gx + b.ox * pulso, sy + b.oy * pulso, b.w * pulso, b.h * pulso);
+  pintar(ctx, spriteObjeto(c.id), gx, sy);
 }
 
 // Silueta tenue del mismo sprite: relleno cal al 35 % y contorno cal, sin segunda imagen
@@ -462,7 +466,7 @@ function silueta(n) {
 function dibujarSilueta(ctx, m, c) {
   const gx = c.x * TW, gy = c.y * TH - c.zBase * LH;
   const bob = Math.sin(m.t * 2.6 + c.x) * 0.1;
-  const sl = silueta('coleccionable');
+  const sl = silueta(spriteObjeto(c.id));
   if (sl) ctx.drawImage(sl.c, gx + sl.ox, gy - (0.7 + bob) * LH + sl.oy, sl.w, sl.h);
 }
 
@@ -541,7 +545,8 @@ const ALAS = {
 const ORIGEN = {
   bloque: [-20, -57], vasija: [-22, -42], 'brasero-apagado': [-20, -30], 'brasero-encendido': [-20, -30], llama: [-10, -38],
   'fuente-caracola': [-22, -40], 'fuente-cimbalo': [-20, -36], argolla: [-14, -30], 'argolla-viva': [-14, -32],
-  coleccionable: [-22, -22], barca: [-52, -32],
+  coleccionable: [-22, -22], barca: [-52, -32], brillo: [-26, -26],
+  ...Object.fromEntries(OBJETOS.map(id => [id, [-22, -22]])),
 };
 const ESCENARIO = [
   ...[0, 1, 2, 3].flatMap(i => [`losa-suelo-${i}`, `sillar-${i}`, `sillar-claro-${i}`, `tope-${i}`]),
@@ -550,6 +555,7 @@ const ESCENARIO = [
   'placa', 'placa-activa', 'reja-cerrada', 'grieta', 'puerta-sol', 'puerta-sonido', 'escombros', 'umbral-reja', 'umbral-sol',
   'bloque', 'vasija', 'brasero-apagado', 'brasero-encendido', 'llama', 'fuente-caracola', 'fuente-cimbalo',
   'argolla', 'argolla-viva', 'coleccionable', 'barca',
+  ...OBJETOS, 'brillo',
 ];
 const imagenes = {};
 const ras = {};          // escenario rasterizado una vez a la densidad del dispositivo: { c, k, ox, oy, w, h }
@@ -582,7 +588,7 @@ const alListos = [];
       terminado();
     };
     img.onerror = () => { fallidos.push(n); terminado(); };
-    img.src = `sprites/escenario/${n}.svg`;
+    img.src = `sprites/${OBJETOS.includes(n) || n === 'brillo' ? 'coleccionables' : 'escenario'}/${n}.svg`;
   }
 }
 
