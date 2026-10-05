@@ -1,13 +1,15 @@
 // No es parte del juego. Herramienta de Claude Code: abre el juego en un navegador sin pantalla
 // con tamaño de celular, lo juega con el teclado y verifica de punta a punta que todo funcione.
-// Uso: node herramientas/probar.js [carpeta-de-capturas]
+// Uso: node herramientas/probar.js [--rapido] [carpeta-de-capturas]
+// --rapido: corrida corta (menos de un minuto) con lo que más se rompe; la completa corre sin bandera.
 const http = require('http'), fs = require('fs'), path = require('path');
 let pw;
 for (const r of ['playwright', '/opt/node22/lib/node_modules/playwright']) { try { pw = require(r); break; } catch (e) {} }
 if (!pw) { console.error('Falta playwright'); process.exit(2); }
 
 const RAIZ = path.resolve(__dirname, '..');
-const SALIDA = process.argv[2] || path.join(RAIZ, 'capturas');
+const ARGS = process.argv.slice(2), RAPIDO = ARGS.includes('--rapido');
+const SALIDA = ARGS.find(a => !a.startsWith('--')) || path.join(RAIZ, 'capturas');
 fs.mkdirSync(SALIDA, { recursive: true });
 const TIPOS = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 
@@ -82,6 +84,52 @@ async function main() {
     OFF = [0, 0];
   };
   const bloque = () => page.evaluate(() => window.__mundo.empujables.filter(e => e.tipo === 'bloque').map(e => [e.tx, e.ty])[0]);
+
+
+  // Modo rápido: chequeos propios y cortos sobre un perfil nuevo (contexto limpio). No toca el resto de las secciones.
+  if (RAPIDO) {
+    const eng = /\b(the|and|you|with|press|hold|power|button|close|next|previous)\b/i;
+    const IDR = ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco'];
+    const texto = () => page.evaluate(() => document.body.innerText);
+    await page.goto(url); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
+    ok(true, 'carga la pantalla de perfiles');
+    ok(!eng.test(await texto()), 'la pantalla de perfiles no tiene texto en inglés');
+    await page.fill('#nombre-nuevo', 'Rapida'); await page.click('#form-nuevo button[type=submit]');
+    await page.waitForFunction(() => window.__mundo); await espera(400);
+    let s = await est();
+    ok(s.pj === 'pegaso' && s.enSuelo && (await page.evaluate(() => window.__mundo.id)) === 'mundo', 'arranca en el mundo con Pegaso en el suelo');
+    ok(!eng.test(await texto()), 'la pantalla de juego no tiene texto en inglés');
+    const yA = s.y; await poner(new Set(['ArrowUp'])); await espera(400); await soltarTodo();
+    ok((await est()).y < yA - 0.5, 'el personaje se mueve con el teclado');
+    await page.click('#btn-menu');
+    ok(await page.isVisible('#menu-seguir') && await page.isVisible('#menu-pruebas'), 'el menú abre y ofrece el campo de pruebas');
+    const tm = await texto();
+    await page.click('#menu-objetos'); const tl = await texto();
+    await page.click('#menu-volver');
+    ok(!eng.test(tm + ' ' + tl), 'el menú y la lista de objetos no tienen texto en inglés');
+    await page.click('#menu-seguir'); await espera(200);
+    await page.click('.pj[data-id=minotauro]'); await espera(200);
+    ok((await est()).pj === 'minotauro' && (await page.textContent('#btn-poder .etiqueta')) === 'Embestir', 'cambia de personaje tocando su botón');
+    await page.click('#btn-menu'); await page.click('#menu-perfiles');
+    ok(await page.isVisible('#pantalla-perfiles'), 'el menú abre la pantalla de perfiles');
+    await page.click('.perfil'); await page.waitForFunction(() => window.__mundo); await espera(300);
+    const sp = await page.evaluate(() => window.__sprites());
+    ok(sp.listos && IDR.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'los cinco sprites cargan');
+    ok(sp.listos && sp.fallidos.length === 0 && sp.esperados > 40 && Object.keys(sp.escenario).length === sp.esperados, 'los sprites del escenario cargan sin fallidos');
+    for (const id of IDR) {
+      const n = await page.evaluate(id => {
+        const c = document.createElement('canvas'); c.width = 120; c.height = 120; const cx = c.getContext('2d');
+        window.__dibujarPersonaje(cx, { id }, { x: 60, y: 90, fx: 1, fy: 1, t: 0, caminando: false, volando: false, embistiendo: false, escala: 1, paso: 0 });
+        const d = cx.getImageData(0, 0, 120, 120).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k;
+      }, id);
+      const t = await page.evaluate(id => { const c = document.querySelector(`.pj[data-id=${id}] canvas`); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k; }, id);
+      ok(n > 500 && t > 500, `se dibuja ${id} (${n} píxeles en el lienzo, ${t} en la tira)`);
+    }
+    ok(errores.length === 0, 'sin errores en consola' + (errores.length ? ': ' + errores.join(' | ') : ''));
+    await browser.close(); servidor.close();
+    console.log(fallos ? `\n${fallos} verificación(es) fallaron (rápido)` : '\nTodo en orden (rápido)');
+    process.exit(fallos ? 1 : 0);
+  }
 
   // 1. Perfiles
   await page.goto(url); await page.waitForSelector('#pantalla-perfiles:not([hidden])');

@@ -161,7 +161,13 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Por qué:** son efectos que se mueven y no tienen forma fija, y los sprites de personajes se diseñan fuera de Code.
 - **Descartado:** el brillo de Fénix con degradé (D17 los descarta).
 
-### D26. Un sprite por coleccionable, verificado contra el objeto real
+### D26. Verificación en dos velocidades y cambios mínimos sin subagente
+- **Estado:** tomada (Willy, 2026-10-04)
+- **Decisión:** por cambio se corre `probar.js --rapido` (menos de un minuto). La corrida completa (unos 10 minutos) queda para el cierre de una etapa grande o antes de un paso riesgoso, y la corre una sola vez quien cierra. Opus no repite la corrida del subagente. Subir `VERSION` de `sw.js` y resolver conflictos de un merge los hace Opus directo, sin subagente. En cambios visuales el `programador` deja capturas y Opus las mira. Opus avisa a Willy cuando una sesión pasa los 250 mil tokens de contexto o repite trabajo sin aportar.
+- **Por qué:** una revisión de las sesiones del 2026-10-04 mostró que cada delegación costaba dos corridas completas seguidas (subagente y Opus) sobre el mismo código, y que subir una versión de una línea tomó unos 19 minutos. El contexto de Opus no se ensucia con una línea; sí con esperas repetidas.
+- **Descartado:** quitar la prueba por completo en el día a día, porque un chequeo de sintaxis no cuenta; saltear secciones de la suite a mano, porque dependen del estado que dejan las anteriores.
+
+### D27. Un sprite por coleccionable, verificado contra el objeto real
 - **Estado:** tomada (Willy, 2026-10-04)
 - **Decisión:** cada objeto del catálogo se dibuja con su propio sprite (`sprites/coleccionables/<id>.svg`), en el mundo, en el medallón del aviso y en "Mis objetos". Atrás va un brillo plano de oro pálido (`brillo.svg`), sin degradé, que sigue siendo la señal de "esto se junta". Los detalles se verificaron contra fuentes de museo (Museo de Heraclión y otras). Hay tres apartamientos deliberados: la figura con serpientes lleva el corpiño cerrado (regla de suavizar), las serpientes van en bronce porque la paleta cerrada no tiene verde, y los signos de la tablilla imitan formas del lineal B sin formar un texto legible.
 - **Por qué:** un ícono genérico no enseñaba nada del objeto, y los objetos son reales: el dibujo no puede contradecir al original.

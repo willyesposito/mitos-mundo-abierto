@@ -23,7 +23,11 @@ Antes de tocar nada, leé `CLAUDE.md` y `MEMORY.md`: ahí están las reglas dura
 
 Todo cambio de reglas o de mapa se verifica en `herramientas/probar.js`. Si no hay una prueba que lo ejerza, agregala: es parte del encargo.
 
-Corré `node herramientas/probar.js` antes de reportar. Puede tardar varios minutos: no lo cortes con un límite de tiempo corto. Un chequeo de sintaxis no cuenta. Si el chequeo real no puede correr, decí cuál faltó y por qué, en vez de reportar el trabajo como hecho.
+Corré `node herramientas/probar.js --rapido` antes de reportar (menos de un minuto). La corrida completa, sin bandera, tarda unos 10 minutos y solo se corre si el encargo la pide: no la corras por tu cuenta. Si corrés la completa, no la cortes con un límite de tiempo corto. Un chequeo de sintaxis no cuenta. Si el chequeo real no puede correr, decí cuál faltó y por qué, en vez de reportar el trabajo como hecho.
+
+Si el cambio es visual, `probar.js` no alcanza: guardá capturas en el directorio temporal de la sesión (nunca dentro del repo) y devolvé las rutas en el reporte.
+
+No hagas commit ni push: lo hace el hilo principal. Dejá los cambios sin commitear y sin `git add`.
 
 ## Reporte
 

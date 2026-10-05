@@ -71,7 +71,7 @@ Código en la raíz, datos en `datos/`.
 | `plan-arte.md` | Plan de arte con sprites embebidos: requisitos, canon visual y pasos A0 a A6 |
 | `.claude/agents/programador.md` | Subagente (Sonnet 5.5) que programa los encargos que escribe Opus |
 | `sw.js` | Service worker. **Subir `VERSION` en cada deploy real** |
-| `herramientas/probar.js` | No es parte del juego. Juega el juego en un navegador sin pantalla, con teclado y toques, y verifica todo |
+| `herramientas/probar.js` | No es parte del juego. Juega el juego en un navegador sin pantalla, con teclado y toques, y verifica todo (unos 10 min). Con `--rapido`, una versión corta de menos de un minuto para cada cambio (D26) |
 
 Leyenda del mapa: `.` suelo, `,` baldosa (única donde se puede empujar), `~` agua, `a` terraza (1), `A` techo (2), `#` pared, `b` parapeto bajo, `M` muro agrietado, `G` reja, `p` placa, `B` bloque, `V` vasija, `S` inicio, `D` puerta del sol, `O` puerta de sonido. Braseros, soles, fuentes de sonido, puertas de sonido y sogas (argollas) van en listas del JSON del mapa, no en letras. Las filas deben tener el mismo largo.
 
@@ -89,8 +89,8 @@ Diseño y canon en Chat, ejecución en Code. Nada de esta sección cambia las re
 El reparto supone Opus 5.5 o superior en el hilo principal. Si el hilo principal es otro modelo o una versión anterior, avisar a Willy antes de empezar.
 
 - **Opus decide y coordina.** Lee, resuelve el diseño dentro de lo que el plan y `DECISIONS.md` ya fijan, escribe el encargo, verifica lo que vuelve, actualiza `ROADMAP.md`, `DECISIONS.md` y `MEMORY.md`, y abre el PR. No programa.
-- **Sonnet 5.5 programa**, a través del subagente `programador`. Todo cambio en `.js`, `.css`, `.html` y `datos/` va con un encargo al `programador`. Opus edita directamente solo los `.md` del repo.
-- Delegar siempre el código, aunque el cambio parezca chico: el contexto de Opus se mantiene limpio porque las lecturas y pruebas del subagente quedan en el suyo y solo vuelve su reporte.
+- **Sonnet 5.5 programa**, a través del subagente `programador`. Todo cambio con lógica en `.js`, `.css`, `.html` y `datos/` va con un encargo al `programador`. Opus edita directamente los `.md` del repo y dos cosas más, que no tienen lógica: subir `VERSION` en `sw.js` y resolver conflictos de un merge. Un encargo para una línea cuesta más tiempo y contexto que hacerla (D26).
+- Delegar el resto del código, aunque el cambio parezca chico: las lecturas y pruebas del subagente quedan en su contexto y solo vuelve su reporte.
 - Un subagente a la vez. Dos en paralelo solo si tocan archivos distintos y ninguno depende del otro.
 - El subagente no ve esta conversación. El encargo trae todo lo que necesita: los archivos a tocar, las reglas del juego que aplican, las decisiones ya tomadas, qué queda fuera y el criterio de terminado verificable.
 - No lanzar subagentes para verificar ni para revisar el trabajo de otro subagente.
@@ -102,19 +102,24 @@ Con el OK de la sesión, trabajar hasta terminarla, sin consultas intermedias. N
 
 Si lo pedido parece equivocado o hay un camino mejor, decirlo en una frase y seguir con lo pedido.
 
+Gasto: avisar a Willy en una línea si una sesión pasa los 250 mil tokens de contexto, o si algo se repite sin aportar (la misma prueba, esperas con chequeos de PR). Después de abrir el PR, no esperar ni consultarlo en bucle: los avisos de GitHub despiertan la sesión solos.
+
 ### Alcance
 
 Hecho lo pedido y verificado, parar y reportar. Lo extra (funciones, tests, archivos, docs, refactors) se nombra en una línea al final y no se construye. Si Willy pide ideas, opciones o un plan, dárselos y parar.
 
 ### Verificar de verdad
 
-- El `programador` corre `node herramientas/probar.js` y devuelve cuántos chequeos pasaron.
-- Opus lo corre una vez más al recibir el reporte. Es el mismo comando, no una segunda opinión.
+- **Por cambio:** el `programador` corre `node herramientas/probar.js --rapido` (menos de un minuto) y devuelve cuántos chequeos pasaron. Opus no lo repite: lee el reporte y el `git diff --stat`.
+- **Corrida completa (`node herramientas/probar.js`, unos 10 minutos):** solo al cerrar una etapa grande, o antes de un paso riesgoso (cambiar el formato del guardado de un mapa ya jugado). La corre quien cierra, una sola vez, sobre el árbol final y en segundo plano. No se repite después de cada merge ni de cada subagente.
+- **Cambios visuales:** `probar.js` no mide si se ve bien. El `programador` deja capturas fuera del repo y devuelve las rutas; Opus abre las clave antes de dar el cambio por bueno.
 - Un chequeo de sintaxis no cuenta. Si el chequeo real no puede correr, decir cuál faltó y por qué, y no dar la sesión por hecha.
 
 ### Reportar
 
 La primera frase dice qué pasó. El detalle viene después y solo si hace falta. Los documentos del repo llevan lo que la tarea necesita, sin secciones de relleno.
+
+Cada respuesta cierra con una línea `Título: MAM …` para que Willy ponga nombre al chat y no se pierda. Empieza por `MAM`, sigue con el número de decisión que se toca (por ejemplo `D26`) o, si no hay, con pocas palabras del foco trabajado. Ejemplo: `Título: MAM D26 verificación en dos velocidades`.
 
 ### Al cerrar una sesión
 
