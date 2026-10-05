@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="44" viewBox="-32 -42 64 44">
+<g fill="none" stroke="#3b2b1d" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-8 -12 C-16 -6 -22 -2 -22 3 C-22 7 -17 7 -17 3"/><path d="M-4 -10 C-8 -2 -10 2 -12 6"/><path d="M4 -10 C8 -2 10 2 12 6"/><path d="M8 -12 C16 -6 22 -2 22 3 C22 7 17 7 17 3"/><path d="M-12 -13 C-24 -12 -26 -4 -24 -1"/><path d="M12 -13 C24 -12 26 -4 24 -1"/></g>
+<g fill="none" stroke="#1f6f9c" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-8 -12 C-16 -6 -22 -2 -22 3 C-22 7 -17 7 -17 3"/><path d="M-4 -10 C-8 -2 -10 2 -12 6"/><path d="M4 -10 C8 -2 10 2 12 6"/><path d="M8 -12 C16 -6 22 -2 22 3 C22 7 17 7 17 3"/><path d="M-12 -13 C-24 -12 -26 -4 -24 -1"/><path d="M12 -13 C24 -12 26 -4 24 -1"/></g>
+<g fill="#b8d8ea"><circle cx="-14.5" cy="-6.5" r="1"/><circle cx="-19" cy="-1.5" r="1"/><circle cx="-8.2" cy="-3.5" r="1"/><circle cx="8.2" cy="-3.5" r="1"/><circle cx="14.5" cy="-6.5" r="1"/><circle cx="19" cy="-1.5" r="1"/></g>
+<path d="M-12 -14 C-14 -28 -8 -37 0 -37 C8 -37 14 -28 12 -14 C8 -9 -8 -9 -12 -14 Z" fill="#1f6f9c" stroke="#3b2b1d" stroke-width="1.8" stroke-linejoin="round"/>
+<path d="M6 -33 C11 -29 11 -20 9 -15 C11 -22 10 -28 6 -33 Z" fill="#16506f"/>
+<path d="M-8 -33 q3 -3 7 -3.4" fill="none" stroke="#b8d8ea" stroke-width="1.6" stroke-linecap="round"/>
+<g fill="#b8d8ea"><circle cx="-3" cy="-28" r="1.1"/><circle cx="3.2" cy="-30" r="1.1"/><circle cx="0" cy="-23.5" r="1.1"/><circle cx="-7" cy="-23" r="1.1"/><circle cx="7" cy="-24.5" r=".9"/></g>
+<g stroke="#3b2b1d" stroke-width="1.2"><circle cx="-5" cy="-17.6" r="3.6" fill="#f4ecd8"/><circle cx="5" cy="-17.6" r="3.6" fill="#f4ecd8"/></g>
+<circle cx="-4.4" cy="-17.4" r="1.7" fill="#3b2b1d"/><circle cx="5.6" cy="-17.4" r="1.7" fill="#3b2b1d"/>
+</svg>

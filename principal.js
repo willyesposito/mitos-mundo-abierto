@@ -133,6 +133,7 @@ async function arrancar() {
       else if (e.tipo === 'escucha') { actualizarPerfil(perfil, { eco: mundo.eco }); ui.sonidoEco(e.id); ui.aviso(`Eco escuchó: ${ui.nombreSonido(e.id)}`, 'Solo guarda el último sonido que escucha.', 2800); sonido.tocar('escucha', e.id); }
       else if (e.tipo === 'eco') sonido.tocar('eco', e.id);
       else if (e.tipo === 'golpe') { ui.aviso(`¡Sonó: ${ui.nombreSonido(e.id)}!`, 'Va a seguir vibrando.', 3000); sonido.tocar('golpe', e.id); }
+      else if (e.tipo === 'ambiente') sonido.tocar('ambiente', e.id);
       else if (e.tipo === 'resuena') sonido.tocar('resuena', e.id);
       else if (e.tipo === 'puerta') { ui.aviso('¡Se abrió una puerta!', '', 2600); sonido.tocar('abre'); }
       else if (e.tipo === 'soga') { ui.aviso('¡Se tendió una soga!', 'Queda para siempre y la usan todos.', 3000); sonido.tocar('soga'); }

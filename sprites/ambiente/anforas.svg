@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="40" viewBox="-32 -36 64 40">
+<ellipse cx="0" cy="1" rx="28" ry="4" fill="rgba(20,12,6,.2)"/>
+<g transform="translate(-8 -9) rotate(-3)">
+<path d="M-12 0 L-6 -6 C-2 -9 6 -9 10 -4 L10 4 C6 9 -2 9 -6 6 Z" fill="#b5482e" stroke="#3b2b1d" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-6 6 C-2 9 6 9 10 4 L10 1 C6 5 -2 6 -8 3.6 Z" fill="#8f3a24"/>
+<path d="M-1 -8.4 q-1.4 8.4 0 16.8 M4.4 -8 q-1.2 8 0 16" fill="none" stroke="#f4ecd8" stroke-width="1.4"/>
+<path d="M-12 0 L-17 -1 L-17 1 Z" fill="#8f3a24" stroke="#3b2b1d" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M10 -3 L14 -2.4 L14 2.4 L10 3 Z" fill="#c4573a" stroke="#3b2b1d" stroke-width="1.3" stroke-linejoin="round"/>
+<path d="M13.4 -3.4 L16 -3.4 L16 3.4 L13.4 3.4 Z" fill="#cbb994" stroke="#3b2b1d" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M10.6 -2.6 C9 -8 5 -9.6 3 -7.4 M10.6 2.6 C9 8 5 9.6 3 7.4" fill="none" stroke="#3b2b1d" stroke-width="2.6" stroke-linecap="round"/>
+<path d="M10.6 -2.6 C9 -8 5 -9.6 3 -7.4 M10.6 2.6 C9 8 5 9.6 3 7.4" fill="none" stroke="#b5482e" stroke-width="1" stroke-linecap="round"/>
+</g>
+<g transform="translate(8 -9) rotate(3)">
+<path d="M-12 0 L-6 -6 C-2 -9 6 -9 10 -4 L10 4 C6 9 -2 9 -6 6 Z" fill="#c4573a" stroke="#3b2b1d" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-6 6 C-2 9 6 9 10 4 L10 1 C6 5 -2 6 -8 3.6 Z" fill="#8f3a24"/>
+<path d="M-1 -8.4 q-1.4 8.4 0 16.8 M4.4 -8 q-1.2 8 0 16" fill="none" stroke="#f4ecd8" stroke-width="1.4"/>
+<path d="M-12 0 L-17 -1 L-17 1 Z" fill="#8f3a24" stroke="#3b2b1d" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M10 -3 L14 -2.4 L14 2.4 L10 3 Z" fill="#c4573a" stroke="#3b2b1d" stroke-width="1.3" stroke-linejoin="round"/>
+<path d="M13.4 -3.4 L16 -3.4 L16 3.4 L13.4 3.4 Z" fill="#cbb994" stroke="#3b2b1d" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M10.6 -2.6 C9 -8 5 -9.6 3 -7.4 M10.6 2.6 C9 8 5 9.6 3 7.4" fill="none" stroke="#3b2b1d" stroke-width="2.6" stroke-linecap="round"/>
+<path d="M10.6 -2.6 C9 -8 5 -9.6 3 -7.4 M10.6 2.6 C9 8 5 9.6 3 7.4" fill="none" stroke="#c4573a" stroke-width="1" stroke-linecap="round"/>
+</g>
+<g transform="translate(0 -24) rotate(-2)">
+<path d="M-12 0 L-6 -6 C-2 -9 6 -9 10 -4 L10 4 C6 9 -2 9 -6 6 Z" fill="#b5482e" stroke="#3b2b1d" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-6 6 C-2 9 6 9 10 4 L10 1 C6 5 -2 6 -8 3.6 Z" fill="#8f3a24"/>
+<path d="M-1 -8.4 q-1.4 8.4 0 16.8 M4.4 -8 q-1.2 8 0 16" fill="none" stroke="#f4ecd8" stroke-width="1.4"/>
+<path d="M-12 0 L-17 -1 L-17 1 Z" fill="#8f3a24" stroke="#3b2b1d" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M10 -3 L14 -2.4 L14 2.4 L10 3 Z" fill="#c4573a" stroke="#3b2b1d" stroke-width="1.3" stroke-linejoin="round"/>
+<path d="M13.4 -3.4 L16 -3.4 L16 3.4 L13.4 3.4 Z" fill="#cbb994" stroke="#3b2b1d" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M10.6 -2.6 C9 -8 5 -9.6 3 -7.4 M10.6 2.6 C9 8 5 9.6 3 7.4" fill="none" stroke="#3b2b1d" stroke-width="2.6" stroke-linecap="round"/>
+<path d="M10.6 -2.6 C9 -8 5 -9.6 3 -7.4 M10.6 2.6 C9 8 5 9.6 3 7.4" fill="none" stroke="#b5482e" stroke-width="1" stroke-linecap="round"/>
+</g>
+</svg>

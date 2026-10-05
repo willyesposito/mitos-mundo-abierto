@@ -51,6 +51,26 @@
   {"a":[8,24],"b":[8,20]},
   {"a":[14,63],"b":[14,59]}
  ],
+ "ambiente": [
+  {"tipo":"delfin","x":3,"y":87},
+  {"tipo":"delfin","x":19,"y":87},
+  {"tipo":"delfin","x":4,"y":94},
+  {"tipo":"delfin","x":18,"y":94},
+  {"tipo":"delfin","x":15,"y":96},
+  {"tipo":"pulpo","x":13,"y":92},
+  {"tipo":"gaviota","x":16,"y":89},
+  {"tipo":"gaviota","x":18,"y":89},
+  {"tipo":"gaviota","x":17,"y":90},
+  {"tipo":"toro","x":4,"y":83,"mira":-1},
+  {"tipo":"red","x":8,"y":83},
+  {"tipo":"red","x":18,"y":82},
+  {"tipo":"anforas","x":19,"y":81},
+  {"tipo":"anforas","x":3,"y":79},
+  {"tipo":"concha","x":7,"y":89},
+  {"tipo":"concha","x":14,"y":90},
+  {"tipo":"concha","x":3,"y":82},
+  {"tipo":"concha","x":10,"y":79}
+ ],
  "filas": [
   "bbbbbbbbbbbbbbbbbbbbbbbb",
   "b......................b",

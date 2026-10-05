@@ -51,6 +51,16 @@ function dibujarMundo(ctx, m, v, personajes) {
   for (const b of m.braseros) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.5, tipo: 'brasero', b });
   for (const f of m.fuentes) if (ver(f.ty)) items.push({ fila: f.ty, prof: f.y, tipo: 'fuente', f });
   for (const b of m.barcas) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.4, tipo: 'barca', b });
+  // Ambiente: fauna y detalles. No bloquean; entran en el mismo orden de profundidad que los objetos.
+  for (const a of m.ambiente) {
+    if (a.tipo === 'gaviota') {
+      if (ver(Math.floor(a.hy))) items.push({ fila: Math.floor(a.hy), prof: a.hy, tipo: 'ambiente', a, parte: 'poste' });
+      const fila = Math.max(0, Math.min(m.rows - 1, Math.floor(a.py)));
+      if (ver(fila)) items.push({ fila, prof: a.py + 0.01, tipo: 'ambiente', a, parte: 'ave' });
+    } else if (a.tipo === 'delfin') {
+      if (ver(Math.floor(a.y))) items.push({ fila: Math.floor(a.y), prof: a.y, tipo: 'ambiente', a });
+    } else if (ver(Math.floor(a.y))) items.push({ fila: Math.floor(a.y), prof: a.y, tipo: 'ambiente', a });
+  }
   // Las argollas y las sogas se dibujan después de todas las baldosas por las que pasan
   for (const s of m.sogas) {
     const maxFila = Math.max(s.a[1], s.b[1]);
@@ -251,7 +261,125 @@ function dibujarItem(ctx, m, it, personajes) {
   else if (it.tipo === 'soga') dibujarSoga(ctx, it.s);
   else if (it.tipo === 'argolla') dibujarArgolla(ctx, it.s, it.p);
   else if (it.tipo === 'objeto') dibujarObjeto(ctx, m, it.c);
+  else if (it.tipo === 'ambiente') dibujarAmbiente(ctx, m, it.a, it.parte);
   else dibujarJugador(ctx, m, personajes, true);
+}
+
+// ---------- Ambiente ----------
+// Fauna y detalles que no son mecanismos: sin brillo dorado, sin argollas, sin color de sonido. Todo plano y de la paleta.
+function dibujarAmbiente(ctx, m, a, parte) {
+  const cx = a.x * TW, suelo = (a.y + 0.5) * TH - 6;   // pie del elemento en su casilla
+  switch (a.tipo) {
+    case 'delfin': dibujarDelfin(ctx, m, a); break;
+    case 'pulpo': dibujarPulpo(ctx, m, a, cx, suelo); break;
+    case 'gaviota': if (parte === 'poste') pintar(ctx, 'poste', cx, suelo + 2); else dibujarGaviota(ctx, m, a); break;
+    case 'toro': dibujarToro(ctx, a, cx, suelo); break;
+    case 'red': pintar(ctx, 'red', cx, suelo + 2); break;
+    case 'anforas': pintar(ctx, 'anforas', cx, suelo + 2); break;
+    case 'concha': pintar(ctx, 'concha', cx, suelo); break;
+  }
+}
+
+function dibujarDelfin(ctx, m, f) {
+  const agua = 3.6;   // el agua está un poco bajo el borde de la casilla
+  ctx.lineCap = 'round';
+  for (const r of f.anillos) {
+    const k = r.t / r.dur, px = r.x * TW, py = r.y * TH + agua;
+    if (r.tipo === 'chapoteo') {
+      ctx.strokeStyle = `rgba(255,255,255,${(1 - k) * 0.85})`; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(px, py, 6 + k * 16, 2.5 + k * 7, 0, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      // chasquido: dos anillos cerrados y cortos, blancos con borde de tinta
+      for (let n = 0; n < 2; n++) {
+        const kk = k - n * 0.18; if (kk <= 0) continue;
+        ctx.globalAlpha = (1 - kk) * 0.9;
+        ctx.beginPath(); ctx.ellipse(px, py, 8 + kk * 26, 3.5 + kk * 11, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = COL.tinta; ctx.lineWidth = 4.4; ctx.stroke();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.2; ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  if (!f.salto) {
+    // un rizo avisa que está por saltar
+    const falta = f.prox - m.t;
+    if (falta > 0 && falta < 0.9) {
+      const k = 1 - falta / 0.9;
+      ctx.strokeStyle = `rgba(255,255,255,${0.35 + k * 0.4})`; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(f.x * TW, f.y * TH + agua, 4 + k * 8, 1.6 + k * 3.4, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    return;
+  }
+  const s = f.salto, u = Math.min(1, s.t / s.dur);
+  const wx = (s.x0 + (s.x1 - s.x0) * u) * TW, wy = (s.y0 + (s.y1 - s.y0) * u) * TH + agua;
+  const h = Math.sin(Math.PI * u) * s.alto * LH;
+  const vx = Math.abs((s.x1 - s.x0) * TW), vy = -Math.cos(Math.PI * u) * Math.PI * s.alto * LH + (s.y1 - s.y0) * TH;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(wx - 60, wy - 140, 120, 140 + 1); ctx.clip();   // lo que está bajo el agua no se ve
+  ctx.translate(wx, wy - h - 2);
+  if (s.dir < 0) ctx.scale(-1, 1);
+  ctx.rotate(Math.atan2(vy, vx));
+  pintar(ctx, 'delfin', 0, 0);
+  ctx.restore();
+}
+
+function dibujarPulpo(ctx, m, p, cx, suelo) {
+  ctx.save(); ctx.translate(cx, suelo); ctx.scale(0.85, 0.85);
+  ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(0, 1, 26, 6, 0, 0, Math.PI * 2); ctx.fill();
+  pintar(ctx, 'rocas-atras', 0, 0);
+  // Se esconde bajando detrás de las rocas de adelante; lo que baja del piso no se ve
+  ctx.save();
+  ctx.beginPath(); ctx.rect(-40, -80, 80, 80); ctx.clip();
+  const y = -2 + p.esc * 28, azul = Math.max(0, Math.min(1, p.azul / 0.6, (3.5 - p.azul) / 0.3));
+  pintar(ctx, 'pulpo-0', 0, y);
+  if (azul > 0) { ctx.globalAlpha = azul; pintar(ctx, 'pulpo-1', 0, y); ctx.globalAlpha = 1; }
+  ctx.restore();
+  pintar(ctx, 'rocas-frente', 0, 0);
+  if (p.esc > 0.7) {
+    // Solo un ojo asoma en la grieta, y parpadea
+    const abierto = (m.t * 0.7 + p.i) % 3 < 2.75;
+    ctx.globalAlpha = Math.min(1, (p.esc - 0.7) / 0.3);
+    ctx.fillStyle = '#f4ecd8'; ctx.strokeStyle = COL.tinta; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(4.5, -4.4, 3.4, abierto ? 2.8 : 0.6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    if (abierto) { ctx.fillStyle = COL.tinta; ctx.beginPath(); ctx.arc(5.4, -4.4, 1.5, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+function dibujarGaviota(ctx, m, g) {
+  const gx = g.px * TW, base = g.py * TH + 6;
+  if (g.vuela) {
+    const alto = Math.max(0, g.pz - 0.2);
+    ctx.fillStyle = `rgba(20,12,6,${0.22 / (1 + alto * 0.5)})`;
+    ctx.beginPath(); ctx.ellipse(gx, base + 2, 9, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  const gy = base - g.pz * LH;
+  ctx.save(); ctx.translate(gx, gy);
+  if (g.cara < 0) ctx.scale(-1, 1);
+  if (g.vuela) pintar(ctx, 'gaviota-vuelo-' + (Math.floor(m.t * 9 + g.i) % 2), 0, 0);
+  else pintar(ctx, g.grazna > 0 && Math.floor(m.t * 5) % 2 === 0 ? 'gaviota-grazna' : 'gaviota', 0, 0);
+  if (g.grazna > 0) {
+    // El graznido se ve: rayitas cortas que salen del pico
+    const k = 1 - g.grazna / 1.2;
+    ctx.lineCap = 'round';
+    for (const [color, ancho] of [[COL.tinta, 4.4], [COL.cal, 2]]) {
+      ctx.strokeStyle = color; ctx.lineWidth = ancho; ctx.globalAlpha = Math.max(0, 1 - k) * 0.95;
+      for (let n = -1; n <= 1; n++) {
+        const a = n * 0.5 - 0.15, r0 = 15 + (k * 6) % 6, r1 = r0 + 6;
+        ctx.beginPath(); ctx.moveTo(20 + Math.cos(a) * r0 * 0.6, -21 + Math.sin(a) * r0); ctx.lineTo(20 + Math.cos(a) * r1 * 0.9, -21 + Math.sin(a) * r1); ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+function dibujarToro(ctx, b, cx, suelo) {
+  ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(cx, suelo + 1, 26, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.save(); ctx.translate(cx, suelo); ctx.scale(b.cara < 0 ? -1 : 1, 1);
+  pintar(ctx, b.cabeza > 0.5 ? 'toro-1' : 'toro-0', 0, 0);
+  ctx.restore();
 }
 
 function dibujarEmpujable(ctx, e) {
@@ -505,6 +633,7 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
   dibujarPersonaje(ctx, p, {
     x: gx, y: j.y * TH - Math.max(j.z, -3) * LH, fx: j.fx, fy: j.fy, t: m.t,
     caminando: j.camina && j.enSuelo, volando: j.planeo, embistiendo: !!j.embiste, escala: 1, paso: j.paso,
+    inclina: !j.embiste && j.reverencia > 0.02 ? j.reverencia * 0.2 * j.reverenciaDir : 0,   // reverencia ante el toro
   });
   if (j.personaje === 'minotauro' && j.esfuerzo > 0) {
     // Líneas de esfuerzo delante del Minotauro mientras empuja
@@ -546,8 +675,13 @@ const ORIGEN = {
   bloque: [-20, -57], vasija: [-22, -42], 'brasero-apagado': [-20, -30], 'brasero-encendido': [-20, -30], llama: [-10, -38],
   'fuente-caracola': [-22, -40], 'fuente-cimbalo': [-20, -36], argolla: [-14, -30], 'argolla-viva': [-14, -32],
   coleccionable: [-22, -22], barca: [-52, -32], brillo: [-26, -26],
+  delfin: [-24, -16], 'pulpo-0': [-32, -42], 'pulpo-1': [-32, -42], 'rocas-atras': [-28, -32], 'rocas-frente': [-28, -24],
+  gaviota: [-18, -26], 'gaviota-grazna': [-18, -28], 'gaviota-vuelo-0': [-24, -26], 'gaviota-vuelo-1': [-24, -26], poste: [-8, -36],
+  'toro-0': [-34, -50], 'toro-1': [-34, -50], red: [-30, -30], anforas: [-32, -36], concha: [-17, -14],
   ...Object.fromEntries(OBJETOS.map(id => [id, [-22, -22]])),
 };
+// Ambiente (sprites/ambiente/): fauna y detalles, rasterizados igual que el escenario
+const AMBIENTE = ['delfin', 'pulpo-0', 'pulpo-1', 'rocas-atras', 'rocas-frente', 'gaviota', 'gaviota-grazna', 'gaviota-vuelo-0', 'gaviota-vuelo-1', 'poste', 'toro-0', 'toro-1', 'red', 'anforas', 'concha'];
 const ESCENARIO = [
   ...[0, 1, 2, 3].flatMap(i => [`losa-suelo-${i}`, `sillar-${i}`, `sillar-claro-${i}`, `tope-${i}`]),
   ...[0, 1, 2].flatMap(i => [`losa-terraza-${i}`, `losa-techo-${i}`]),
@@ -556,6 +690,7 @@ const ESCENARIO = [
   'bloque', 'vasija', 'brasero-apagado', 'brasero-encendido', 'llama', 'fuente-caracola', 'fuente-cimbalo',
   'argolla', 'argolla-viva', 'coleccionable', 'barca',
   ...OBJETOS, 'brillo',
+  ...AMBIENTE,
 ];
 const imagenes = {};
 const ras = {};          // escenario rasterizado una vez a la densidad del dispositivo: { c, k, ox, oy, w, h }
@@ -588,7 +723,7 @@ const alListos = [];
       terminado();
     };
     img.onerror = () => { fallidos.push(n); terminado(); };
-    img.src = `sprites/${OBJETOS.includes(n) || n === 'brillo' ? 'coleccionables' : 'escenario'}/${n}.svg`;
+    img.src = `sprites/${OBJETOS.includes(n) || n === 'brillo' ? 'coleccionables' : AMBIENTE.includes(n) ? 'ambiente' : 'escenario'}/${n}.svg`;
   }
 }
 
@@ -641,6 +776,7 @@ export function dibujarPersonaje(ctx, p, o) {
   };
   ctx.save();
   ctx.translate(x, y); ctx.scale(escala, escala);
+  if (o.inclina) ctx.rotate(o.inclina);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.save();
   if (fx < 0) ctx.scale(-1, 1);

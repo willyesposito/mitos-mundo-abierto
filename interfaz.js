@@ -234,7 +234,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   $('menu-pruebas').addEventListener('click', () => { menu.hidden = true; if (ui.alCambiarMapa) ui.alCambiarMapa(mapa.id === 'pruebas' ? null : 'pruebas'); });
   $('menu-objetos').addEventListener('click', () => {
     const ul = $('lista-objetos'); ul.innerHTML = '';
-    const hechos = catalogo.objetos.filter(o => ui.recogidosMenu[o.id]);
+    const hechos = catalogo.objetos.filter(o => o.zona !== 'pruebas' && ui.recogidosMenu[o.id]);   // los de prueba no se listan
     if (!hechos.length) { const li = document.createElement('li'); li.className = 'vacio'; li.textContent = 'Todavía no encontraste ninguno.'; ul.append(li); }
     for (const o of hechos) {
       const li = document.createElement('li');
