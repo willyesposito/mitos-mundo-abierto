@@ -12,6 +12,13 @@ const R_PEGASO = 3.2;              // las gaviotas se suman al vuelo de Pegaso a
 const R_TORO = 3.4;                // el toro y el Minotauro se saludan a esta distancia
 const ALTO_POSTE = 1.1;            // niveles (el poste mide unos 33 px)
 const SIGUE_DUR = 4.5;             // cuánto acompañan las gaviotas a Pegaso
+const R_LIRIO = 1.8;               // los lirios se mecen si alguien pasa a esta distancia
+const R_OLIVO = 3.2;               // caen hojas del olivo si Pegaso vuela a esta distancia
+const R_GRANADO = 2.4;             // el granado se sacude si el Minotauro embiste o empuja a esta distancia
+const R_CABRA = 2;                 // las cabras se apartan si alguien pasa a esta distancia
+const R_CABRA_MINO = 4.5;          // y salen corriendo si es el Minotauro
+const R_GATO = 1.8;                // los gatos se estiran si alguien pasa a esta distancia
+const R_HILO = 4;                  // los gatos persiguen a Ariadna a esta distancia
 
 const azar = (a, b) => a + Math.random() * (b - a);
 
@@ -23,6 +30,12 @@ export function crearAmbiente(lista, celdas) {
     else if (d.tipo === 'pulpo') Object.assign(it, { esc: 0, curioso: 0, azul: 0 });
     else if (d.tipo === 'gaviota') Object.assign(it, { estado: 'posada', t: 0, reposo: 0, px: it.x, py: it.y, pz: ALTO_POSTE, grazna: 0, vuela: false, cara: i % 2 ? -1 : 1, fase: i * 2.1 });
     else if (d.tipo === 'toro') Object.assign(it, { cabeza: 0, cara: it.mira });
+    else if (d.tipo === 'lirios') Object.assign(it, { agita: 0, abre: 0, abreT: 0 });
+    else if (d.tipo === 'narciso') Object.assign(it, { inc: 0, incT: 0, hacia: d.hacia ? [d.hacia[0] + 0.5, d.hacia[1] + 0.5] : [it.x, it.y] });
+    else if (d.tipo === 'olivo') Object.assign(it, { colision: true, hojas: [], cool: 0 });
+    else if (d.tipo === 'granado') Object.assign(it, { sacude: 0, cool: 0, granada: null });
+    else if (d.tipo === 'cabra') Object.assign(it, { estado: 'quieta', t: 0, reposo: 0, px: it.x, py: it.y, tx: it.x, ty: it.y, balido: 0, cara: i % 2 ? -1 : 1, mueve: false, corre: false });
+    else if (d.tipo === 'gato') Object.assign(it, { estado: 'duerme', reposo: 0, px: it.x, py: it.y, estira: 0, sigue: 0, cara: i % 2 ? -1 : 1, mueve: false });
     return it;
   });
 
@@ -103,12 +116,90 @@ export function crearAmbiente(lista, celdas) {
     return cerca ? b.cabeza : 0;
   }
 
+  // --- Plaza ---
+  const piso = (x, y) => { const f = celdas[Math.floor(y)]; return !!f && (f[Math.floor(x)] === '.'); };
+
+  function actualizarLirios(l, dt, j) {
+    l.agita = dist(j, l.x, l.y) < R_LIRIO ? 1 : Math.max(0, l.agita - dt * 0.7);
+    l.abreT = Math.max(0, l.abreT - dt);
+    l.abre += ((l.abreT > 0 ? 1 : 0) - l.abre) * Math.min(1, dt * 3);
+  }
+  function actualizarNarciso(n, dt) {
+    n.incT = Math.max(0, n.incT - dt);
+    n.inc += ((n.incT > 0 ? 1 : 0) - n.inc) * Math.min(1, dt * 3);
+  }
+  function actualizarOlivo(o, dt, j) {
+    o.cool = Math.max(0, o.cool - dt);
+    if (o.cool <= 0 && j.personaje === 'pegaso' && j.planeo && j.estado === 'jugando' && dist(j, o.x, o.y) < R_OLIVO) {
+      o.cool = 4;
+      for (let k = 0; k < 6; k++) o.hojas.push({ x: o.x + azar(-0.9, 0.9), y: o.y + azar(-0.4, 0.3), z0: azar(1.4, 2.1), vx: azar(-0.4, 0.4), ph: azar(0, 6), t: 0, dur: azar(1.5, 2.2) });
+    }
+    for (const h of o.hojas) h.t += dt;
+    o.hojas = o.hojas.filter(h => h.t < h.dur + 0.7);
+  }
+  function actualizarGranado(g, dt, j) {
+    g.cool = Math.max(0, g.cool - dt); g.sacude = Math.max(0, g.sacude - dt);
+    if (g.cool <= 0 && j.personaje === 'minotauro' && (j.embiste || j.esfuerzo > 0) && dist(j, g.x, g.y) < R_GRANADO) {
+      g.cool = 7; g.sacude = 0.6;
+      g.granada = { x: g.x + azar(-0.3, 0.3), y: g.y + 0.3, vx: (Math.random() < 0.5 ? -1 : 1) * azar(0.8, 1.3), t: 0, dur: 2.4 };
+    }
+    if (g.granada) { g.granada.t += dt; if (g.granada.t >= g.granada.dur) g.granada = null; else if (g.granada.t > 0.35) g.granada.x += g.granada.vx * dt * Math.max(0, 1 - (g.granada.t - 0.35) / 1.8); }
+  }
+  // Primer destino válido (casilla de piso) alejándose de (ox, oy) desde el hogar; si no hay, se queda
+  function huida(c, ox, oy, largo) {
+    const l = Math.hypot(c.hx - ox, c.hy - oy) || 1, dx = (c.hx - ox) / l, dy = (c.hy - oy) / l;
+    for (let d = largo; d > 0.4; d -= 0.5) {
+      const x = c.hx + dx * d, y = c.hy + dy * d * 0.7;
+      if (piso(x, y)) return [x, y];
+    }
+    return [c.hx, c.hy];
+  }
+  function actualizarCabra(c, dt, j) {
+    c.reposo = Math.max(0, c.reposo - dt); c.balido = Math.max(0, c.balido - dt); c.t += dt;
+    const d = dist(j, c.hx, c.hy);
+    if (c.estado !== 'huye' && c.estado !== 'aparta' && c.reposo <= 0 && j.estado === 'jugando') {
+      if (j.personaje === 'minotauro' && d < R_CABRA_MINO) { c.estado = 'huye'; c.t = 0; [c.tx, c.ty] = huida(c, j.x, j.y, 3.6); }
+      else if (d < R_CABRA) { c.estado = 'aparta'; c.t = 0; [c.tx, c.ty] = huida(c, j.x, j.y, 1.1); }
+    }
+    let tx = c.hx, ty = c.hy, k = 2;
+    if (c.estado === 'huye') { tx = c.tx; ty = c.ty; k = 4; if (c.t > 2.2) c.estado = 'vuelve'; }
+    else if (c.estado === 'aparta') { tx = c.tx; ty = c.ty; k = 2.5; if (c.t > 1.6 && d > 2.4) c.estado = 'vuelve'; }
+    const kk = 1 - Math.exp(-dt * k), ax = c.px, ay = c.py;
+    c.px += (tx - c.px) * kk; c.py += (ty - c.py) * kk;
+    const v = Math.hypot(c.px - ax, c.py - ay) / dt;
+    c.mueve = v > 0.3; c.corre = v > 1.4;
+    if (Math.abs(c.px - ax) > 0.002) c.cara = Math.sign(c.px - ax);
+    if (c.estado === 'vuelve' && Math.hypot(c.px - c.hx, c.py - c.hy) < 0.05) { c.estado = 'quieta'; c.px = c.hx; c.py = c.hy; c.reposo = 1.5; }
+  }
+  function actualizarGato(g, dt, j) {
+    g.reposo = Math.max(0, g.reposo - dt); g.estira = Math.max(0, g.estira - dt); g.sigue = Math.max(0, g.sigue - dt);
+    const d = dist(j, g.hx, g.hy), ariadna = j.personaje === 'ariadna' && j.estado === 'jugando';
+    if (ariadna && dist(j, g.px, g.py) < R_HILO) g.sigue = Math.max(g.sigue, 3);
+    if (g.sigue > 0) g.estado = 'sigue';
+    else if (g.estado === 'sigue') g.estado = 'vuelve';
+    else if (g.estado === 'duerme' && g.reposo <= 0 && g.estira <= 0 && d < R_GATO) { g.estira = 2.2; g.reposo = 4; }
+    let tx = g.hx, ty = g.hy, k = 2.5;
+    if (g.estado === 'sigue') { tx = j.x - (j.fx >= 0 ? 0.9 : -0.9); ty = j.y + 0.35; k = 3.2; }
+    if (g.estado === 'duerme') { g.px = g.hx; g.py = g.hy; g.mueve = false; return; }
+    const kk = 1 - Math.exp(-dt * k), ax = g.px, ay = g.py;
+    g.px += (tx - g.px) * kk; g.py += (ty - g.py) * kk;
+    g.mueve = Math.hypot(g.px - ax, g.py - ay) / dt > 0.3;
+    if (Math.abs(g.px - ax) > 0.002) g.cara = Math.sign(g.px - ax);
+    if (g.estado === 'vuelve' && Math.hypot(g.px - g.hx, g.py - g.hy) < 0.05) { g.estado = 'duerme'; g.px = g.hx; g.py = g.hy; g.reposo = 2; g.mueve = false; }
+  }
+
   function actualizar(dt, t, j) {
     let rev = 0, dirRev = j.reverenciaDir || 1;
     for (const it of items) {
       if (it.tipo === 'delfin') actualizarDelfin(it, dt, t, j);
       else if (it.tipo === 'pulpo') actualizarPulpo(it, dt, j);
       else if (it.tipo === 'gaviota') actualizarGaviota(it, dt, j);
+      else if (it.tipo === 'lirios') actualizarLirios(it, dt, j);
+      else if (it.tipo === 'narciso') actualizarNarciso(it, dt);
+      else if (it.tipo === 'olivo') actualizarOlivo(it, dt, j);
+      else if (it.tipo === 'granado') actualizarGranado(it, dt, j);
+      else if (it.tipo === 'cabra') actualizarCabra(it, dt, j);
+      else if (it.tipo === 'gato') actualizarGato(it, dt, j);
       else if (it.tipo === 'toro') { const r = actualizarToro(it, dt, j); if (r > rev) { rev = r; dirRev = Math.sign(it.x - j.x) || 1; } }
     }
     j.reverencia += (rev - j.reverencia) * Math.min(1, dt * 4);
@@ -118,7 +209,7 @@ export function crearAmbiente(lista, celdas) {
   // Eco usó la voz: responden los delfines (chasquido) y las gaviotas (graznido) a su alcance.
   // Devuelve qué respondió para que el mundo avise (sonido sintetizado; siempre también se ve).
   function voz(j) {
-    const res = { delfin: false, gaviota: false };
+    const res = { delfin: false, gaviota: false, cabra: false };
     for (const it of items) {
       if (dist(j, it.x, it.y) > ALCANCE_VOZ) continue;
       if (it.tipo === 'delfin') {
@@ -126,14 +217,22 @@ export function crearAmbiente(lista, celdas) {
         if (!it.salto) saltar(it, undefined, undefined, true);
         res.delfin = true;
       } else if (it.tipo === 'gaviota') { it.grazna = 1.2; res.gaviota = true; }
+      else if (it.tipo === 'cabra') { it.balido = 1.2; res.cabra = true; }
+      else if (it.tipo === 'narciso') it.incT = 3;   // solo con Eco: se inclinan hacia el agua
     }
     return res;
   }
 
-  // Fénix brilló: el pulpo cambia de color un rato y se asoma
+  // Fénix brilló: el pulpo cambia de color un rato y se asoma; los lirios se abren
   function brillo(j) {
-    for (const it of items) if (it.tipo === 'pulpo' && dist(j, it.x, it.y) < R_BRILLO) { it.azul = 3.5; it.curioso = 3; }
+    for (const it of items) {
+      if (it.tipo === 'pulpo' && dist(j, it.x, it.y) < R_BRILLO) { it.azul = 3.5; it.curioso = 3; }
+      else if (it.tipo === 'lirios' && dist(j, it.x, it.y) < R_BRILLO) it.abreT = 6;
+    }
   }
+  // Ariadna tendió una soga: los gatos cercanos la persiguen un rato
+  function hilo(j) { for (const it of items) if (it.tipo === 'gato' && dist(j, it.x, it.y) < 10) it.sigue = Math.max(it.sigue, 5); }
+  const bloqueos = new Set(items.filter(it => it.colision).map(it => Math.floor(it.hx) + ',' + Math.floor(it.hy)));
 
-  return { items, actualizar, voz, brillo };
+  return { items, actualizar, voz, brillo, hilo, bloqueos };
 }

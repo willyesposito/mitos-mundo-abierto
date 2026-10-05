@@ -143,7 +143,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
   const amb = crearAmbiente(mapa.ambiente, celdas);   // fauna y detalles: no bloquean ni se guardan
 
   const m = {
-    id: mapa.id, barcas: mapa.barcas || [], ambiente: amb.items,
+    id: mapa.id, barcas: mapa.barcas || [], ambiente: amb.items, bloqueos: amb.bloqueos,
     cols, rows, celdas, origen, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], senales: [], eventos: [], t: 0, velo: 0,
     jugador: {
@@ -182,6 +182,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
 
   function alturaTile(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return ALTURA_PARED;
+    if (amb.bloqueos.has(tx + ',' + ty)) return ALTURA_PARED;   // el olivo es el único ambiente con cuerpo
     const hc = cuerdas.get(tx + ',' + ty);
     if (hc !== undefined) return hc;
     const h = alturaCelda(celdas[ty][tx]);
@@ -325,6 +326,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     const resp = amb.voz(j);
     if (resp.delfin) m.eventos.push({ tipo: 'ambiente', id: 'chasquido' });
     if (resp.gaviota) m.eventos.push({ tipo: 'ambiente', id: 'graznido' });
+    if (resp.cabra) m.eventos.push({ tipo: 'ambiente', id: 'balido' });
     for (const p of puertasSonido) {
       if (p.abierta || p.sonido !== m.eco) continue;
       if (Math.hypot(p.x + 0.5 - j.x, p.y + 0.5 - j.y) <= ALCANCE_ECO) {
@@ -392,6 +394,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     mejor.desde = da <= db ? 0 : 1; mejor.prog = 0;
     tenderEn(mejor);
     for (const c of mejor.casillas) chispas(c.x + 0.5, c.y + 0.5, c.h + 0.4, '#b5482e', 6, 1.6);
+    amb.hilo(j);
     m.eventos.push({ tipo: 'soga' });
   }
 
