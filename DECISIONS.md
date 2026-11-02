@@ -172,3 +172,8 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** cada objeto del catálogo se dibuja con su propio sprite (`sprites/coleccionables/<id>.svg`), en el mundo, en el medallón del aviso y en "Mis objetos". Atrás va un brillo plano de oro pálido (`brillo.svg`), sin degradé, que sigue siendo la señal de "esto se junta". Los detalles se verificaron contra fuentes de museo (Museo de Heraclión y otras). Hay tres apartamientos deliberados: la figura con serpientes lleva el corpiño cerrado (regla de suavizar), las serpientes van en bronce porque la paleta cerrada no tiene verde, y los signos de la tablilla imitan formas del lineal B sin formar un texto legible.
 - **Por qué:** un ícono genérico no enseñaba nada del objeto, y los objetos son reales: el dibujo no puede contradecir al original.
 - **Descartado:** dibujar de memoria sin verificar; sumar un verde a la paleta solo para las serpientes.
+
+### D28. Mejora gráfica integral de ChatGPT / Codex (2026-11-02)
+- **Estado:** implementación autorizada; validación visual en dispositivo pendiente.
+- **Decisión:** avanzar con vistas y pasos, ambiente agrupado, sombras y juntas afinadas, transiciones visuales, cámara vertical y controles. Recursos locales con movimiento reducido. Se conservan identidad minoica, reglas, física y guardado.
+- **Por qué:** mejorar presencia del personaje, identidad de zonas y lectura de alturas. Detalle en `plan-mejora-grafica-codex.md`.

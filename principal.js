@@ -1,5 +1,6 @@
 // Arranque y bucle principal.
 import { crearMundo, TW, TH, LH } from './mundo.js';
+import { encuadre } from './animacion.js';
 import { crearDibujo, estadoSprites, dibujarPersonaje, dibujarObjeto } from './dibujo.js';
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
@@ -148,8 +149,7 @@ async function arrancar() {
     lienzo.style.width = W + 'px'; lienzo.style.height = H + 'px';
     const inferior = $('controles').offsetHeight, superior = $('hud').offsetHeight + 8;
     vista.W = W; vista.H = H; vista.dpr = dpr;
-    vista.esc = Math.min(W / (9.5 * TW), (H - inferior - superior) / (11 * TH));
-    vista.focoY = superior + (H - inferior - superior) / 2;
+    Object.assign(vista, encuadre(W, H, inferior, superior, TW, TH));
     vista.inferior = inferior; vista.superior = superior;
     document.documentElement.style.setProperty('--alto-controles', inferior + 'px');
   }

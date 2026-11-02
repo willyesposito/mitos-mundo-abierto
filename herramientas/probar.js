@@ -9,6 +9,9 @@ if (!pw) { console.error('Falta playwright'); process.exit(2); }
 
 const RAIZ = path.resolve(__dirname, '..');
 const ARGS = process.argv.slice(2), RAPIDO = ARGS.includes('--rapido');
+// Modo para entornos sin sockets: sirve recursos locales por intercepción de Playwright.
+// Verifica juego y render; la instalación real del service worker queda explícitamente pendiente.
+const SIN_SERVIDOR = ARGS.includes('--sin-servidor');
 const SALIDA = ARGS.find(a => !a.startsWith('--')) || path.join(RAIZ, 'capturas');
 fs.mkdirSync(SALIDA, { recursive: true });
 const TIPOS = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
@@ -27,8 +30,15 @@ const espera = ms => new Promise(r => setTimeout(r, ms));
 async function main() {
   await new Promise(r => servidor.listen(0, r));
   const url = `http://localhost:${servidor.address().port}/?prueba&pruebas`;
-  const browser = await pw.chromium.launch();
-  const ctx = await browser.newContext({ ...pw.devices['Pixel 7'], serviceWorkers: 'allow' });
+  const browser = await pw.chromium.launch({ executablePath: process.env.MITOS_BROWSER || undefined });
+  const ctx = await browser.newContext({ ...pw.devices['Pixel 7'], serviceWorkers: SIN_SERVIDOR ? 'block' : 'allow' });
+  if (SIN_SERVIDOR) await ctx.route('**/*', async route => {
+    let p = decodeURIComponent(new URL(route.request().url()).pathname);
+    if (p.endsWith('/')) p += 'index.html';
+    const f = path.resolve(RAIZ, '.' + p);
+    if (!f.startsWith(RAIZ + path.sep) || !fs.existsSync(f)) return route.fulfill({ status: 404, body: '' });
+    await route.fulfill({ status: 200, contentType: TIPOS[path.extname(f)] || 'application/octet-stream', body: fs.readFileSync(f) });
+  });
   const page = await ctx.newPage();
   const errores = [];
   page.on('pageerror', e => errores.push(e.message));
@@ -950,6 +960,7 @@ async function main() {
   }
 
   // 11. Sin conexión
+  if (!SIN_SERVIDOR) {
   await page.evaluate(() => navigator.serviceWorker.ready); await espera(500);
   await ctx.setOffline(true);
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
@@ -962,6 +973,7 @@ async function main() {
   const tiraOff = await page.evaluate(() => { const c = document.querySelector('.pj[data-id=eco] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; });
   ok(tiraOff > 500, 'sin conexión la tira muestra los sprites');
   await ctx.setOffline(false);
+  } else console.log('PENDIENTE: instalación y recarga offline del service worker (modo --sin-servidor).');
 
   ok(errores.length === 0, 'sin errores en consola' + (errores.length ? ': ' + errores.join(' | ') : ''));
   await browser.close(); servidor.close();

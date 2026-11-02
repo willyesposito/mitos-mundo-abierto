@@ -42,3 +42,7 @@ Plan en `plan-arte.md`. Decisiones: D16 a D22. Orden de inicio a definir por Wil
 ## Fuera de la etapa 1
 
 Etapa 2: laberinto, cueva del monte y personajes nuevos. Sin fecha: taller de Dédalo y Talos.
+
+## Mejora gráfica de ChatGPT / Codex (2026-11-02)
+
+Implementados A2 (vistas y pasos), ambiente y reacciones de A6, apertura visual de A5 y ajustes de profundidad, pisos, cámara y controles (D28). Verificación y límites en `plan-mejora-grafica-codex.md`. Validación en celular real pendiente; no se marca validada ninguna sesión.
