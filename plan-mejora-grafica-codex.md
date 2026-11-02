@@ -15,7 +15,7 @@ Autoría: ChatGPT / Codex (OpenAI). Implementación autorizada el 2026-11-02. Ba
 
 17 chequeos rápidos y 366 invariantes gráficas aprobados. Render revisado en vertical (390×844 y 360×640), escritorio y movimiento reducido: 56 sprites de personajes y 70 recursos de escenario, sin errores ni faltantes. Capturas reales inspeccionadas.
 
-Prueba integral en ejecución; se agregará su resultado al cerrar. La red local directa devuelve ERR_NETWORK_ACCESS_DENIED: las pruebas usan intercepción de archivos locales. Permite verificar el juego, pero no instalación y recarga real del service worker. Esta comprobación y la prueba en celular físico quedan pendientes. No se afirma medición de rendimiento ni validación por la jugadora.
+Prueba integral: 240 chequeos aprobados, cero fallas y sin errores de consola (`node herramientas/probar.js --sin-servidor`). La red local directa devuelve ERR_NETWORK_ACCESS_DENIED: las pruebas usan intercepción de archivos locales. Permite verificar el juego, pero no instalación y recarga real del service worker. Esta comprobación y la prueba en celular físico quedan pendientes. No se afirma medición de rendimiento ni validación por la jugadora.
 
 ## Alcance
 

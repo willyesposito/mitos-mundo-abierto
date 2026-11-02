@@ -45,4 +45,4 @@ Etapa 2: laberinto, cueva del monte y personajes nuevos. Sin fecha: taller de D�
 
 ## Mejora gráfica de ChatGPT / Codex (2026-11-02)
 
-Implementados A2 (vistas y pasos), ambiente y reacciones de A6, apertura visual de A5 y ajustes de profundidad, pisos, cámara y controles (D28). Verificación y límites en `plan-mejora-grafica-codex.md`. Validación en celular real pendiente; no se marca validada ninguna sesión.
+Construida: 240 chequeos integrales, 17 rápidos y 366 invariantes gráficas aprobados. Implementados A2 (vistas y pasos), ambiente y reacciones de A6, apertura visual de A5 y ajustes de profundidad, pisos, cámara y controles (D28). Verificación y límites en `plan-mejora-grafica-codex.md`. Validación en celular real pendiente; no se marca validada ninguna sesión.
