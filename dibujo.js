@@ -1,6 +1,17 @@
 // Dibujo del mundo en vista cenital inclinada. Escenario y mecanismos con sprites SVG (sprites/escenario/);
 // lo que se mueve (olas, llamas, ondas, sogas, partículas) se dibuja por código en el mismo estilo.
 import { TW, TH, LH, ABISMO, alturaCelda } from './mundo.js';
+import { posePersonaje } from './animacion.js';
+import { TIPOS_AMBIENTE, actualizarAmbiente, movimientoAmbiente } from './ambiente.js';
+const preferenciaMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
+const reducirMovimiento = () => preferenciaMovimiento.matches;
+const transiciones = new WeakMap();
+const apoyos = new WeakMap();
+const ORIGEN_AMBIENTE = {
+  anforas: [-44,-50], cabra: [-31,-48], delfin: [-38,-39], fresco: [-45,-47],
+  gato: [-25,-33], gaviota: [-24,-30], golondrina: [-26,-30], laurel: [-29,-70],
+  lirios: [-27,-47], olivo: [-36,-70], pulpo: [-30,-36], redes: [-42,-55],
+};
 
 const NIVEL_AGUA = -0.12;
 const COL = {
@@ -44,6 +55,23 @@ function dibujarMundo(ctx, m, v, personajes) {
 
   const j = m.jugador;
   const items = [];
+  const ambiente = actualizarAmbiente(m, reducirMovimiento());
+  for (const e of ambiente) {
+    if (e.y < y0 - 3 || e.y > y1 + 4 || e.x * TW < camX - mitadW - 100 || e.x * TW > camX + mitadW + 100) continue;
+    items.push({ fila: Math.floor(e.y), prof: e.y, tipo: 'ambiente', e });
+  }
+  // Registrar aperturas desde el render: el mecanismo lógico ya está abierto y nunca espera a la animación.
+  let tr = transiciones.get(m);
+  if (!tr) {
+    tr = new Map(); transiciones.set(m, tr);
+    for (const [y, fila] of m.origen.entries()) for (const [x, c] of fila.entries()) if ('GDO'.includes(c)) tr.set(x+','+y, {x,y,c,abierta:m.celdas[y][x]==='.',inicio:-10});
+  }
+  for (const q of tr.values()) {
+    const abierta = m.celdas[q.y][q.x] === '.';
+    if (abierta && !q.abierta) q.inicio = m.t;
+    q.abierta = abierta;
+    if (abierta && m.t-q.inicio < .5 && !reducirMovimiento()) items.push({fila:q.y,prof:q.y+.5,tipo:'apertura',q});
+  }
   // Solo entra lo que cae en cámara: el mundo es largo y corre en un celular
   const ver = (fila, minFila = fila) => fila >= y0 - 2 && minFila <= y1 + 4;
   for (const e of m.empujables) if (ver(Math.round(e.py))) items.push({ fila: Math.round(e.py), prof: e.py, tipo: 'empujable', e });
@@ -126,6 +154,16 @@ function dibujarTile(ctx, m, x, y) {
         else if (antes === 'D') pintar(ctx, 'umbral-sol', px, py, 0.5);
       }
     }
+  }
+  // Sombras de contacto en el piso receptor, sin juntas oscuras en cada casilla.
+  if (!ES_PARED(c) && c !== '~') {
+    const norte = y > 0 ? alturaVisual(m.celdas[y-1][x]) : h;
+    const oeste = x > 0 ? alturaVisual(m.celdas[y][x-1]) : h;
+    ctx.fillStyle = 'rgba(59,43,29,.14)';
+    if (norte > h) ctx.fillRect(px,py,TW,5);
+    if (oeste > h) ctx.fillRect(px,py,4,TH);
+    ctx.fillStyle = 'rgba(244,236,216,.48)';
+    if ((c==='a'||c==='A') && hs<h) ctx.fillRect(px,py+TH-1,TW,1);
   }
 }
 
@@ -244,7 +282,9 @@ function dibujarBarca(ctx, m, b) {
 
 // ---------- Objetos y personajes ----------
 function dibujarItem(ctx, m, it, personajes) {
-  if (it.tipo === 'empujable') dibujarEmpujable(ctx, it.e);
+  if (it.tipo === 'ambiente') dibujarAmbiente(ctx, m, it.e);
+  else if (it.tipo === 'apertura') dibujarApertura(ctx, m, it.q);
+  else if (it.tipo === 'empujable') dibujarEmpujable(ctx, it.e);
   else if (it.tipo === 'brasero') dibujarBrasero(ctx, m, it.b);
   else if (it.tipo === 'fuente') dibujarFuente(ctx, m, it.f);
   else if (it.tipo === 'barca') dibujarBarca(ctx, m, it.b);
@@ -252,6 +292,28 @@ function dibujarItem(ctx, m, it, personajes) {
   else if (it.tipo === 'argolla') dibujarArgolla(ctx, it.s, it.p);
   else if (it.tipo === 'objeto') dibujarObjeto(ctx, m, it.c);
   else dibujarJugador(ctx, m, personajes, true);
+}
+
+function dibujarAmbiente(ctx, m, e) {
+  const mov = movimientoAmbiente(e, m.t, reducirMovimiento()), s = ras['ambiente-' + e.tipo];
+  if (!s) return;
+  const x=e.x*TW, y=e.y*TH-e.z*LH;
+  const cerca = Math.hypot(m.jugador.x-e.x,m.jugador.y-e.y) < 1.3;
+  ctx.save();
+  // Si el personaje está detrás de un árbol, se conserva la lectura de su posición.
+  ctx.globalAlpha = cerca && ['olivo','laurel','fresco','redes'].includes(e.tipo) ? .48 : 1;
+  ctx.fillStyle='rgba(59,43,29,.17)'; ctx.beginPath(); ctx.ellipse(x+4,y+3,Math.min(24,s.w*.27),5,0,0,Math.PI*2); ctx.fill();
+  ctx.translate(x+mov.dx,y+mov.dy); ctx.rotate(mov.giro); ctx.scale(.8*mov.escala,.8*mov.escala);
+  pintar(ctx,'ambiente-'+e.tipo,0,0); ctx.restore();
+}
+
+function dibujarApertura(ctx,m,q) {
+  const t=Math.max(0,Math.min(1,(m.t-q.inicio)/.5)), x=q.x*TW, y=q.y*TH;
+  // La reja se eleva visualmente; al subir pierde opacidad para no tapar el paso ya libre.
+  ctx.save(); ctx.globalAlpha=(1-t)*.85;
+  ctx.beginPath(); ctx.rect(x,y-90,TW,TH+90); ctx.clip();
+  pintar(ctx,q.c==='G'?'reja-cerrada':q.c==='D'?'puerta-sol':'puerta-sonido',x,y-54-t*38);
+  ctx.restore();
 }
 
 function dibujarEmpujable(ctx, e) {
@@ -266,15 +328,13 @@ function dibujarBrasero(ctx, m, b) {
   const cx = b.x * TW + TW / 2, by = b.y * TH + TH - 6 - b.zBase * LH;
   ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(cx, by + 1, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
   if (b.encendido) {
-    const g = ctx.createRadialGradient(cx, by - 28, 2, cx, by - 28, 40);
-    g.addColorStop(0, 'rgba(255,243,200,.5)'); g.addColorStop(1, 'rgba(255,243,200,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, by - 28, 40, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,243,200,.12)'; ctx.beginPath(); ctx.arc(cx, by - 28, 34, 0, Math.PI * 2); ctx.fill();
   }
   pintar(ctx, b.encendido ? 'brasero-encendido' : 'brasero-apagado', cx, by);
   if (b.encendido) {
     // la llama titila
-    const f = 1 + Math.sin(m.t * 9 + b.x) * 0.07 + Math.sin(m.t * 13) * 0.04;
-    ctx.save(); ctx.translate(cx + Math.sin(m.t * 7 + b.y) * 0.8, by - 26); ctx.scale(1 + (1 - f) * 0.5, f);
+    const f = reducirMovimiento() ? 1 : 1 + Math.sin(m.t * 9 + b.x) * 0.05 + Math.sin(m.t * 13) * 0.025;
+    ctx.save(); ctx.translate(cx + (reducirMovimiento() ? 0 : Math.sin(m.t * 7 + b.y) * 0.6), by - 26); ctx.scale(1 + (1 - f) * 0.5, f);
     pintar(ctx, 'llama', 0, 0);
     ctx.restore();
   } else {
@@ -287,7 +347,7 @@ function dibujarFuente(ctx, m, f) {
   const snd = m.sonidos[f.sonido];
   const cx = f.tx * TW + TW / 2, by = f.ty * TH + TH - 6 - f.zBase * LH;
   ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(cx, by + 1, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
-  const vib = f.activa ? Math.sin(m.t * 30) * 1.2 : 0;
+  const vib = f.activa && !reducirMovimiento() ? Math.sin(m.t * 30) * .7 : 0;
   pintar(ctx, f.modo === 'sola' ? 'fuente-caracola' : 'fuente-cimbalo', cx + vib, by);
   // insignia del sonido: color y símbolo (apagada y sin brillo hasta que suene)
   const ix = cx, iy = by - 50 - Math.sin(m.t * 3) * (f.activa ? 2 : 0);
@@ -437,10 +497,10 @@ const spriteObjeto = id => OBJETOS.includes(id) ? id : 'coleccionable';
 
 export function dibujarObjeto(ctx, m, c) {
   const gx = c.x * TW, gy = c.y * TH - c.zBase * LH;
-  const bob = Math.sin(m.t * 2.6 + c.x) * 0.1;
+  const bob = reducirMovimiento() ? 0 : Math.sin(m.t * 2.6 + c.x) * 0.07;
   const sy = gy - (0.7 + bob) * LH;
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(gx, gy, 9, 4, 0, 0, Math.PI * 2); ctx.fill();
-  const pulso = 1 + Math.sin(m.t * 4 + c.x) * 0.06;
+  const pulso = reducirMovimiento() ? 1 : 1 + Math.sin(m.t * 4 + c.x) * 0.04;
   const b = ras.brillo;
   if (b) ctx.drawImage(b.c, gx + b.ox * pulso, sy + b.oy * pulso, b.w * pulso, b.h * pulso);
   pintar(ctx, spriteObjeto(c.id), gx, sy);
@@ -465,13 +525,19 @@ function silueta(n) {
 }
 function dibujarSilueta(ctx, m, c) {
   const gx = c.x * TW, gy = c.y * TH - c.zBase * LH;
-  const bob = Math.sin(m.t * 2.6 + c.x) * 0.1;
+  const bob = reducirMovimiento() ? 0 : Math.sin(m.t * 2.6 + c.x) * 0.07;
   const sl = silueta(spriteObjeto(c.id));
   if (sl) ctx.drawImage(sl.c, gx + sl.ox, gy - (0.7 + bob) * LH + sl.oy, sl.w, sl.h);
 }
 
 function dibujarJugador(ctx, m, personajes, conSombra) {
   const j = m.jugador;
+  let apoyo = apoyos.get(m);
+  if (!apoyo) { apoyo = { enSuelo: j.enSuelo, aterriza: -10 }; apoyos.set(m, apoyo); }
+  if (j.enSuelo && !apoyo.enSuelo) apoyo.aterriza = m.t;
+  apoyo.enSuelo = j.enSuelo;
+  const edadApoyo = m.t - apoyo.aterriza;
+  const asentamiento = !reducirMovimiento() && edadApoyo < .18 ? Math.sin(edadApoyo / .18 * Math.PI) * .065 : 0;
   const g = Math.max(m.suelo(j.x, j.y), NIVEL_AGUA);
   const gx = j.x * TW, gy = j.y * TH - g * LH;
   if (conSombra) {
@@ -505,6 +571,7 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
   dibujarPersonaje(ctx, p, {
     x: gx, y: j.y * TH - Math.max(j.z, -3) * LH, fx: j.fx, fy: j.fy, t: m.t,
     caminando: j.camina && j.enSuelo, volando: j.planeo, embistiendo: !!j.embiste, escala: 1, paso: j.paso,
+    asentamiento, empujando: j.esfuerzo > 0,
   });
   if (j.personaje === 'minotauro' && j.esfuerzo > 0) {
     // Líneas de esfuerzo delante del Minotauro mientras empuja
@@ -557,6 +624,16 @@ const ESCENARIO = [
   'argolla', 'argolla-viva', 'coleccionable', 'barca',
   ...OBJETOS, 'brillo',
 ];
+// Las poses comparten el mismo encuadre: el origen del pie no salta entre cuadros.
+for (const id of ['pegaso','minotauro','ariadna','fenix','eco']) {
+  for (const v of ['', '-frente', '-espalda']) {
+    if (v) SPRITES[id+v]=SPRITES[id];
+    for (const paso of [1,2]) SPRITES[id+v+'-paso-'+paso]=SPRITES[id];
+  }
+  if (['pegaso','fenix'].includes(id)) for (const v of ['frente','espalda']) SPRITES[id+'-'+v+'-vuelo']=SPRITES[id];
+  else SPRITES[id+'-costado']=SPRITES[id];
+}
+for (const id of TIPOS_AMBIENTE) { ESCENARIO.push('ambiente-'+id); ORIGEN['ambiente-'+id]=ORIGEN_AMBIENTE[id]; }
 const imagenes = {};
 const ras = {};          // escenario rasterizado una vez a la densidad del dispositivo: { c, k, ox, oy, w, h }
 const fallidos = [];
@@ -573,7 +650,7 @@ const alListos = [];
   for (const id of Object.keys(SPRITES)) {
     const img = new Image();
     img.onload = () => { imagenes[id] = img; terminado(); };
-    img.onerror = () => terminado();   // si uno falla, ese personaje no se dibuja pero el juego sigue
+    img.onerror = () => { fallidos.push(id); terminado(); };   // si uno falla, ese personaje no se dibuja pero el juego sigue
     img.src = `sprites/personajes/${id}.svg`;
   }
   for (const n of ESCENARIO) {
@@ -588,7 +665,7 @@ const alListos = [];
       terminado();
     };
     img.onerror = () => { fallidos.push(n); terminado(); };
-    img.src = `sprites/${OBJETOS.includes(n) || n === 'brillo' ? 'coleccionables' : 'escenario'}/${n}.svg`;
+    img.src = n.startsWith('ambiente-') ? `sprites/ambiente/${n.slice(9)}.svg` : `sprites/${OBJETOS.includes(n) || n === 'brillo' ? 'coleccionables' : 'escenario'}/${n}.svg`;
   }
 }
 
@@ -619,44 +696,31 @@ export function estadoSprites() {
 // Pegaso y Fénix llevan las alas aparte: ala lejana, cuerpo, ala cercana.
 export function dibujarPersonaje(ctx, p, o) {
   const { x, y, fx, caminando, escala, paso } = o;
-  const img = spritesListos && imagenes[p.id];
+  const reducir = reducirMovimiento(), pose = posePersonaje(p.id,o,reducir);
+  const img = spritesListos && (imagenes[pose.nombre] || imagenes[p.id]);
   if (!img) return;
-  const [sx, sy, sw, sh] = SPRITES[p.id];
-  const bob = caminando ? Math.abs(Math.sin(paso * 5)) * 2 : 0;
-  const alas = ALAS[p.id];
-  const cerca = alas && imagenes[p.id + '-ala-cerca'], lejos = alas && imagenes[p.id + '-ala-lejos'];
-  // Ángulo de la ala cercana: volando, aleteo completo; si no, vaivén leve y lento alrededor de la pose media
-  let ang = 0;
-  if (alas) {
-    if (o.volando) ang = alas.abajo + (alas.arriba - alas.abajo) * (Math.sin(o.t * 20) + 1) / 2;
-    else ang = alas.media + Math.sin(o.t * 2) * 10;
-  }
-  const ala = (im, art, grados) => {
-    if (!im) return;
-    const [ax, ay, aw, ah] = SPRITES[p.id + (im === cerca ? '-ala-cerca' : '-ala-lejos')];
-    ctx.save();
-    ctx.translate(art[0], art[1] - bob); ctx.rotate(grados * Math.PI / 180);
-    ctx.drawImage(im, ax, ay, aw, ah);
-    ctx.restore();
+  const [sx,sy,sw,sh]=SPRITES[p.id], t=o.t||0;
+  const bob = reducir ? 0 : caminando ? Math.abs(Math.sin((paso||0)*5))*.7 : Math.sin(t*1.7)*.3;
+  const alas=ALAS[p.id], separar=alas && (pose.vista==='costado'||o.volando);
+  let ang=0;
+  if(alas) ang=reducir?alas.media:o.volando?alas.abajo+(alas.arriba-alas.abajo)*(Math.sin(t*16)+1)/2:alas.media+Math.sin(t*1.8)*5;
+  const ala=(nombre,art,grados,espejo=false)=>{
+    const im=imagenes[p.id+nombre]; if(!im)return;
+    const [ax,ay,aw,ah]=SPRITES[p.id+nombre];
+    ctx.save();ctx.translate(art[0],art[1]-bob);if(espejo)ctx.scale(-1,1);ctx.rotate(grados*Math.PI/180);ctx.drawImage(im,ax,ay,aw,ah);ctx.restore();
   };
-  ctx.save();
-  ctx.translate(x, y); ctx.scale(escala, escala);
-  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  ctx.save();
-  if (fx < 0) ctx.scale(-1, 1);
-  if (alas) ala(lejos, alas.lejos, ang - alas.desfase);
-  ctx.drawImage(img, sx, sy - bob, sw, sh);
-  if (alas) ala(cerca, alas.cerca, ang);
-  ctx.restore();
-
-  // Embestida: líneas de velocidad cal con contorno tinta (el polvo a los pies viene del mundo)
-  if (o.embistiendo) {
-    const dir = fx < 0 ? -1 : 1;
-    ctx.lineCap = 'round';
-    for (const [color, ancho] of [[COL.tinta, 5.5], [COL.cal, 2.6]]) {
-      ctx.strokeStyle = color; ctx.lineWidth = ancho;
-      for (let n = 0; n < 3; n++) { ctx.beginPath(); ctx.moveTo(-dir * (14 + n * 3), -10 - n * 11); ctx.lineTo(-dir * (34 - n * 2), -10 - n * 11); ctx.stroke(); }
-    }
+  ctx.save();ctx.translate(x,y);ctx.scale(escala,escala);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  if (!reducir && o.asentamiento) ctx.scale(1+o.asentamiento,1-o.asentamiento);
+  if(pose.espejo)ctx.scale(-1,1);
+  if(o.embistiendo&&!reducir)ctx.rotate((fx<0?1:-1)*.1);
+  else if(o.empujando&&!reducir)ctx.rotate((fx<0?1:-1)*.045);
+  if(separar&&pose.vista==='costado')ala('-ala-lejos',alas.lejos,ang-alas.desfase);
+  if(separar&&pose.vista!=='costado') { ala('-ala-lejos',[-6,-25],ang,true); ala('-ala-cerca',[6,-25],ang); }
+  ctx.drawImage(img,sx,sy-bob,sw,sh);
+  if(separar&&pose.vista==='costado')ala('-ala-cerca',alas.cerca,ang);
+  if(o.embistiendo) {
+    ctx.strokeStyle=COL.cal;ctx.lineWidth=2;ctx.lineCap='round';
+    for(let n=0;n<3;n++){ctx.beginPath();ctx.moveTo(-17,-12-n*9);ctx.lineTo(-29,-12-n*9);ctx.stroke();}
   }
   ctx.restore();
 }

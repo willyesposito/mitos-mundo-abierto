@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="39" viewBox="-25 -33 50 39"><g stroke="#3b2b1d" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-13 -3 Q-24 -2 -22 -13 Q-21 -20 -18 -18 Q-16 -16 -19 -12 Q-20 -6 -12 -8" fill="none" stroke="#7a5236" stroke-width="4"/>
+<path d="M-14 -5 Q-17 -20 -6 -20 Q5 -23 11 -12 L13 -3 H-10Z" fill="#d9a441" stroke-width="1.6"/>
+<path d="M-13 -9 Q-12 -19 -6 -19 Q-4 -11 -5 -4 H-11Z" fill="#a9764a" stroke="none"/>
+<path d="M5 -13 L2 -26 L8 -22 L15 -24 L21 -29 L22 -16 Q20 -9 12 -9Z" fill="#d9a441" stroke-width="1.5"/>
+<path d="M6 -23 L7 -19 L10 -20 M18 -22 L20 -25 L20 -20" fill="#b5482e" stroke="none"/>
+<path d="M4 -4 H14 M-11 -3 H-3" stroke="#3b2b1d" stroke-width="2"/>
+<path d="M9 -16 L11 -16 M17 -17 L19 -17" stroke="#3b2b1d" stroke-width="1.4"/>
+<path d="M14 -14 l1 2 l2 -2" fill="#8f3a24" stroke="none"/>
+<path d="M7 -12 H2 M19 -12 L24 -13" stroke="#f4ecd8" stroke-width="1"/></g></svg>

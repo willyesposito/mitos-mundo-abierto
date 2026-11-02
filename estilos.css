@@ -197,3 +197,29 @@ body.con-pista #tira { box-shadow: 0 0 0 5px var(--oro-palido); }
   .pj .retrato { width: 38px; height: 38px; } .pj canvas { width: 36px !important; height: 36px !important; } .pj > span { display: none; } .pj .insignia { width: 20px; height: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { #pista-cambio .cartel { animation: none; } #contadores.pulso { animation: none; } }
+
+
+/* Pulido gráfico: controles cómodos que dejan respirar al mundo. */
+#tira { padding-top: 12px; background: #f4ecd8; border-top-width: 5px; }
+#joystick { background: rgba(244,236,216,.28); border-color: rgba(59,43,29,.65); }
+#btn-poder { width: 92px; height: 92px; }
+#btn-salto { width: 70px; height: 70px; }
+#zona-joystick { height: 132px; width: 146px; }
+#joystick { width: 116px; height: 116px; }
+#botones { gap: 10px; padding-bottom: 10px; }
+@media (max-width: 380px) {
+  #fila-acciones { padding-left: 8px; padding-right: 8px; }
+  #zona-joystick { width: 124px; height: 124px; }
+  #btn-poder { width: 84px; height: 84px; }
+  #btn-salto { width: 64px; height: 64px; }
+  .pj .retrato { width: 48px; height: 48px; }
+}
+@media (max-height: 520px) {
+  #zona-joystick { width: 110px; height: 100px; }
+  #joystick { width: 94px; height: 94px; }
+  #btn-poder { width: 76px; height: 76px; }
+  #btn-salto { width: 60px; height: 60px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
