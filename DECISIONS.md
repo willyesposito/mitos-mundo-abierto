@@ -177,3 +177,10 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Estado:** implementación autorizada; validación visual en dispositivo pendiente.
 - **Decisión:** avanzar con vistas y pasos, ambiente agrupado, sombras y juntas afinadas, transiciones visuales, cámara vertical y controles. Recursos locales con movimiento reducido. Se conservan identidad minoica, reglas, física y guardado.
 - **Por qué:** mejorar presencia del personaje, identidad de zonas y lectura de alturas. Detalle en `plan-mejora-grafica-codex.md`.
+
+
+### D29. Teclado en PC, orientación y plaza menos rígida
+- **Estado:** implementación autorizada y construida para revisión; prueba en dispositivo pendiente.
+- **Decisión:** adaptar HUD, cámara y controles a la superficie visible; ocultar joystick en PC con puntero fino y mantener interacción táctil en tablet y celular. Priorizar encontrar actividades con lugares elegibles y pistas que no revelan la solución. Primera revisión espacial: plaza, con senderos curvos y dos recovecos laterales.
+- **Compatibilidad:** mecanismos y objetos conservan coordenadas; solo se abren 16 casillas de parapeto. La guía usa progreso existente, sin modificar guardados.
+- **Detalle:** `jugabilidad-adaptable-codex.md`.

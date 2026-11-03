@@ -2,11 +2,34 @@
 import { ICONOS, simboloSvg } from './iconos.js';
 import { dibujarPersonaje, alTenerSprites, tieneSpriteObjeto } from './dibujo.js';
 import { listarPerfiles, crearPerfil, borrarPerfil, MAX_PERFILES } from './nucleo.js';
+import { lugaresPlaza, elegirLugar, objetivoCercano } from './exploracion.js';
 
 const $ = id => document.getElementById(id);
 
 export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es el actual; ver usarMapa
   const ui = {};
+  // La orientación muestra lugares, no la solución ni el personaje que los resuelve.
+  const guia=document.createElement('section');guia.id='exploracion';guia.hidden=true;
+  const verLugares=document.createElement('button');verLugares.id='btn-explorar';verLugares.textContent='Explorar plaza';
+  verLugares.setAttribute('aria-expanded','false');verLugares.setAttribute('aria-controls','lista-lugares');
+  const pista=document.createElement('span');pista.id='pista-exploracion';pista.setAttribute('role','status');
+  const listaLugares=document.createElement('div');listaLugares.id='lista-lugares';listaLugares.hidden=true;
+  guia.append(verLugares,pista,listaLugares);$('hud').append(guia);
+  let mundoGuia=null,ultimaGuia='',ultimoTiempoGuia=-1;
+  verLugares.addEventListener('click',()=>{listaLugares.hidden=!listaLugares.hidden;verLugares.setAttribute('aria-expanded',String(!listaLugares.hidden));});
+  ui.orientar=m=>{
+    mundoGuia=m;
+    if(m.t-ultimoTiempoGuia<.15&&m.t>=ultimoTiempoGuia)return;ultimoTiempoGuia=m.t;
+    const lugares=lugaresPlaza(m);guia.hidden=!lugares.length;
+    if(!lugares.length){listaLugares.hidden=true;verLugares.setAttribute('aria-expanded','false');ultimaGuia='';return;}
+    const o=objetivoCercano(m);
+    const texto=o ? (o.cerca ? o.nombre+': '+o.pista : o.nombre+' · '+o.direccion) : 'Ya exploraste los lugares de la plaza';
+    if(pista.textContent!==texto)pista.textContent=texto;
+    const clave=lugares.map(l=>l.id+':'+l.pendiente).join('|')+'|'+o?.id;
+    if(clave===ultimaGuia)return;ultimaGuia=clave;listaLugares.replaceChildren();
+    for(const l of lugares){const b=document.createElement('button');b.dataset.lugar=l.id;b.textContent=l.nombre+(l.pendiente?'':' · Explorado');b.disabled=!l.pendiente;b.setAttribute('aria-pressed',String(l.id===o?.id));
+      b.addEventListener('click',()=>{elegirLugar(mundoGuia,l.id);listaLugares.hidden=true;verLugares.setAttribute('aria-expanded','false');ultimaGuia='';ultimoTiempoGuia=-1;ui.orientar(mundoGuia);});listaLugares.append(b);}
+  };
   const porId = Object.fromEntries(personajes.map(p => [p.id, p]));
   const porObjeto = Object.fromEntries(catalogo.objetos.map(o => [o.id, o]));
   let zonaId = mapa.zona || null;   // en el mundo continuo la zona es donde está parado el personaje (ver usarZona)

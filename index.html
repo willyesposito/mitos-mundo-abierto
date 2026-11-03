@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
+<main id="superficie-juego" aria-label="Mundo de Mitos">
 <canvas id="lienzo" role="img" aria-label="Mapa del juego"></canvas>
 
 <div id="hud">
@@ -29,15 +30,17 @@
 <div id="pista-cambio" hidden><div class="cartel"><span>Tocá a otro personaje para usar su poder</span><span class="flecha-pista" data-icono="flecha"></span></div></div>
 
 <div id="controles">
+  <p id="ayuda-teclado"><span>Mover: <kbd>W A S D</kbd> o <kbd>flechas</kbd></span><span>Personajes: <kbd>1–5</kbd></span><span>Menú: <kbd>Esc</kbd></span></p>
   <div id="fila-acciones">
     <div id="zona-joystick"><div id="joystick"><div id="palanca"></div></div></div>
     <div id="botones">
-      <button id="btn-poder" class="boton-accion" aria-label="Poder"><span class="ico"></span><span class="etiqueta"></span></button>
-      <button id="btn-salto" class="boton-accion" aria-label="Saltar"><span class="ico"></span><span class="etiqueta">Saltar</span></button>
+      <button id="btn-poder" class="boton-accion" aria-label="Poder" aria-keyshortcuts="E"><span class="ico"></span><span class="etiqueta"></span><kbd class="atajo-accion">E</kbd></button>
+      <button id="btn-salto" class="boton-accion" aria-label="Saltar" aria-keyshortcuts="Space"><span class="ico"></span><span class="etiqueta">Saltar</span><kbd class="atajo-accion">Espacio</kbd></button>
     </div>
   </div>
   <nav id="tira" aria-label="Personajes"></nav>
 </div>
+</main>
 
 <section id="pantalla-perfiles" class="pantalla" hidden>
   <div class="tarjeta">

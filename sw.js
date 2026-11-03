@@ -1,7 +1,8 @@
 // Service worker: deja el juego jugable sin conexión. Subir VERSION en cada deploy real.
-const VERSION = '13';
+const VERSION = '14';
 const CACHE = 'mitos-mundo-abierto-' + VERSION;
 const ARCHIVOS = [
+  'exploracion.js', 'plaza.js',
   './', 'index.html', 'estilos.css', 'principal.js', 'mundo.js', 'dibujo.js', 'interfaz.js', 'controles.js',
   'nucleo.js', 'iconos.js', 'sonido.js', 'manifest.webmanifest',
   'datos/personajes.json', 'datos/coleccionables.json', 'datos/mapa-pruebas.json', 'datos/mapa-mundo.json',

@@ -46,3 +46,8 @@ Etapa 2: laberinto, cueva del monte y personajes nuevos. Sin fecha: taller de D�
 ## Mejora gráfica de ChatGPT / Codex (2026-11-02)
 
 Construida: 240 chequeos integrales, 17 rápidos y 366 invariantes gráficas aprobados. Implementados A2 (vistas y pasos), ambiente y reacciones de A6, apertura visual de A5 y ajustes de profundidad, pisos, cámara y controles (D28). Verificación y límites en `plan-mejora-grafica-codex.md`. Validación en celular real pendiente; no se marca validada ninguna sesión.
+
+
+## Jugabilidad y plaza adaptable (D29)
+
+**Construida para revisión:** controles de PC y táctiles, superficie visible, orientación hacia actividades y primera revisión de espacios de la plaza. Pruebas y límites en `jugabilidad-adaptable-codex.md`. Pendiente: prueba de uso en dispositivo, especialmente encontrar actividades sin ayuda externa. Puerto y palacio conservan su distribución.

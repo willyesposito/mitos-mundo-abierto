@@ -15,7 +15,9 @@ export function posePersonaje(id, o, reducir = false) {
 export function encuadre(W, H, inferior, superior, TW, TH) {
   const alto = Math.max(120, H - inferior - superior);
   const vertical = H > W;
-  // En vertical se ven nueve casillas de ancho y nueve de fondo; antes el alto reducía demasiado al personaje.
-  const esc = Math.max(0.32, Math.min(W / ((vertical ? 9 : 17) * TW), alto / ((vertical ? 9 : 12) * TH)));
+  // Reserva el espacio del HUD y los controles antes de elegir cuanto mundo entra.
+  const columnas = vertical ? (W >= 600 ? 12 : 9) : 20;
+  const filas = vertical ? 10 : (H <= 520 ? 6 : 13);
+  const esc = Math.max(0.32, Math.min(1.65, W / (columnas * TW), alto / (filas * TH)));
   return { esc, focoY: superior + alto * (vertical ? 0.57 : 0.53) };
 }
