@@ -22,6 +22,7 @@ export const ICONOS = {
   embestir: S('<path d="M2 8h5M1 12h6M2 16h5" fill="none" stroke="#cbb994" stroke-width="1.8"/><path d="M11 15c-3-1-4.5-4.5-3.5-9 1 2.5 2.5 3.8 5 4.200M19 15c3-1 4.5-4.5 3.5-9-1 2.5-2.5 3.8-5 4.2" fill="#f4ecd8" transform="translate(-1 0)"/><path d="M9.5 11h9v4a4.5 4.5 0 01-9 0z" fill="#8a5a3c" transform="translate(-1 0)"/>'),
   hilo:     S('<circle cx="10.5" cy="11" r="7" fill="#d9a441"/><path d="M5 8.500c3 1.2 7.5 1.2 11 0M4 12c3.5 1.8 9 1.8 13 0M7 16.500c2.2-3 3.2-7 2.7-11M13 17.500c.6-4 .1-8.5-1.5-12" fill="none" stroke="#8f3a24" stroke-width="1"/><path d="M15 17c3 1.5 5 3 7 3.5" fill="none" stroke="#b5482e" stroke-width="2"/>'),
   luz:      llama,
+  navegar:  S('<path d="M2.5 14.500h19c-.8 3.700-3.400 5.700-6.800 5.700H9.300c-3.400 0-6-2-6.800-5.700z" fill="#d9a441"/><path d="M3.500 17.500c.8 1.700 2.600 2.700 5.800 2.700h5.400c3.200 0 5-1 5.800-2.700z" fill="#8f3a24" stroke="none"/><path d="M6 4l10 9.500" fill="none" stroke="#f4ecd8" stroke-width="2.200"/><path d="M14.500 11.200l3.600 3.300-1.600 1.400-3.600-3.300z" fill="#f4ecd8"/>'),
   voz:      voz,
   menu:     S([4, 10.4, 15.8].map(y => `<rect x="4" y="${y}" width="16" height="3.2" rx="1.6" fill="#b5482e"/>`).join('')),
   ficha:    S('<path d="M6 4h11a2 2 0 012 2v12H8a2 2 0 01-2-2z" fill="#f4ecd8"/><path d="M6 16a2 2 0 002 2h11v2H8a4 4 0 01-4-4V6a2 2 0 012-2z" fill="#cbb994"/><path d="M9.5 8h6M9.5 11h6M9.5 14h4" fill="none" stroke="#b5482e" stroke-width="1.6"/>'),
@@ -35,6 +36,7 @@ export const ICONOS = {
   rasgo_minotauro: cuernos,
   rasgo_ariadna: ovillo,
   rasgo_fenix: llama,
+  rasgo_ulises: S('<path d="M5.500 18c.2-6.500 2.800-13 6.500-14 3.700 1 6.300 7.500 6.500 14z" fill="#e6b866"/><path d="M9 16.500c.3-4 1.200-8 3-10.500" fill="none" stroke="#fff3c8" stroke-width="1.200"/><path d="M4 18h16v2.800H4z" fill="#b5482e"/>'),
   rasgo_eco: S('<circle cx="6" cy="12" r="2.6" fill="#1f6f9c"/><path d="M10.5 8a5.5 5.5 0 010 8M14.5 5a10 10 0 010 14M18.5 2.500a14 14 0 010 19" fill="none" stroke="#1f6f9c" stroke-width="2"/>'),
 };
 
