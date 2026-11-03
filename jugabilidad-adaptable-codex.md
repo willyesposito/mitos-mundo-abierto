@@ -12,6 +12,8 @@ Autoría: ChatGPT / Codex (OpenAI). Implementación autorizada en la conversaci�
 
 ## Compatibilidad
 
+Revisión visual del pavimento: los ramales usan una máscara común y se dibujan como una superficie continua, sin bordes cruzados en las bifurcaciones. Se agregan losas pequeñas de variación discreta y transiciones de material en los accesos. Los jardines se reducen y se terminan con bordes de piedra, tierra moteada y plantas bajas, cuidando que no queden recortados contra paredes. Cambia solo la presentación de `plaza.js`.
+
 No se mueven objetos, braseros, puertas, sogas, zonas ni coordenadas de mecanismos. No se agrega ninguna pared ni se altera la física. Las posiciones antiguas siguen siendo transitables. La selección temporal de destino y sus rutas no se guardan. Los módulos nuevos están incluidos en la caché, versión 14.
 
 ## Verificación
