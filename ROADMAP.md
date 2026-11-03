@@ -4,11 +4,11 @@ Estado de las sesiones. El contenido de cada una (fichas, catálogo, desafíos) 
 
 Estados: **pendiente**, **construida** (`probar.js` pasa) y **validada** (la jugadora lo usó en el celular). Solo Willy marca "validada".
 
-Última verificación: 2026-10-05, `probar.js` con 245 chequeos OK y ninguna falla (A6, tanda 1).
+Última verificación: 2026-11-03, `probar.js` completo con 263 chequeos OK y ninguna falla (U1).
 
 ## Etapa 1: primer mapa completo (puerto, plaza, palacio)
 
-Se cierra con el criterio de terminado de `CLAUDE.md`.
+Se cierra con el criterio de terminado de `CLAUDE.md`. **Validada por Willy el 2026-11-02.**
 
 - [x] **S0 Prueba con la jugadora**: validada.
 - [x] **S1 El mundo se guarda**: construida. Falta probarla en el celular.
@@ -39,9 +39,16 @@ Plan en `plan-arte.md`. Decisiones: D16 a D22. Orden de inicio a definir por Wil
 
 - Validar S1 a S6 en el celular con la jugadora, siguiendo la lista de observación del final de `plan-etapa-1.md`.
 
-## Fuera de la etapa 1
+## Etapa 2: personajes nuevos, laberinto y cueva del monte
 
-Etapa 2: laberinto, cueva del monte y personajes nuevos. Sin fecha: taller de Dédalo y Talos.
+Contenido en `plan-etapa-2.md`.
+
+- [x] **U1 Poder de Ulises**: construida (`probar.js --rapido` con los chequeos de U1). Decisiones: D29, D31. Corrió con marcadores, sin esperar los sprites. Falta probarla en el celular.
+- [ ] **U2 El canal**: diseñada. Decisión: D30. Necesita los sprites del chat de diseño (Ulises, barca con remo, boca baja y los dos objetos). Incluye la migración del guardado del puerto: paso riesgoso, con corrida completa de `probar.js`.
+- [ ] **Laberinto**: pendiente de diseño.
+- [ ] **Cueva del monte**: pendiente de diseño.
+
+Sin fecha: taller de Dédalo y Talos.
 
 ## Mejora gráfica de ChatGPT / Codex (2026-11-02)
 

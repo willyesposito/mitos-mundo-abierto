@@ -30,11 +30,15 @@ const ALCANCE_ECO = 6;      // casillas que llega el eco repetido (atraviesa par
 const RADIO_ARGOLLA = 1.3;  // distancia a la argolla para tender la soga
 const TOL_SOGA = 0.55;      // cuánto se puede subir de golpe sobre una soga
 const MAX_SOGA = 5;
+const VEL_BARCA = 3;        // Ulises: la barca va más lenta que a pie
+const MEDIO_BARCA = 0.3;    // semiancho de la caja con la que la barca choca contra la orilla
+const RADIO_BARCA = 1.7;    // distancia a la barca para subir
+const TECHO_BOCA = 0.45;    // bajo la roca de la boca baja no cabe saltar ni volar
 
 export function alturaCelda(c) {
   switch (c) {
     case '#': case 'b': case 'M': case 'G': case 'D': case 'O': return ALTURA_PARED;
-    case '~': return ABISMO;
+    case '~': case 'r': return ABISMO;   // 'r': boca baja, agua con techo de roca (ver alturaTile)
     case 'a': return 1;
     case 'A': return 2;
     default: return 0;
@@ -132,6 +136,38 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
   function tenderEn(s) { s.tendida = true; for (const c of s.casillas) cuerdas.set(c.x + ',' + c.y, c.h); }
   for (const s of sogas) if (sogasTendidas.has(s.a.join(','))) tenderEn(s);
 
+  // Ulises: barcas con remo. Viven sobre el agua (`~`) o la boca baja (`r`). Una barca se identifica por su casilla original.
+  const aguaCelda = (x, y) => !!celdas[y] && (celdas[y][x] === '~' || celdas[y][x] === 'r');
+  const movidas = guardado.barcas || {};
+  const barcas = (mapa.barcasRemo || []).filter(b => aguaCelda(b.x, b.y)).map(b => ({ origen: b.x + ',' + b.y, ox: b.x, oy: b.y, x: b.x + 0.5, y: b.y + 0.5 }));
+  const barcaLibre = (b, x, y, medio = MEDIO_BARCA) => {
+    for (const cx of [x - medio, x + medio])
+      for (const cy of [y - medio, y + medio])
+        if (!aguaCelda(Math.floor(cx), Math.floor(cy))) return false;
+    return !barcas.some(o => o !== b && Math.abs(o.x - x) < 0.9 && Math.abs(o.y - y) < 0.9);
+  };
+  for (const b of barcas) {   // el margen de 0,02 absorbe el redondeo a 2 decimales del guardado
+    const pos = movidas[b.origen];
+    if (Array.isArray(pos) && pos.length === 2 && pos.every(Number.isFinite) && barcaLibre(b, pos[0], pos[1], MEDIO_BARCA - 0.02)) { b.x = pos[0]; b.y = pos[1]; }
+  }
+  // Nadie queda varado: si ninguna barca toca la tierra que alcanza quien aparece, la primera que pueda vuelve a su lugar de origen.
+  {
+    const alcanza = new Set(), pila = [[Math.floor(arranque[0]), Math.floor(arranque[1])]];
+    while (pila.length) {
+      const [x, y] = pila.pop(), k = x + ',' + y;
+      if (alcanza.has(k) || x < 0 || y < 0 || x >= cols || y >= rows) continue;
+      const h = alturaCelda(celdas[y][x]);
+      if (h < 0 || h >= ALTURA_PARED) continue;
+      alcanza.add(k);
+      pila.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+    }
+    const toca = (tx, ty) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => alcanza.has((tx + dx) + ',' + (ty + dy)));
+    if (barcas.length && !barcas.some(b => toca(Math.floor(b.x), Math.floor(b.y)))) {
+      const b = barcas.find(q => toca(q.ox, q.oy));
+      if (b) { b.x = b.ox + 0.5; b.y = b.oy + 0.5; }
+    }
+  }
+
   const coleccionables = (mapa.objetos || []).filter(o => o.tipo === 'coleccionable').map(o => ({
     id: o.id, x: o.x + 0.5, y: o.y + 0.5,
     zBase: alturaCelda(celdas[o.y][o.x]),
@@ -139,7 +175,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
   }));
 
   const m = {
-    id: mapa.id, barcas: mapa.barcas || [],
+    id: mapa.id, barcas: mapa.barcas || [], barcasRemo: barcas,
     cols, rows, celdas, origen, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], senales: [], eventos: [], t: 0, velo: 0,
     jugador: {
@@ -148,7 +184,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       fx: 0, fy: 1, camina: false, paso: 0,
       personaje: 'pegaso', embiste: null, embCool: 0,
       empuje: { e: null, t: 0 }, pistaCool: 0, tap: false, poderT: 0, brillo: 0, ecoCool: 0, esfuerzo: 0, senalT: 0,
-      seguro: { x: arranque[0], y: arranque[1], z: 0 },
+      seguro: { x: arranque[0], y: arranque[1], z: 0 }, seguroBarca: null, aBordo: null,
       estado: 'jugando', estadoT: 0,
     },
     suelo, alturaTile, actualizar, cambiarPersonaje, estado,
@@ -168,6 +204,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       puertas: puertasSonido.filter(p => p.abierta).map(p => p.x + ',' + p.y),
       eco: m.eco,
       sogas: sogas.filter(s => s.tendida).map(s => s.a.join(',')),
+      barcas: Object.fromEntries(barcas.filter(b => Math.hypot(b.x - b.ox - 0.5, b.y - b.oy - 0.5) > 0.01).map(b => [b.origen, [+b.x.toFixed(2), +b.y.toFixed(2)]])),
     };
   }
 
@@ -176,12 +213,23 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     return null;
   }
 
+  // La barca es piso firme (nivel 0) en las casillas del agua que cubre.
+  function barcaEn(tx, ty) {
+    for (const b of barcas) if (Math.abs(b.x - tx - 0.5) < 0.8 && Math.abs(b.y - ty - 0.5) < 0.8) return b;
+    return null;
+  }
+  // La barca sobre la que está parado el personaje, si hay una bajo sus pies.
+  function barcaBajo(j) {
+    if (!j.enSuelo || Math.abs(j.z) > 0.3) return null;
+    return barcas.find(b => Math.abs(b.x - j.x) < 0.55 && Math.abs(b.y - j.y) < 0.55) || null;
+  }
+
   function alturaTile(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return ALTURA_PARED;
     const hc = cuerdas.get(tx + ',' + ty);
     if (hc !== undefined) return hc;
     const h = alturaCelda(celdas[ty][tx]);
-    if (h <= ABISMO) return ABISMO;
+    if (h <= ABISMO) return barcaEn(tx, ty) ? 0 : celdas[ty][tx] === 'r' ? ALTURA_PARED : ABISMO;
     const e = empujableEn(tx, ty);
     return e ? h + e.alto : h;
   }
@@ -195,6 +243,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     for (const cx of [x - MEDIO, x + MEDIO])
       for (const cy of [y - MEDIO, y + MEDIO]) {
         const tx = Math.floor(cx), ty = Math.floor(cy);
+        if (z > TECHO_BOCA && celdas[ty] && celdas[ty][tx] === 'r') return false;
         if (alturaTile(tx, ty) > z + (cuerdas.has(tx + ',' + ty) ? TOL_SOGA : PASO)) return false;
       }
     return true;
@@ -239,6 +288,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     const j = m.jugador;
     if (j.estado !== 'jugando' || j.personaje === id) return;
     j.personaje = id;
+    if (j.aBordo) { j.aBordo = null; m.eventos.push({ tipo: 'barca' }); }   // el que aparece queda parado en la barca
     j.embiste = null; j.tap = false; j.poderT = 0;
     for (const f of fuentes) f.oida = false;   // al volver a Eco, vuelve a escuchar lo que tiene cerca
     chispas(j.x, j.y, j.z + 0.6, '#f4ecd8', 14, 2.4);
@@ -387,6 +437,64 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     m.eventos.push({ tipo: 'soga' });
   }
 
+  // --- Ulises ---
+  // Con el joystick la barca anda por el agua y lleva a Ulises; no sale del agua. Si la orilla la frena
+  // por una esquina, se corre hacia el centro de la fila (o columna) por la que sí pasa.
+  function navegar(dt, ix, iy) {
+    const j = m.jugador, b = j.aBordo, paso = VEL_BARCA * dt;
+    const eje = (d, x) => {
+      if (!d) return;
+      const nx = x ? b.x + d * paso : b.x, ny = x ? b.y : b.y + d * paso;
+      if (barcaLibre(b, nx, ny)) { b.x = nx; b.y = ny; return; }
+      const v = x ? b.y : b.x, c0 = Math.floor(v) + 0.5;
+      const centros = [c0, c0 + (v >= c0 ? 1 : -1)];
+      for (const c of centros) {
+        const pasa = x ? barcaLibre(b, nx, c) : barcaLibre(b, c, ny);
+        if (!pasa || Math.abs(c - v) < 0.005) continue;
+        const n = v + Math.sign(c - v) * Math.min(Math.abs(c - v), paso * 0.9);
+        if (x ? barcaLibre(b, b.x, n) : barcaLibre(b, n, b.y)) { if (x) b.y = n; else b.x = n; }
+        return;
+      }
+    };
+    eje(ix, true); eje(iy, false);
+    j.x = b.x; j.y = b.y; j.z = 0; j.vz = 0; j.enSuelo = true; j.planeo = false;
+  }
+  function subirOBajar() {
+    const j = m.jugador;
+    if (j.aBordo) {
+      const b = j.aBordo, tx0 = Math.floor(b.x), ty0 = Math.floor(b.y);
+      let mejor = null, pm = -9;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const tx = tx0 + dx, ty = ty0 + dy;
+        if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) continue;
+        const c = celdas[ty][tx];
+        if (alturaCelda(c) !== 0 || empujableEn(tx, ty) || cuerdas.has(tx + ',' + ty)) continue;
+        if (Math.hypot(tx + 0.5 - b.x, ty + 0.5 - b.y) > 1.6) continue;
+        const p = dx * j.fx + dy * j.fy;
+        if (p > pm) { pm = p; mejor = [tx, ty]; }
+      }
+      if (!mejor) {
+        if (j.pistaCool <= 0) { j.pistaCool = 6; m.eventos.push({ tipo: 'pista', texto: 'Para bajar, acercá la barca a tierra firme.' }); }
+        return;
+      }
+      j.aBordo = null;
+      j.x = mejor[0] + 0.5; j.y = mejor[1] + 0.5; j.z = 0; j.vz = 0; j.enSuelo = true;
+      j.seguro = { x: j.x, y: j.y, z: 0 }; j.seguroBarca = null;
+      chispas(b.x, b.y, 0.2, '#9ed6e8', 10, 1.8);
+      m.eventos.push({ tipo: 'barca' });
+      return;
+    }
+    let cerca = null, dm = RADIO_BARCA;
+    for (const b of barcas) { const d = Math.hypot(b.x - j.x, b.y - j.y); if (d < dm) { dm = d; cerca = b; } }
+    if (!cerca || !j.enSuelo || Math.abs(j.z) > 0.3) {
+      if (j.pistaCool <= 0) { j.pistaCool = 6; m.eventos.push({ tipo: 'pista', texto: 'Ulises sube a una barca con remo, parado junto a ella.' }); }
+      return;
+    }
+    j.aBordo = cerca; j.x = cerca.x; j.y = cerca.y; j.z = 0; j.vz = 0; j.enSuelo = true; j.seguroBarca = cerca;
+    chispas(cerca.x, cerca.y, 0.2, '#9ed6e8', 10, 1.8);
+    m.eventos.push({ tipo: 'barca' });
+  }
+
   function actualizarParticulas(dt) {
     for (const p of m.particulas) {
       p.vida -= dt; p.vz -= 9 * dt;
@@ -422,7 +530,8 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
   function reaparecer() {
     const j = m.jugador;
     let s = j.seguro;
-    if (empujableEn(Math.floor(s.x), Math.floor(s.y))) s = { x: arranque[0], y: arranque[1], z: 0 };
+    if (j.seguroBarca) s = { x: j.seguroBarca.x, y: j.seguroBarca.y, z: 0 };   // caer al agua desde la barca devuelve a la barca
+    else if (empujableEn(Math.floor(s.x), Math.floor(s.y))) s = { x: arranque[0], y: arranque[1], z: 0 };
     j.x = s.x; j.y = s.y; j.z = suelo(s.x, s.y); j.vz = 0;
     j.enSuelo = true; j.planeo = false; j.coyote = 0; j.buffer = 0;
   }
@@ -477,6 +586,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
 
     const antes = { x: j.x, y: j.y };
     let choco = false;
+    if (control && j.aBordo) { navegar(dt, ix * mag, iy * mag); vx = 0; vy = 0; }
     if (vx) { const nx = j.x + vx * dt; if (libre(nx, j.y, j.z)) j.x = nx; else choco = true; }
     if (vy) { const ny = j.y + vy * dt; if (libre(j.x, ny, j.z)) j.y = ny; else choco = true; }
     if (choco && j.embiste) j.embiste = null;
@@ -515,6 +625,11 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     } else { j.tap = false; j.poderT = 0; }
     if (control && j.personaje === 'eco') { escuchar(); if (poderPulsado) repetir(); }
     if (control && j.personaje === 'ariadna' && poderPulsado) tender();
+    if (control && j.personaje === 'ulises' && poderPulsado) subirOBajar();
+    // Cualquiera puede pararse en la barca, pero solo Ulises la mueve: avisar al intentar irse por el agua
+    if (control && j.personaje !== 'ulises' && barcaBajo(j) && mag > 0.4 && suelo(j.x + ix * 0.7, j.y + iy * 0.7) <= ABISMO && j.pistaCool <= 0) {
+      j.pistaCool = 8; m.eventos.push({ tipo: 'pista', texto: 'La barca la mueve Ulises.' });
+    }
 
     // Vertical: salto, vuelo, caída
     const vuela = control && entrada.poderMantenido &&
@@ -524,7 +639,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       if (g0 < j.z - 0.02) { j.enSuelo = false; j.coyote = COYOTE; }
       else j.z = g0;
     }
-    if (j.buffer > 0 && (j.enSuelo || j.coyote > 0) && !vuela) {
+    if (j.buffer > 0 && (j.enSuelo || j.coyote > 0) && !vuela && !j.aBordo) {
       j.vz = SALTO; j.enSuelo = false; j.coyote = 0; j.buffer = 0;
     }
     if (vuela) {
@@ -542,6 +657,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       j.z += j.vz * dt;
       const tope = j.personaje === 'fenix' ? VUELO_MAX_FENIX : VUELO_MAX;
       if (vuela && j.z >= tope) { j.z = tope; j.vz = Math.min(j.vz, 0); }
+      if (j.z > TECHO_BOCA && celdas[Math.floor(j.y)] && celdas[Math.floor(j.y)][Math.floor(j.x)] === 'r') { j.z = TECHO_BOCA; j.vz = Math.min(j.vz, 0); }
       const g = suelo(j.x, j.y);
       if (j.vz <= 0 && j.z <= g && g > ABISMO) {
         if ((j.vz < -2.5 || j.planeo) && j.estado === 'jugando') polvo(j.x, j.y + 0.05, g, 4, 0.35);   // aterriza en piso firme
@@ -555,8 +671,11 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     }
 
     // Último piso firme
-    if (control && j.enSuelo && !empujableEn(Math.floor(j.x), Math.floor(j.y)) && esquinasFirmes(j.x, j.y, j.z))
-      j.seguro = { x: j.x, y: j.y, z: j.z };
+    if (control && j.enSuelo && !empujableEn(Math.floor(j.x), Math.floor(j.y))) {
+      const bb = barcaBajo(j);
+      if (bb) j.seguroBarca = bb;
+      else if (esquinasFirmes(j.x, j.y, j.z)) { j.seguro = { x: j.x, y: j.y, z: j.z }; j.seguroBarca = null; }
+    }
 
     // Objetos
     if (control) {

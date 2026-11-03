@@ -21,7 +21,7 @@ const COL = {
   lino: '#c9a46a', linoSombra: '#8a6a3a',
 };
 
-function alturaVisual(c) { return c === '~' ? NIVEL_AGUA : c === 'b' ? 0.8 : alturaCelda(c); }
+function alturaVisual(c) { return c === '~' || c === 'r' ? NIVEL_AGUA : c === 'b' ? 0.8 : alturaCelda(c); }
 
 export function crearDibujo(lienzo) {
   const ctx = lienzo.getContext('2d');
@@ -79,6 +79,7 @@ function dibujarMundo(ctx, m, v, personajes) {
   for (const b of m.braseros) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.5, tipo: 'brasero', b });
   for (const f of m.fuentes) if (ver(f.ty)) items.push({ fila: f.ty, prof: f.y, tipo: 'fuente', f });
   for (const b of m.barcas) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.4, tipo: 'barca', b });
+  for (const b of m.barcasRemo) if (ver(Math.floor(b.y))) items.push({ fila: Math.floor(b.y), prof: b.y - 0.6, tipo: 'barcaRemo', b });
   // Las argollas y las sogas se dibujan después de todas las baldosas por las que pasan
   for (const s of m.sogas) {
     const maxFila = Math.max(s.a[1], s.b[1]);
@@ -100,6 +101,7 @@ function dibujarMundo(ctx, m, v, personajes) {
 
   dibujarParticulas(ctx, m);
   dibujarSenales(ctx, m);
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (m.celdas[y][x] === 'r') dibujarTechoBoca(ctx, x, y);
 
   // Siluetas tenues por encima de todo: se ve al personaje y a los objetos detrás de un muro.
   for (const c of m.coleccionables) if (!c.recogido && ver(Math.floor(c.y))) dibujarSilueta(ctx, m, c);
@@ -136,7 +138,7 @@ function dibujarTile(ctx, m, x, y) {
   }
 
   switch (c) {
-    case '~': dibujarAgua(ctx, m, x, y, px, py); break;
+    case '~': case 'r': dibujarAgua(ctx, m, x, y, px, py); break;
     case '#': case 'b': case 'M': case 'G': case 'D': case 'O':
       pintar(ctx, (c === 'M' ? 'tope-claro-' + (azar(x, y, 3) % 2) : 'tope-' + (azar(x, y, 3) % 4)), px, py, 0.5);
       break;
@@ -156,7 +158,7 @@ function dibujarTile(ctx, m, x, y) {
     }
   }
   // Sombras de contacto en el piso receptor, sin juntas oscuras en cada casilla.
-  if (!ES_PARED(c) && c !== '~') {
+  if (!ES_PARED(c) && c !== '~' && c !== 'r') {
     const norte = y > 0 ? alturaVisual(m.celdas[y-1][x]) : h;
     const oeste = x > 0 ? alturaVisual(m.celdas[y][x-1]) : h;
     ctx.fillStyle = 'rgba(59,43,29,.14)';
@@ -244,7 +246,7 @@ export function simbolo(ctx, id, cx, cy, r) {
 const OLAS = [[1, 7], [2, 5], [2, 7], [3, 5], [1, 10]];   // [ondas, medio ancho]
 function dibujarAgua(ctx, m, x, y, px, py) {
   recorte(ctx, 'mar', (x * TW) % 176, (y * TH) % 108, TW, TH, px, py, 1);
-  const tierra = (cx, cy) => cx >= 0 && cy >= 0 && cx < m.cols && cy < m.rows && m.celdas[cy][cx] !== '~';
+  const tierra = (cx, cy) => cx >= 0 && cy >= 0 && cx < m.cols && cy < m.rows && m.celdas[cy][cx] !== '~' && m.celdas[cy][cx] !== 'r';
   const N = tierra(x, y - 1), O = tierra(x - 1, y), E = tierra(x + 1, y);
   if (N || O || E) {
     ctx.fillStyle = '#3d8cb8';
@@ -280,6 +282,39 @@ function dibujarBarca(ctx, m, b) {
   ctx.restore();
 }
 
+// Barca con remo (la que navega Ulises). Marcador: la barca de adorno con un remo apoyado; el sprite definitivo sale del chat de diseño.
+function dibujarBarcaRemo(ctx, b) {
+  const cx = b.x * TW, cy = b.y * TH, k = 1.25 * TW / 96;
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k);
+  pintar(ctx, 'barca', 0, 0);
+  ctx.restore();
+  ctx.save(); ctx.translate(cx, cy); ctx.lineCap = 'round';
+  for (const [color, ancho] of [[COL.tinta, 5], [COL.cal, 2.4]]) {
+    ctx.strokeStyle = color; ctx.lineWidth = ancho;
+    ctx.beginPath(); ctx.moveTo(-17, -16); ctx.lineTo(-9, 8); ctx.stroke();
+  }
+  ctx.restore();
+}
+// Techo de roca de la boca baja: translúcido, para ver lo que pasa por abajo.
+function dibujarTechoBoca(ctx, x, y) {
+  const px = x * TW, py = y * TH - 1.3 * LH;
+  ctx.save(); ctx.globalAlpha = 0.55;
+  ctx.fillStyle = '#8c7a5c'; ctx.fillRect(px, py, TW, TH);
+  ctx.fillStyle = '#6b5a40'; ctx.fillRect(px, py + TH, TW, 9);
+  ctx.strokeStyle = COL.tinta; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, TW - 2, TH + 8);
+  ctx.restore();
+}
+// Ulises sin sprite: figura de marcador (cuerpo humano y pilos) hasta que llegue el diseño definitivo.
+function dibujarMarcador(ctx, p, o) {
+  const { x, y, fx, escala } = o;
+  ctx.save(); ctx.translate(x, y); ctx.scale(escala * (fx < 0 ? -1 : 1), escala);
+  ctx.lineWidth = 2; ctx.strokeStyle = COL.tinta; ctx.lineJoin = 'round';
+  ctx.fillStyle = p.color; ctx.beginPath(); ctx.rect(-8, -27, 16, 27); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e8c9a0'; ctx.beginPath(); ctx.arc(0, -33, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e6b866'; ctx.beginPath(); ctx.moveTo(-7, -37); ctx.lineTo(0, -50); ctx.lineTo(7, -37); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
 // ---------- Objetos y personajes ----------
 function dibujarItem(ctx, m, it, personajes) {
   if (it.tipo === 'ambiente') dibujarAmbiente(ctx, m, it.e);
@@ -288,6 +323,7 @@ function dibujarItem(ctx, m, it, personajes) {
   else if (it.tipo === 'brasero') dibujarBrasero(ctx, m, it.b);
   else if (it.tipo === 'fuente') dibujarFuente(ctx, m, it.f);
   else if (it.tipo === 'barca') dibujarBarca(ctx, m, it.b);
+  else if (it.tipo === 'barcaRemo') dibujarBarcaRemo(ctx, it.b);
   else if (it.tipo === 'soga') dibujarSoga(ctx, it.s);
   else if (it.tipo === 'argolla') dibujarArgolla(ctx, it.s, it.p);
   else if (it.tipo === 'objeto') dibujarObjeto(ctx, m, it.c);
@@ -695,6 +731,7 @@ export function estadoSprites() {
 // Dibuja el sprite del personaje con los pies en (x, y). Mirando a la izquierda se espeja; hacia atrás usa el mismo.
 // Pegaso y Fénix llevan las alas aparte: ala lejana, cuerpo, ala cercana.
 export function dibujarPersonaje(ctx, p, o) {
+  if (!SPRITES[p.id]) { dibujarMarcador(ctx, p, o); return; }
   const { x, y, fx, caminando, escala, paso } = o;
   const reducir = reducirMovimiento(), pose = posePersonaje(p.id,o,reducir);
   const img = spritesListos && (imagenes[pose.nombre] || imagenes[p.id]);

@@ -1,6 +1,6 @@
 # Mitos: mundo abierto
 
-Juego de exploración de mitología griega, aparte de Mundo de Mitos. Toma prestados cinco personajes de ese juego pero no comparte progreso, colección ni reglas de módulo. Sin relación técnica con el otro repo.
+Juego de exploración de mitología griega, aparte de Mundo de Mitos. Toma prestados cinco personajes de ese juego (y suma a Ulises) pero no comparte progreso, colección ni reglas de módulo. Sin relación técnica con el otro repo.
 
 ## Qué es
 
@@ -12,7 +12,7 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 
 ## Reglas del juego
 
-- Un lugar puede requerir un poder. Los 5 personajes están disponibles desde el inicio: requerir un poder significa cambiar de personaje, no conseguir uno.
+- Un lugar puede requerir un poder. Los 6 personajes están disponibles desde el inicio: requerir un poder significa cambiar de personaje, no conseguir uno.
 - Saltos generosos, caer no castiga: si cae al vacío o al agua, reaparece en el último piso firme sin perder nada. Un coleccionable obtenido nunca se pierde.
 - Sin timers ni cuentas regresivas. Nada se derrumba si no llega a tiempo.
 - La sombra bajo el personaje es siempre visible al saltar o volar.
@@ -40,8 +40,9 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 | Ariadna | Hilo: tender sogas entre argollas (escala o puente, hasta 5 casillas) | ovillo |
 | Fénix | Luz: tocar brilla y enciende braseros; mantener vuela, pero solo hasta terrazas (los techos son de Pegaso, D21) | llama |
 | Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
+| Ulises | Navegar: sube a una barca con remo, la mueve por el agua y baja en tierra firme (D29) | pilos |
 
-Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave de perfil con cola larga; sus alas son piezas aparte que aletean por código (D20). Minotauro, Ariadna y Eco tienen cuerpo humano (D19). El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
+Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave de perfil con cola larga; sus alas son piezas aparte que aletean por código (D20). Minotauro, Ariadna, Eco y Ulises tienen cuerpo humano (D19); Ulises, por ahora, es un marcador sin sprite. El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
 
 ## Mapa de archivos
 
@@ -63,17 +64,18 @@ Código en la raíz, datos en `datos/`.
 | `datos/coleccionables.json` | Catálogo de objetos y zonas. El catálogo real lo define Chat |
 | `datos/mapa-mundo.json` | El mundo: puerto (inicio, abajo), plaza y palacio en terrazas (arriba) en un solo mapa continuo (D23). `zonas` dice qué filas son de cada zona, su desplazamiento y su inicio. La plaza tiene un desafío por poder; el palacio, tres desafíos de a dos. Declara una vez el catálogo de `sonidos` |
 | `datos/mapa-puerto.json`, `mapa-plaza.json`, `mapa-palacio.json` | Los mapas separados de antes de D23. Ya no los carga el juego |
-| `datos/mapa-pruebas.json` | Campo de pruebas, se abre desde el menú. Leyenda abajo |
+| `datos/mapa-pruebas.json` | Campo de pruebas, se abre desde el menú. Leyenda abajo. Al sur tiene el estanque de Ulises: una barca con remo y una boca baja |
 | `ROADMAP.md` | Estado de las sesiones de la etapa. Se actualiza al cerrar cada sesión |
 | `DECISIONS.md` | Decisiones tomadas, con el porqué. Solo se agregan entradas |
 | `MEMORY.md` | Reglas aprendidas de diseño, técnica y proceso. Se anota ante cada corrección de Willy |
 | `plan-etapa-1.md` | Diseño y contenido de la etapa 1: fichas, catálogo, desafíos y sesiones |
+| `plan-etapa-2.md` | Diseño y contenido de la etapa 2. Por ahora, Ulises (D29) y el canal (D30) |
 | `plan-arte.md` | Plan de arte con sprites embebidos: requisitos, canon visual y pasos A0 a A6 |
 | `.claude/agents/programador.md` | Subagente (Sonnet 5.5) que programa los encargos que escribe Opus |
 | `sw.js` | Service worker. **Subir `VERSION` en cada deploy real** |
 | `herramientas/probar.js` | No es parte del juego. Juega el juego en un navegador sin pantalla, con teclado y toques, y verifica todo (unos 10 min). Con `--rapido`, una versión corta de menos de un minuto para cada cambio (D26) |
 
-Leyenda del mapa: `.` suelo, `,` baldosa (única donde se puede empujar), `~` agua, `a` terraza (1), `A` techo (2), `#` pared, `b` parapeto bajo, `M` muro agrietado, `G` reja, `p` placa, `B` bloque, `V` vasija, `S` inicio, `D` puerta del sol, `O` puerta de sonido. Braseros, soles, fuentes de sonido, puertas de sonido y sogas (argollas) van en listas del JSON del mapa, no en letras. Las filas deben tener el mismo largo.
+Leyenda del mapa: `.` suelo, `,` baldosa (única donde se puede empujar), `~` agua, `a` terraza (1), `A` techo (2), `#` pared, `b` parapeto bajo, `M` muro agrietado, `G` reja, `p` placa, `B` bloque, `V` vasija, `S` inicio, `D` puerta del sol, `O` puerta de sonido, `r` boca baja (agua con techo de roca: solo pasa la barca). Braseros, soles, fuentes de sonido, puertas de sonido y sogas (argollas) y barcas con remo (`barcasRemo`) van en listas del JSON del mapa, no en letras. Las filas deben tener el mismo largo.
 
 ## Flujo
 

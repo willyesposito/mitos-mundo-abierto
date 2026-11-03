@@ -119,7 +119,7 @@ async function arrancar() {
   function procesarEventos() {
     let cambioMundo = false;
     for (const e of mundo.eventos.splice(0)) {
-      if (['muro', 'reja', 'empuje', 'brasero', 'sol', 'golpe', 'puerta', 'escucha', 'soga'].includes(e.tipo)) cambioMundo = true;
+      if (['muro', 'reja', 'empuje', 'brasero', 'sol', 'golpe', 'puerta', 'escucha', 'soga', 'barca'].includes(e.tipo)) cambioMundo = true;
       if (e.tipo === 'objeto') {
         registrarObjeto(perfil, e.id);
         ui.contadores(perfil.objetos); ui.pulsarContadores(); ui.avisoObjeto(e.id);

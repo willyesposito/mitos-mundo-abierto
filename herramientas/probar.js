@@ -96,6 +96,121 @@ async function main() {
   const bloque = () => page.evaluate(() => window.__mundo.empujables.filter(e => e.tipo === 'bloque').map(e => [e.tx, e.ty])[0]);
 
 
+
+  // U1: poder de Ulises (D29). La barca con remo, la boca baja y la tira de seis, en el campo de pruebas.
+  async function seccionU1() {
+    const eng = /\b(the|and|you|with|press|hold|power|button|close|next|previous)\b/i;
+    const J = () => page.evaluate(() => {
+      const m = window.__mundo, j = m.jugador, b = m.barcasRemo[0];
+      return { id: m.id, x: j.x, y: j.y, z: j.z, pj: j.personaje, aBordo: !!j.aBordo, enSuelo: j.enSuelo, estado: j.estado, bx: b && b.x, by: b && b.y, recogidos: m.coleccionables.filter(c => c.recogido).length };
+    });
+    const ponerEn = (x, y) => page.evaluate(([x, y]) => { const m = window.__mundo, j = m.jugador; j.x = x; j.y = y; j.z = m.suelo(x, y); j.vz = 0; j.enSuelo = true; j.planeo = false; j.estado = 'jugando'; j.aBordo = null; j.seguro = { x, y, z: j.z }; j.seguroBarca = null; }, [x, y]);
+    const barcaA = (x, y) => page.evaluate(([x, y]) => { const b = window.__mundo.barcasRemo[0]; b.x = x; b.y = y; }, [x, y]);
+    const elegirU = async id => { await page.click(`.pj[data-id=${id}]`); await espera(150); };
+    const enJuego = () => page.waitForFunction(() => { const j = window.__mundo.jugador; return j.estado === 'jugando' && j.enSuelo; }, null, { timeout: 9000 });
+    const recargar = async () => {
+      // Vuelve al perfil que movió la barca (con varios perfiles guardados, el primero puede ser otro)
+      const idx = await page.evaluate(() => {
+        const d = JSON.parse(localStorage.getItem('mitos-mundo-abierto-v1')), i = d.perfiles.findIndex(p => p.mundos && p.mundos.pruebas && p.mundos.pruebas.barcas && Object.keys(p.mundos.pruebas.barcas).length);
+        return Math.max(0, i);
+      });
+      await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
+      await page.locator('.perfil').nth(idx).click(); await page.waitForFunction(() => window.__mundo); await espera(300);
+    };
+    await soltarTodo();
+    if (await page.evaluate(() => window.__mundo.id) !== 'pruebas') await entrarPruebas();
+    OFF = [0, 0];
+
+    // La tira de seis: todos entran, se pueden elegir y ninguno tiene texto en inglés
+    const medir = () => page.evaluate(() => {
+      const t = document.getElementById('tira').getBoundingClientRect(), bs = [...document.querySelectorAll('#tira .pj')];
+      return { ids: bs.map(b => b.dataset.id), dentro: bs.every(b => { const r = b.getBoundingClientRect(); return r.left >= t.left - 1 && r.right <= t.right + 1 && r.width >= 44 && r.height >= 44; }), desborda: document.documentElement.scrollWidth > innerWidth, texto: document.getElementById('tira').innerText };
+    });
+    let t6 = await medir();
+    ok(t6.ids.join() === 'pegaso,minotauro,ariadna,fenix,eco,ulises' && t6.dentro && !t6.desborda, `la tira tiene seis personajes que entran en el celular: ${t6.ids.join()}`);
+    const vp = page.viewportSize();
+    await page.setViewportSize({ width: 360, height: 640 }); await espera(200);
+    t6 = await medir();
+    ok(t6.dentro && !t6.desborda, 'los seis entran también en un celular chico (360 de ancho), con botones de 44 px o más');
+    await foto('u1-tira-360'); await page.setViewportSize(vp); await espera(200);
+    let todos = true;
+    for (const id of t6.ids) { await elegirU(id); if ((await J()).pj !== id) todos = false; }
+    ok(todos, 'los seis personajes se pueden elegir tocando la tira');
+    ok((await page.textContent('#btn-poder .etiqueta')) === 'Navegar', 'con Ulises elegido el botón de poder dice Navegar');
+    const pxU = await page.evaluate(() => { const c = document.querySelector('.pj[data-id=ulises] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k; });
+    ok(pxU > 500, `la tira muestra el marcador de Ulises (${pxU} píxeles)`);
+    await page.click('#btn-ficha');
+    const fU = await page.evaluate(() => ({ nombre: document.getElementById('ficha-nombre').textContent, texto: document.getElementById('ficha-texto').textContent, poder: document.getElementById('ficha-poder-titulo').textContent, todo: document.getElementById('pantalla-ficha').innerText }));
+    ok(fU.nombre === 'Ulises' && fU.texto.startsWith('En griego se llama Odiseo') && fU.poder === 'Poder: Navegar' && !eng.test(fU.todo + ' ' + t6.texto), 'la ficha de Ulises se abre en español, sin texto en inglés');
+    await page.keyboard.press('KeyI'); await espera(200);
+
+    // Subir, cruzar la boca baja, bajar y recargar: la barca sigue donde se la dejó
+    await barcaA(13.5, 32.5);
+    await elegirU('ulises'); await ponerEn(12.5, 32.5); await espera(100);
+    await page.keyboard.press('KeyE'); await espera(200);
+    let s = await J();
+    ok(s.aBordo && Math.abs(s.x - s.bx) < 0.01 && Math.abs(s.y - s.by) < 0.01 && s.enSuelo, 'Ulises sube a la barca parado junto a ella');
+    await hasta('ArrowRight', () => window.__mundo.barcasRemo[0].x >= 27.6, 11000);
+    await foto('u1-orilla-enfrente');
+    s = await J();
+    ok(s.aBordo && s.bx >= 27.5 && Math.abs(s.by - 32.5) < 0.2 && Math.abs(s.x - s.bx) < 0.01, `la barca cruza la boca baja y llega a la otra orilla (x=${s.bx.toFixed(2)})`);
+    await page.keyboard.press('KeyE'); await espera(250);
+    s = await J();
+    ok(!s.aBordo && s.x > 28 && s.z === 0 && s.enSuelo && s.bx >= 27.5, 'junto a la orilla el botón baja a Ulises y la barca queda en el agua');
+    const dejada = s.bx;
+    const claves = await page.evaluate(() => Object.keys(window.__mundo.estado().barcas));
+    ok(claves.length === 1 && claves[0] === '13,32', 'la barca movida se guarda con clave propia en el estado del mapa');
+    await recargar(); await entrarPruebas();
+    s = await J();
+    ok(Math.abs(s.bx - dejada) < 0.05 && Math.abs(s.by - 32.5) < 0.05, `tras recargar la barca sigue donde la dejó (x=${s.bx.toFixed(2)})`);
+
+    // La boca baja cierra el vuelo
+    await elegirU('pegaso'); await ponerEn(12.5, 32.5); await espera(100);
+    await poner(new Set(['KeyE', 'ArrowRight'])); await espera(3200); await soltarTodo();
+    s = await J();
+    ok(s.x < 20 && s.x > 15, `Pegaso en vuelo no pasa por la boca baja (x=${s.x.toFixed(2)})`);
+    await enJuego();
+    await barcaA(20.5, 32.5);
+    await page.evaluate(() => { const j = window.__mundo.jugador; j.x = 18.8; j.y = 32.5; j.z = 1.5; j.vz = 0; j.enSuelo = false; j.planeo = true; j.estado = 'jugando'; j.seguro = { x: 12.5, y: 32.5, z: 0 }; });
+    await poner(new Set(['KeyE', 'ArrowRight'])); await espera(1500); await soltarTodo();
+    s = await J();
+    ok(s.x < 20, `ni siquiera con la barca justo en la boca baja pasa volando (x=${s.x.toFixed(2)})`);
+    await enJuego();
+
+    // Cualquiera se para en la barca, pero solo Ulises la mueve; caer al agua devuelve a la barca
+    await barcaA(13.5, 32.5);
+    await elegirU('minotauro'); await ponerEn(13.5, 32.5); await espera(150);
+    const antesM = await J();
+    await poner(new Set(['ArrowDown'])); await espera(450); await soltarTodo();
+    const aviso = await page.evaluate(() => document.getElementById('aviso').innerText);
+    s = await J();
+    ok(/La barca la mueve Ulises/.test(aviso) && Math.abs(s.bx - 13.5) < 0.01 && Math.abs(s.by - 32.5) < 0.01, 'otro personaje en la barca no la mueve y recibe la pista "La barca la mueve Ulises"');
+    await enJuego(); await espera(150);
+    s = await J();
+    ok(Math.abs(s.x - 13.5) < 0.1 && Math.abs(s.y - 32.5) < 0.1 && s.recogidos === antesM.recogidos && Math.abs(s.bx - 13.5) < 0.01, 'caer al agua desde la barca reaparece en la barca y no pierde nada');
+
+    // Cambiar de personaje arriba de la barca: el que aparece queda parado en ella
+    await elegirU('ulises'); await ponerEn(12.5, 32.5); await espera(100);
+    await page.keyboard.press('KeyE'); await espera(200);
+    await poner(new Set(['ArrowRight'])); await espera(500); await soltarTodo();
+    await elegirU('eco'); await espera(200);
+    s = await J();
+    ok(s.pj === 'eco' && !s.aBordo && s.enSuelo && Math.abs(s.x - s.bx) < 0.01 && Math.abs(s.y - s.by) < 0.01 && s.bx > 13.6, 'al cambiar de personaje arriba de la barca el nuevo queda parado en ella');
+
+    // Perfil restaurado: una barca guardada donde nadie la alcanza vuelve a su lugar; nadie queda sin barca
+    const guardarBarca = pos => page.evaluate(pos => {
+      const K = 'mitos-mundo-abierto-v1', d = JSON.parse(localStorage.getItem(K));
+      for (const p of d.perfiles) { p.mundos = p.mundos || {}; p.mundos.pruebas = { ...(p.mundos.pruebas || {}), barcas: { '13,32': pos } }; }
+      localStorage.setItem(K, JSON.stringify(d));
+    }, pos);
+    await guardarBarca([16.5, 32.5]); await recargar(); await entrarPruebas();
+    s = await J();
+    ok(Math.abs(s.bx - 13.5) < 0.01 && Math.abs(s.by - 32.5) < 0.01, 'con la barca restaurada en medio del agua, lejos de la orilla, vuelve a su lugar: nadie queda varado');
+    await guardarBarca([27.7, 32.5]); await recargar(); await entrarPruebas();
+    s = await J();
+    ok(Math.abs(s.bx - 27.7) < 0.01, 'una barca restaurada en una orilla que se alcanza a pie se queda donde estaba');
+    await guardarBarca([13.5, 32.5]);
+  }
   // Modo rápido: chequeos propios y cortos sobre un perfil nuevo (contexto limpio). No toca el resto de las secciones.
   if (RAPIDO) {
     const eng = /\b(the|and|you|with|press|hold|power|button|close|next|previous)\b/i;
@@ -135,6 +250,7 @@ async function main() {
       const t = await page.evaluate(id => { const c = document.querySelector(`.pj[data-id=${id}] canvas`); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k; }, id);
       ok(n > 500 && t > 500, `se dibuja ${id} (${n} píxeles en el lienzo, ${t} en la tira)`);
     }
+    await seccionU1();
     ok(errores.length === 0, 'sin errores en consola' + (errores.length ? ': ' + errores.join(' | ') : ''));
     await browser.close(); servidor.close();
     console.log(fallos ? `\n${fallos} verificación(es) fallaron (rápido)` : '\nTodo en orden (rápido)');
@@ -337,8 +453,9 @@ async function main() {
   ok(cat.objetos.filter(o => o.zona === 'pruebas').length === 3, 'los 3 objetos de prueba siguen');
   const textosPlan = {};
   for (const sec of plan.split(/^### /m).slice(1)) { const t = sec.match(/\*\*Texto:\*\* (.+)/); if (t) textosPlan[sec.split('\n')[0].trim().toLowerCase().replace('é', 'e').replace('í', 'i')] = t[1].trim(); }
-  ok(pers.every(p => p.ficha && p.ficha.texto === textosPlan[p.nombre.toLowerCase().replace('é', 'e').replace('í', 'i')]), 'las cinco fichas repiten exacto el texto del plan');
-  ok(pers.every(p => p.poder.activo), 'los cinco poderes están activos');
+  textosPlan.ulises = fs.readFileSync(path.join(RAIZ, 'plan-etapa-2.md'), 'utf8').match(/### Texto\n\n(.+)/)[1].trim();
+  ok(pers.length === 6 && pers.every(p => p.ficha && p.ficha.texto === textosPlan[p.nombre.toLowerCase().replace('é', 'e').replace('í', 'i')]), 'las seis fichas repiten exacto el texto del plan');
+  ok(pers.every(p => p.poder.activo), 'los seis poderes están activos');
   ok(pers.find(p => p.id === 'minotauro').ficha.texto.endsWith('Teseo entró con el hilo de Ariadna, lo venció y encontró la salida.'), 'la ficha del Minotauro termina con Teseo (D5)');
 
   await elegir('minotauro'); await tp(10.5, 24.5);
@@ -356,13 +473,13 @@ async function main() {
     return { dentro, sinCorte: f.bottom <= r2.bottom + 0.5 && t.scrollWidth <= t.clientWidth };
   });
   let vistos = 0;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < pers.length; i++) {
     const nombre = await page.textContent('#ficha-nombre'), p = pers.find(q => q.nombre === nombre);
     const c = await caben();
     if (p && (await page.textContent('#ficha-texto')) === p.ficha.texto && c.dentro && c.sinCorte && (await page.textContent('#ficha-poder-titulo')).startsWith('Poder: ')) vistos++;
     await page.click('#ficha-siguiente');
   }
-  ok(vistos === 5, `las cinco fichas se abren con texto, poder y señal sin cortarse (${vistos}/5)`);
+  ok(vistos === pers.length, `las seis fichas se abren con texto, poder y señal sin cortarse (${vistos}/${pers.length})`);
   const ingles = /\b(the|and|you|with|press|hold|power|button|close|next|previous)\b/i;
   ok(!ingles.test(await page.textContent('#pantalla-ficha')), 'la ficha no tiene texto en inglés');
   await foto('16-ficha');
@@ -490,7 +607,7 @@ async function main() {
   await ir(44.5, 17.5, { orden: 'y', tol: 0.15 }); await espera(200); s = await est();
   ok(s.estado === 'jugando' && s.y < 17.9 && s.z < 0.1, 'tras recargar, Eco cruza por el puente: la soga la usan todos');
   const est2 = await page.evaluate(() => JSON.stringify(Object.keys(window.__mundo.estado()).sort()));
-  ok(est2 === JSON.stringify(['braseros', 'eco', 'empujables', 'fuentes', 'muros', 'puertas', 'rejas', 'sogas', 'soles']), `el estado guardado tiene una clave por mecanismo (${est2})`);
+  ok(est2 === JSON.stringify(['barcas', 'braseros', 'eco', 'empujables', 'fuentes', 'muros', 'puertas', 'rejas', 'sogas', 'soles']), `el estado guardado tiene una clave por mecanismo (${est2})`);
 
   // 17. Mundo unido: recorrido completo desde el inicio (puerto y plaza), sin ningún cambio de mapa
   const idMapa = () => page.evaluate(() => window.__mundo.id);
@@ -975,6 +1092,7 @@ async function main() {
   await ctx.setOffline(false);
   } else console.log('PENDIENTE: instalación y recarga offline del service worker (modo --sin-servidor).');
 
+  await seccionU1();
   ok(errores.length === 0, 'sin errores en consola' + (errores.length ? ': ' + errores.join(' | ') : ''));
   await browser.close(); servidor.close();
   console.log(fallos ? `\n${fallos} verificación(es) fallaron` : '\nTodo en orden');
