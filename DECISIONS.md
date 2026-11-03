@@ -178,8 +178,27 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** avanzar con vistas y pasos, ambiente agrupado, sombras y juntas afinadas, transiciones visuales, cámara vertical y controles. Recursos locales con movimiento reducido. Se conservan identidad minoica, reglas, física y guardado.
 - **Por qué:** mejorar presencia del personaje, identidad de zonas y lectura de alturas. Detalle en `plan-mejora-grafica-codex.md`.
 
+## Etapa 2 (2026-11)
 
-### D29. Teclado en PC, orientación y plaza menos rígida
+### D29. Ulises, sexto personaje: navegar
+- **Estado:** tomada (Willy, 2026-11-02)
+- **Decisión:** Ulises entra al elenco como sexto personaje, con el poder Navegar: sube a una barca con remo, la mueve por el agua y baja en tierra firme. La barca queda donde la dejó, cualquiera puede pararse en ella y solo Ulises la mueve; quien cae al agua desde la barca reaparece en ella. Rasgo visual: el pilos. Se diseña ahora y se construye en la etapa 2. Ficha en `plan-etapa-2.md`. Completa D1.
+- **Por qué:** navegar es lo más firme del personaje en la Odisea, no repite el verbo de ningún otro y le da uso al agua del puerto, que hoy es solo borde. Se construye en la etapa 2 porque D1 deja ahí los personajes nuevos.
+- **Descartado:** el arco (la prueba de las hachas tiene un detalle de canon discutido y se cruza con las argollas de Ariadna y el alcance de Eco); el disfraz y la astucia, porque el juego no tiene guardias ni enemigos sobre los que usarlos.
+
+### D30. El canal: zona nueva entre el puerto y la plaza
+- **Estado:** tomada (Willy, 2026-11-02)
+- **Decisión:** entre el puerto y la plaza va una zona nueva, el canal, que es la única unión entre las dos y se cruza solo en la barca de Ulises. Paredes de 3 alrededor y una boca baja en cada borde: una casilla nueva de agua con techo de roca, donde no se vuela ni se salta. Una barca con remo amarrada en cada orilla. Dos coleccionables a los que solo se llega navegando: el frasco del pulpo, a la vista, y el sello con barco, que se dibuja recién cuando la barca pasa a 2 casillas o menos. Para hacer lugar se corre el puerto hacia abajo y su guardado se migra una vez. Diseño en `plan-etapa-2.md`.
+- **Por qué:** Willy quiso que Ulises sea necesario para avanzar, y Pegaso cruza cualquier agua abierta. La boca baja es la forma de cerrarle el canal al vuelo. Dos barcas evitan que un perfil quede del lado sin barca. Se corre el puerto porque casi no tiene estado guardado.
+- **Descartado:** una gruta suelta en el puerto, sin ser paso obligado; una sola barca; correr la plaza y el palacio.
+
+### D31. Cómo se construyó la barca (U1)
+- **Estado:** tomada (Code, 2026-11-03), para revisar con Willy en el PR
+- **Decisión:** la barca con remo va en la lista `barcasRemo` del JSON del mapa (no en una letra), y es una pieza libre: el joystick la mueve de a poco, no casilla por casilla, y con el botón Ulises sube o baja. La boca baja es la letra `r`: agua con techo de roca, que solo cruza la barca; bajo ella no se salta ni se vuela (techo a 0,45 niveles). El guardado suma la clave `barcas` en `estado()`, con la posición de cada barca movida por su casilla original. Al restaurar un perfil, si ninguna barca toca la tierra que alcanza quien aparece, la primera vuelve a su lugar de origen: así nadie queda varado, aunque la barca pueda no estar donde se la dejó si nadie podía llegar a ella.
+- **Por qué:** el plan dejaba estos puntos a Code. Mover la barca libre se siente como navegar y no obliga a alinear el joystick; el techo de 0,45 cierra el vuelo y el salto sin tocar las paredes de 3. La regla del varado es la forma de cumplir "nadie queda sin barca" con una sola barca en el campo de pruebas.
+- **Descartado:** mover la barca casilla por casilla; guardarla en letras del mapa; dejarla varada y confiar en que quien la necesita la encuentre.
+
+### D32. Teclado en PC, orientación y plaza menos rígida
 - **Estado:** implementación autorizada y construida para revisión; prueba en dispositivo pendiente.
 - **Decisión:** adaptar HUD, cámara y controles a la superficie visible; ocultar joystick en PC con puntero fino y mantener interacción táctil en tablet y celular. Priorizar encontrar actividades con lugares elegibles y pistas que no revelan la solución. Primera revisión espacial: plaza, con senderos curvos y dos recovecos laterales.
 - **Compatibilidad:** mecanismos y objetos conservan coordenadas; solo se abren 16 casillas de parapeto. La guía usa progreso existente, sin modificar guardados.

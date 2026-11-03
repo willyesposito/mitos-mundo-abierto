@@ -47,6 +47,14 @@
           "- otras hay que hacerlas sonar con otro personaje (un címbalo de bronce que golpea el Minotauro o al que llega Pegaso). Una vez que sonó, sigue vibrando para siempre.",
           "Cada sonido tiene un color y un símbolo; el mecanismo que le responde lleva el mismo."
         ],
-        "senal": "Objetos con ondas y puertas con el símbolo de un sonido." } }
+        "senal": "Objetos con ondas y puertas con el símbolo de un sonido." } },
+    { "id": "ulises", "nombre": "Ulises", "color": "#2e7d8c", "rasgo": "pilos",
+      "poder": {"id": "navegar", "nombre": "Navegar", "activo": true},
+      "ficha": {
+        "texto": "En griego se llama Odiseo; Ulises es su nombre en latín. Era rey de Ítaca, una isla rocosa, y fue uno de los que entraron a Troya escondidos en el caballo de madera. Volver a casa le llevó diez años de mar. Al cíclope Polifemo le dijo que se llamaba Nadie, y se hizo atar al mástil para oír a las sirenas sin peligro. Llegó a Ítaca disfrazado de mendigo y contó que venía de Creta, pero era otro de sus inventos. Su perro Argos lo reconoció igual.",
+        "poder": [
+          "Parado junto a una barca con remo, el botón lo sube. Con la barca anda por el agua; junto a tierra firme, el botón lo baja. La barca queda donde la dejó. Cualquiera puede pararse en ella, pero solo Ulises la mueve."
+        ],
+        "senal": "Barcas con un remo apoyado, amarradas al muelle." } }
   ]
 }

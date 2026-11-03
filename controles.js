@@ -61,7 +61,7 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
     if (ev.repeat) { if (ev.code === 'Space' || ev.code.startsWith('Arrow')) ev.preventDefault(); return; }
     if (ev.code === 'Space') { entrada.saltoPulsado = true; ev.preventDefault(); }
     else if (PODER.includes(ev.code)) { teclas.add(ev.code); entrada.poderPulsado = true; actualizarPoder(); ev.preventDefault(); }
-    else if (/^Digit[1-5]$/.test(ev.code)) alCambiar(Number(ev.code.slice(5)) - 1);
+    else if (/^Digit[1-6]$/.test(ev.code)) alCambiar(Number(ev.code.slice(5)) - 1);
     else if (ev.code === 'KeyC') alCambiar(-1);
     else if (ev.code === 'Escape') alMenu();
     else if (ev.code === 'KeyI' && alFicha) alFicha();
