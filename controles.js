@@ -4,9 +4,9 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
 
   // --- Joystick ---
   let punteroJoy = null;
-  const RADIO = 46;
   function mover(ev) {
     const r = joystick.getBoundingClientRect();
+    const RADIO = Math.min(46, r.width * .35);
     let dx = ev.clientX - (r.left + r.width / 2), dy = ev.clientY - (r.top + r.height / 2);
     const l = Math.hypot(dx, dy);
     if (l > RADIO) { dx = dx / l * RADIO; dy = dy / l * RADIO; }
@@ -28,6 +28,7 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
     zona.addEventListener(t, ev => { if (ev.pointerId === punteroJoy) soltarJoy(); });
 
   // --- Botones ---
+  let poderDelPuntero = false;
   function boton(el, abajo, arriba) {
     let activo = null;
     el.addEventListener('pointerdown', ev => {
@@ -42,7 +43,7 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
       });
   }
   boton(btnSalto, () => { entrada.saltoPulsado = true; });
-  boton(btnPoder, () => { entrada.poderPulsado = true; entrada.poderMantenido = true; }, () => { entrada.poderMantenido = false; });
+  boton(btnPoder, () => { poderDelPuntero = true; entrada.poderPulsado = true; entrada.poderMantenido = true; }, () => { poderDelPuntero = false; actualizarPoder(); });
 
   // --- Teclado (extra) ---
   const teclas = new Set();
@@ -52,11 +53,14 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
     if (punteroJoy === null) { entrada.x = h; entrada.y = v; }
   }
   const PODER = ['KeyE', 'KeyJ', 'ShiftLeft', 'ShiftRight'];
+  function actualizarPoder() { entrada.poderMantenido = poderDelPuntero || PODER.some(k => teclas.has(k)); }
   addEventListener('keydown', ev => {
-    if (ev.target instanceof HTMLInputElement) return;
+    if (ev.target instanceof HTMLInputElement || ev.target instanceof HTMLTextAreaElement || ev.target?.isContentEditable) return;
+    // En listas y ventanas, Espacio activa el boton enfocado en vez de saltar.
+    if (ev.code === 'Space' && ev.target?.closest?.('#exploracion, .pantalla')) return;
     if (ev.repeat) { if (ev.code === 'Space' || ev.code.startsWith('Arrow')) ev.preventDefault(); return; }
     if (ev.code === 'Space') { entrada.saltoPulsado = true; ev.preventDefault(); }
-    else if (PODER.includes(ev.code)) { entrada.poderPulsado = true; entrada.poderMantenido = true; }
+    else if (PODER.includes(ev.code)) { teclas.add(ev.code); entrada.poderPulsado = true; actualizarPoder(); ev.preventDefault(); }
     else if (/^Digit[1-6]$/.test(ev.code)) alCambiar(Number(ev.code.slice(5)) - 1);
     else if (ev.code === 'KeyC') alCambiar(-1);
     else if (ev.code === 'Escape') alMenu();
@@ -64,10 +68,13 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
     else { teclas.add(ev.code); recalcular(); if (ev.code.startsWith('Arrow')) ev.preventDefault(); }
   });
   addEventListener('keyup', ev => {
-    if (PODER.includes(ev.code)) entrada.poderMantenido = false;
-    teclas.delete(ev.code); recalcular();
+    teclas.delete(ev.code); actualizarPoder(); recalcular();
   });
-  addEventListener('blur', () => { teclas.clear(); entrada.poderMantenido = false; recalcular(); });
+  addEventListener('blur', () => {
+    teclas.clear(); poderDelPuntero = false; soltarJoy();
+    entrada.saltoPulsado = entrada.poderPulsado = entrada.poderMantenido = false;
+    btnPoder.classList.remove('apretado'); btnSalto.classList.remove('apretado');
+  });
 
   return entrada;
 }

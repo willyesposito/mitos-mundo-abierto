@@ -197,3 +197,9 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** la barca con remo va en la lista `barcasRemo` del JSON del mapa (no en una letra), y es una pieza libre: el joystick la mueve de a poco, no casilla por casilla, y con el botón Ulises sube o baja. La boca baja es la letra `r`: agua con techo de roca, que solo cruza la barca; bajo ella no se salta ni se vuela (techo a 0,45 niveles). El guardado suma la clave `barcas` en `estado()`, con la posición de cada barca movida por su casilla original. Al restaurar un perfil, si ninguna barca toca la tierra que alcanza quien aparece, la primera vuelve a su lugar de origen: así nadie queda varado, aunque la barca pueda no estar donde se la dejó si nadie podía llegar a ella.
 - **Por qué:** el plan dejaba estos puntos a Code. Mover la barca libre se siente como navegar y no obliga a alinear el joystick; el techo de 0,45 cierra el vuelo y el salto sin tocar las paredes de 3. La regla del varado es la forma de cumplir "nadie queda sin barca" con una sola barca en el campo de pruebas.
 - **Descartado:** mover la barca casilla por casilla; guardarla en letras del mapa; dejarla varada y confiar en que quien la necesita la encuentre.
+
+### D32. Teclado en PC, orientación y plaza menos rígida
+- **Estado:** implementación autorizada y construida para revisión; prueba en dispositivo pendiente.
+- **Decisión:** adaptar HUD, cámara y controles a la superficie visible; ocultar joystick en PC con puntero fino y mantener interacción táctil en tablet y celular. Priorizar encontrar actividades con lugares elegibles y pistas que no revelan la solución. Primera revisión espacial: plaza, con senderos curvos y dos recovecos laterales.
+- **Compatibilidad:** mecanismos y objetos conservan coordenadas; solo se abren 16 casillas de parapeto. La guía usa progreso existente, sin modificar guardados.
+- **Detalle:** `jugabilidad-adaptable-codex.md`.

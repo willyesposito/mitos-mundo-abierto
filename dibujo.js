@@ -2,6 +2,8 @@
 // lo que se mueve (olas, llamas, ondas, sogas, partículas) se dibuja por código en el mismo estilo.
 import { TW, TH, LH, ABISMO, alturaCelda } from './mundo.js';
 import { posePersonaje } from './animacion.js';
+import { pintarSueloPlaza } from './plaza.js';
+import { objetivoCercano } from './exploracion.js';
 import { TIPOS_AMBIENTE, actualizarAmbiente, movimientoAmbiente } from './ambiente.js';
 const preferenciaMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
 const reducirMovimiento = () => preferenciaMovimiento.matches;
@@ -109,12 +111,30 @@ function dibujarMundo(ctx, m, v, personajes) {
   if (j.estado !== 'cayendo' || j.z > -1.2) dibujarJugador(ctx, m, personajes, false);
   ctx.globalAlpha = 1;
   dibujarOndas(ctx, m);
+  dibujarOrientacion(ctx, m, v);
 
   if (m.velo > 0) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = `rgba(42,34,48,${m.velo})`;
     ctx.fillRect(0, 0, W, H);
   }
+}
+
+// La pista se mantiene dentro del área de juego, aunque el destino quede fuera de cámara.
+function dibujarOrientacion(ctx,m,v) {
+  const o=objetivoCercano(m); if(!o || m.velo>0)return;
+  // El marcador queda a un costado: no tapa argollas, grietas ni puertas.
+  const sx=v.W/2+(o.x*TW-v.camX)*v.esc+28,sy=v.focoY+(o.y*TH-v.camY)*v.esc+8;
+  const borde=24,top=(v.superior||80)+borde,bottom=Math.max(top+20,v.H-(v.inferior||100)-borde);
+  const x=Math.max(borde,Math.min(v.W-borde,sx)),y=Math.max(top,Math.min(bottom,sy));
+  const fuera=Math.abs(x-sx)>1||Math.abs(y-sy)>1;
+  ctx.save();ctx.setTransform(v.dpr,0,0,v.dpr,0,0);
+  ctx.fillStyle='#f4ecd8';ctx.strokeStyle='#1f6f9c';ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(x,y,17,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#1f6f9c';ctx.translate(x,y);
+  if(fuera) {ctx.rotate(Math.atan2(sy-y,sx-x));ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-6);ctx.lineTo(-5,6);ctx.closePath();ctx.fill();}
+  else {ctx.font='bold 19px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',0,1);}
+  ctx.restore();
 }
 
 // ---------- Baldosas ----------
@@ -157,6 +177,7 @@ function dibujarTile(ctx, m, x, y) {
       }
     }
   }
+  pintarSueloPlaza(ctx, m, x, y, px, py);
   // Sombras de contacto en el piso receptor, sin juntas oscuras en cada casilla.
   if (!ES_PARED(c) && c !== '~' && c !== 'r') {
     const norte = y > 0 ? alturaVisual(m.celdas[y-1][x]) : h;

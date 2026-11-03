@@ -58,6 +58,7 @@ async function arrancar() {
     return z ? z.id : zonaActual;
   }
   function actualizarZona() {
+    ui.orientar(mundo);
     const id = zonaDe(mundo.jugador.y);
     if (id === zonaActual) return;
     zonaActual = id;
@@ -144,10 +145,19 @@ async function arrancar() {
 
   function ajustar() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    const W = innerWidth, H = innerHeight;
-    lienzo.width = Math.round(W * dpr); lienzo.height = Math.round(H * dpr);
+    // El navegador puede mostrar menos espacio que el documento (barras, teclado o zoom).
+    const ventana = window.visualViewport;
+    const W = Math.round(ventana?.width || innerWidth), H = Math.round(ventana?.height || innerHeight);
+    const raiz = document.documentElement;
+    raiz.style.setProperty('--vista-ancho', W + 'px');
+    raiz.style.setProperty('--vista-alto', H + 'px');
+    raiz.style.setProperty('--vista-x', (ventana?.offsetLeft || 0) + 'px');
+    raiz.style.setProperty('--vista-y', (ventana?.offsetTop || 0) + 'px');
+    if (lienzo.width !== Math.round(W * dpr)) lienzo.width = Math.round(W * dpr);
+    if (lienzo.height !== Math.round(H * dpr)) lienzo.height = Math.round(H * dpr);
     lienzo.style.width = W + 'px'; lienzo.style.height = H + 'px';
-    const inferior = $('controles').offsetHeight, superior = $('hud').offsetHeight + 8;
+    const inferior = $('controles').getBoundingClientRect().height + 8;
+    const superior = $('hud').getBoundingClientRect().height + 8;
     vista.W = W; vista.H = H; vista.dpr = dpr;
     Object.assign(vista, encuadre(W, H, inferior, superior, TW, TH));
     vista.inferior = inferior; vista.superior = superior;
@@ -187,7 +197,19 @@ async function arrancar() {
     requestAnimationFrame(bucle);
   }
 
-  addEventListener('resize', () => { ajustar(); if (mundo) centrarCamara(true); });
+  // Agrupa cambios de orientacion, zoom y tamanos del HUD en un solo ajuste por cuadro.
+  let ajustePendiente = false;
+  function solicitarAjuste() {
+    if (ajustePendiente) return;
+    ajustePendiente = true;
+    requestAnimationFrame(() => { ajustePendiente = false; ajustar(); if (mundo) centrarCamara(true); });
+  }
+  addEventListener('resize', solicitarAjuste);
+  window.visualViewport?.addEventListener('resize', solicitarAjuste);
+  window.visualViewport?.addEventListener('scroll', solicitarAjuste);
+  const observarTamano = new ResizeObserver(solicitarAjuste);
+  observarTamano.observe($('hud'));
+  observarTamano.observe($('controles'));
   document.addEventListener('visibilitychange', () => { if (document.hidden && mundo) { recordarLugar(true); if (!ui.menuAbierto()) entrada.x = entrada.y = 0; } });
   addEventListener('pagehide', () => recordarLugar(true));
   document.addEventListener('contextmenu', ev => ev.preventDefault());

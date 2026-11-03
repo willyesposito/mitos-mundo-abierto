@@ -48,3 +48,7 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **La corrida completa de `probar.js` es para cerrar etapas; por cambio va `--rapido` (D26).** Por qué: Willy pidió acortar la verificación el 2026-10-04 después de ver que cada delegación corría dos veces los 10 minutos. Si Willy vuelve a quejarse del tiempo o del contexto, avisarle el gasto en una línea.
 - **Cada respuesta cierra con `Título: MAM <decisión o foco>`.** Por qué: Willy maneja varios chats del proyecto a la vez y se perdía entre ellos (pedido del 2026-10-04).
 - **`probar.js --rapido` (17 chequeos, unos 4 s) es la verificación por cambio.** No correr dos pruebas a la vez.
+
+
+- **Prioridad de jugabilidad y espacios:** teclado como entrada principal en PC; tablet y celular deben conservar controles táctiles utilizables en ambas orientaciones. Las actividades deben poder ubicarse desde el recorrido y una guía opcional, porque la exploración anterior no las hacía fáciles de encontrar. Primera revisión espacial autorizada sobre plaza, conservando desafíos y progreso.
+- **Acabado de caminos:** revisar las intersecciones en una captura real antes de publicar. Los ramales deben formar una superficie continua, sin bordes internos cruzados ni cortes entre casillas; los jardines requieren un acabado integrado, no manchas lisas sueltas. Por qué: la primera revisión espacial dejó uniones y superficies visualmente sin terminar.
