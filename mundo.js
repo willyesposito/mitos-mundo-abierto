@@ -164,18 +164,31 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     const toca = (tx, ty) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => alcanza.has((tx + dx) + ',' + (ty + dy)));
     if (barcas.length && !barcas.some(b => toca(Math.floor(b.x), Math.floor(b.y)))) {
       const b = barcas.find(q => toca(q.ox, q.oy));
-      if (b) { b.x = b.ox + 0.5; b.y = b.oy + 0.5; }
+      if (b && barcaLibre(b, b.ox + 0.5, b.oy + 0.5)) { b.x = b.ox + 0.5; b.y = b.oy + 0.5; }
+      else {
+        // Una roca del canal no tiene un origen de barca: acercar una a su orilla libre.
+        const b = barcas[0], candidatos = [];
+        for (const k of alcanza) {
+          const [x, y] = k.split(',').map(Number);
+          for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+            const bx = x + dx + 0.5, by = y + dy + 0.5;
+            if (barcaLibre(b, bx, by)) candidatos.push([bx, by]);
+          }
+        }
+        candidatos.sort((a,b) => Math.hypot(a[0]-arranque[0],a[1]-arranque[1]) - Math.hypot(b[0]-arranque[0],b[1]-arranque[1]));
+        if (candidatos.length) [b.x, b.y] = candidatos[0];
+      }
     }
   }
 
   const coleccionables = (mapa.objetos || []).filter(o => o.tipo === 'coleccionable').map(o => ({
     id: o.id, x: o.x + 0.5, y: o.y + 0.5,
     zBase: alturaCelda(celdas[o.y][o.x]),
-    recogido: !!recogidos[o.id],
+    recogido: !!recogidos[o.id], ocultoBarca: !!o.ocultoBarca, visible: !o.ocultoBarca || !!recogidos[o.id] || (guardado.revelados || []).includes(o.id),
   }));
 
   const m = {
-    id: mapa.id, barcas: mapa.barcas || [], barcasRemo: barcas,
+    id: mapa.id, zonas: mapa.zonas || [], barcas: mapa.barcas || [], barcasRemo: barcas,
     cols, rows, celdas, origen, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], senales: [], eventos: [], t: 0, velo: 0,
     jugador: {
@@ -195,6 +208,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     const empuj = {};
     for (const e of empujables) if (movido(e)) empuj[e.origen] = [e.tx, e.ty];
     return {
+      revelados: coleccionables.filter(c => c.ocultoBarca && c.visible).map(c => c.id),
       muros: [...rotos],
       rejas: enlaces.filter(l => l.abierto).map(l => l.abre.join(',')),
       empujables: empuj,
@@ -681,6 +695,10 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     if (control) {
       for (const c of coleccionables) {
         if (c.recogido) continue;
+        if (!c.visible && barcas.some(b => Math.hypot(b.x - c.x, b.y - c.y) <= 2)) {
+          c.visible = true; m.eventos.push({ tipo: 'revelado', id: c.id });
+        }
+        if (!c.visible) continue;
         if (Math.hypot(c.x - j.x, c.y - j.y) < 0.6 && Math.abs(j.z - c.zBase) <= 1.0) {
           c.recogido = true;
           chispas(c.x, c.y, c.zBase + 0.6, '#d9a441', 24, 2.8);

@@ -46,7 +46,8 @@ async function main() {
 
   // Mundo continuo: las coordenadas de las pruebas son locales a la zona donde se juega (OFF = desplazamiento de la zona).
   // Se suman al hablar con el mundo (tp, celda, ir) y se restan al leer (est). En el campo de pruebas OFF es [0, 0].
-  const ZONAS = { puerto: [1, 74], plaza: [0, 40], palacio: [0, 0] };
+  const datosMundo = JSON.parse(fs.readFileSync(path.join(RAIZ, 'datos/mapa-mundo.json'), 'utf8'));
+  const ZONAS = Object.fromEntries(datosMundo.zonas.map(z => [z.id, [z.dx, z.dy]]));
   let OFF = ZONAS.puerto;
   const zona = n => { OFF = ZONAS[n]; };
   const est = () => page.evaluate(([ox, oy]) => {
@@ -138,7 +139,7 @@ async function main() {
     ok(todos, 'los seis personajes se pueden elegir tocando la tira');
     ok((await page.textContent('#btn-poder .etiqueta')) === 'Navegar', 'con Ulises elegido el botón de poder dice Navegar');
     const pxU = await page.evaluate(() => { const c = document.querySelector('.pj[data-id=ulises] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k; });
-    ok(pxU > 500, `la tira muestra el marcador de Ulises (${pxU} píxeles)`);
+    ok(pxU > 500, `la tira muestra el sprite de Ulises (${pxU} píxeles)`);
     await page.click('#btn-ficha');
     const fU = await page.evaluate(() => ({ nombre: document.getElementById('ficha-nombre').textContent, texto: document.getElementById('ficha-texto').textContent, poder: document.getElementById('ficha-poder-titulo').textContent, todo: document.getElementById('pantalla-ficha').innerText }));
     ok(fU.nombre === 'Ulises' && fU.texto.startsWith('En griego se llama Odiseo') && fU.poder === 'Poder: Navegar' && !eng.test(fU.todo + ' ' + t6.texto), 'la ficha de Ulises se abre en español, sin texto en inglés');
@@ -211,16 +212,50 @@ async function main() {
     ok(Math.abs(s.bx - 27.7) < 0.01, 'una barca restaurada en una orilla que se alcanza a pie se queda donde estaba');
     await guardarBarca([13.5, 32.5]);
   }
+  // La ficha nueva se presenta una sola vez a perfiles anteriores con progreso real.
+  async function seccionFichaUlises() {
+    const clave = 'mitos-mundo-abierto-v1';
+    async function probarPerfil(nombre, cambios, esperaAviso) {
+      const c = await browser.newContext({ ...pw.devices['Pixel 7'], serviceWorkers: 'block' });
+      const p = await c.newPage();
+      p.on('pageerror', e => errores.push(e.message));
+      try {
+        await p.goto(url);
+        const perfil = { id: 'anterior', nombre: 'Anterior', objetos: {}, mundos: {}, personaje: 'eco', vistoCambio: true, mapa: 'mundo', llegada: [11.5, 95.5], eco: null, mundoUnido: true, ...cambios };
+        await p.evaluate(([k, perfil]) => localStorage.setItem(k, JSON.stringify({ version: 1, perfiles: [perfil] })), [clave, perfil]);
+        await p.reload(); await p.click('.perfil');
+        await p.waitForFunction(() => window.__mundo);
+        ok(await p.isVisible('#aviso') === esperaAviso && (!esperaAviso || (await p.textContent('#aviso')).includes('Nueva ficha: Ulises')), nombre + ': aviso según progreso');
+        if (esperaAviso) {
+          ok((await p.evaluate(() => window.__mundo.jugador.personaje)) === 'eco' && !(await p.isVisible('#pantalla-ficha')), nombre + ': el aviso no cambia personaje ni interrumpe con una ficha');
+          const guardado = await p.evaluate(k => JSON.parse(localStorage.getItem(k)).perfiles[0], clave);
+          ok(JSON.stringify(guardado.objetos) === JSON.stringify(perfil.objetos) && JSON.stringify(guardado.mundos) === JSON.stringify(perfil.mundos) && guardado.fichaUlisesPresentada === true, nombre + ': conserva objetos y mecanismos y guarda la marca');
+          if (nombre === 'perfil con objetos') await p.screenshot({ path: path.join(SALIDA, 'ulises-ficha-nueva.png') });
+          await p.click('.pj[data-id=ulises]'); await p.click('#btn-ficha');
+          ok((await p.textContent('#ficha-nombre')) === 'Ulises' && await p.isVisible('#pantalla-ficha'), nombre + ': se puede consultar la ficha anunciada');
+        }
+        await p.reload(); await p.click('.perfil'); await p.waitForFunction(() => window.__mundo);
+        ok(!(await p.isVisible('#aviso')), nombre + ': no repite el aviso tras recargar');
+      } finally { await c.close(); }
+    }
+    await probarPerfil('perfil con objetos', { objetos: { 'hacha-doble': true } }, true);
+    await probarPerfil('perfil con mecanismos', { mundos: { mundo: { muros: ['5,62'], rejas: [], empujables: {} } } }, true);
+    await probarPerfil('perfil anterior sin progreso', { mundos: { mundo: { muros: [], rejas: [], empujables: {} } } }, false);
+    await probarPerfil('perfil ya informado', { objetos: { 'hacha-doble': true }, fichaUlisesPresentada: true }, false);
+  }
+  await seccionFichaUlises();
+  await require('./probar-canal-navegador')(browser, url, SALIDA, ok);
   // Modo rápido: chequeos propios y cortos sobre un perfil nuevo (contexto limpio). No toca el resto de las secciones.
   if (RAPIDO) {
     const eng = /\b(the|and|you|with|press|hold|power|button|close|next|previous)\b/i;
-    const IDR = ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco'];
+    const IDR = ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco', 'ulises'];
     const texto = () => page.evaluate(() => document.body.innerText);
     await page.goto(url); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
     ok(true, 'carga la pantalla de perfiles');
     ok(!eng.test(await texto()), 'la pantalla de perfiles no tiene texto en inglés');
     await page.fill('#nombre-nuevo', 'Rapida'); await page.click('#form-nuevo button[type=submit]');
     await page.waitForFunction(() => window.__mundo); await espera(400);
+    ok(!(await page.isVisible('#aviso')) && await page.evaluate(() => JSON.parse(localStorage.getItem('mitos-mundo-abierto-v1')).perfiles[0].fichaUlisesPresentada === true), 'perfil nuevo: la ficha de Ulises no se anuncia como novedad');
     let s = await est();
     ok(s.pj === 'pegaso' && s.enSuelo && (await page.evaluate(() => window.__mundo.id)) === 'mundo', 'arranca en el mundo con Pegaso en el suelo');
     ok(!eng.test(await texto()), 'la pantalla de juego no tiene texto en inglés');
@@ -239,7 +274,7 @@ async function main() {
     ok(await page.isVisible('#pantalla-perfiles'), 'el menú abre la pantalla de perfiles');
     await page.click('.perfil'); await page.waitForFunction(() => window.__mundo); await espera(300);
     const sp = await page.evaluate(() => window.__sprites());
-    ok(sp.listos && IDR.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'los cinco sprites cargan');
+    ok(sp.listos && IDR.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'los seis sprites cargan');
     ok(sp.listos && sp.fallidos.length === 0 && sp.esperados > 40 && Object.keys(sp.escenario).length === sp.esperados, 'los sprites del escenario cargan sin fallidos');
     for (const id of IDR) {
       const n = await page.evaluate(id => {
@@ -403,7 +438,7 @@ async function main() {
   ok((await page.textContent('#zona-n')) === '3/3' && !(await page.isVisible('#total-n')), 'en el campo de pruebas el contador de la zona llega a 3/3 y el total de la partida no se muestra');
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
   const lista = await page.textContent('#lista-perfiles');
-  ok(lista.includes('Prueba') && lista.includes('0/7'), 'los objetos de prueba no suman a la partida (0/7 en el perfil)');
+  ok(lista.includes('Prueba') && lista.includes('0/9'), 'los objetos de prueba no suman a la partida (0/9 en el perfil)');
   await page.click('.perfil'); await page.waitForFunction(() => window.__mundo); await espera(300);
   ok(await page.evaluate(() => window.__mundo.id) === 'mundo', 'tras recargar desde el campo de pruebas, se vuelve al mundo de la partida');
   await entrarPruebas();
@@ -424,7 +459,7 @@ async function main() {
   await page.click('#btn-menu'); await page.click('#menu-perfiles');
   await page.fill('#nombre-nuevo', 'Otra'); await page.click('#form-nuevo button[type=submit]');
   await page.waitForFunction(() => window.__mundo && window.__mundo.coleccionables.every(c => !c.recogido)); await espera(200);
-  ok((await page.textContent('#total-n')) === '0/7', 'un perfil nuevo arranca en 0/7 y el otro no se toca');
+  ok((await page.textContent('#total-n')) === '0/9', 'un perfil nuevo arranca en 0/9 y el otro no se toca');
   await entrarPruebas();
   ok((await celda(11, 5)) === 'M' && (await abiertas())[0] === false, 'un perfil nuevo arranca con el muro entero y la reja cerrada');
   b = [await bloque()];
@@ -449,8 +484,12 @@ async function main() {
   ok(filasPlan.length === 7, `el plan tiene 7 coleccionables (${filasPlan.length})`);
   ok(filasPlan.every(f => { const o = cat.objetos.find(q => q.id === f[1]); return o && o.zona === f[2] && o.nombre === f[3].trim() && o.texto === f[4].trim(); }),
     'el catálogo repite exactos id, zona, nombre y texto de los 7 coleccionables del plan');
-  ok(['puerto', 'plaza', 'palacio', 'pruebas'].every(z => cat.zonas.some(q => q.id === z)), 'las zonas puerto, plaza, palacio y pruebas existen');
+  ok(['puerto', 'canal', 'plaza', 'palacio', 'pruebas'].every(z => cat.zonas.some(q => q.id === z)), 'las zonas puerto, plaza, palacio y pruebas existen');
   ok(cat.objetos.filter(o => o.zona === 'pruebas').length === 3, 'los 3 objetos de prueba siguen');
+  const plan2 = fs.readFileSync(path.join(RAIZ, 'plan-etapa-2.md'), 'utf8');
+  const objetosCanal = [...plan2.matchAll(/^\| `([a-z-]+)` \| [^|]*\| ([^|]+) \| ([^|]+) \|$/gm)];
+  ok(objetosCanal.length === 2 && objetosCanal.every(f => { const o = cat.objetos.find(q => q.id === f[1]); return o && o.zona === 'canal' && o.nombre === f[2].trim() && o.texto === f[3].trim(); }), 'los dos objetos del canal repiten exacto nombre y texto de etapa 2');
+
   const textosPlan = {};
   for (const sec of plan.split(/^### /m).slice(1)) { const t = sec.match(/\*\*Texto:\*\* (.+)/); if (t) textosPlan[sec.split('\n')[0].trim().toLowerCase().replace('é', 'e').replace('í', 'i')] = t[1].trim(); }
   textosPlan.ulises = fs.readFileSync(path.join(RAIZ, 'plan-etapa-2.md'), 'utf8').match(/### Texto\n\n(.+)/)[1].trim();
@@ -607,7 +646,7 @@ async function main() {
   await ir(44.5, 17.5, { orden: 'y', tol: 0.15 }); await espera(200); s = await est();
   ok(s.estado === 'jugando' && s.y < 17.9 && s.z < 0.1, 'tras recargar, Eco cruza por el puente: la soga la usan todos');
   const est2 = await page.evaluate(() => JSON.stringify(Object.keys(window.__mundo.estado()).sort()));
-  ok(est2 === JSON.stringify(['barcas', 'braseros', 'eco', 'empujables', 'fuentes', 'muros', 'puertas', 'rejas', 'sogas', 'soles']), `el estado guardado tiene una clave por mecanismo (${est2})`);
+  ok(est2 === JSON.stringify(['barcas', 'braseros', 'eco', 'empujables', 'fuentes', 'muros', 'puertas', 'rejas', 'revelados', 'sogas', 'soles']), `el estado guardado tiene una clave por mecanismo (${est2})`);
 
   // 17. Mundo unido: recorrido completo desde el inicio (puerto y plaza), sin ningún cambio de mapa
   const idMapa = () => page.evaluate(() => window.__mundo.id);
@@ -623,7 +662,7 @@ async function main() {
   zona('puerto'); await marcar();
   s = await est();
   ok((await idMapa()) === 'mundo' && (await chip()) === 'Puerto 0/1' && Math.abs(s.x - 10.5) < 0.01 && Math.abs(s.y - 21.5) < 0.01, 'un perfil nuevo empieza en el mundo, en el puerto, sin objetos');
-  ok(await page.evaluate(() => window.__mundo.rows) === 98 && await page.evaluate(() => window.__mundo.cols) === 24, 'el mundo es un solo mapa de 24 por 98 casillas');
+  ok(await page.evaluate(() => window.__mundo.rows) === 112 && await page.evaluate(() => window.__mundo.cols) === 24, 'el mundo es un solo mapa de 24 por 112 casillas');
   await foto('24-puerto');
   // Ningún texto visible en inglés (pantalla de juego y menú)
   const textoVisible = () => page.evaluate(() => document.body.innerText);
@@ -647,10 +686,25 @@ async function main() {
   ok((await M(() => window.__mundo.eco)) === 'caracola', 'Eco guarda la caracola en el puerto');
   await foto('25-puerto-caracola');
   await ir(10.5, 15.5, { orden: 'x', tol: 0.15 });
-  await hasta('ArrowUp', ([ox, oy]) => window.__mundo.jugador.y < 73.6, 9000); await espera(700);
-  zona('plaza'); s = await est();
-  ok(await mismoMapa() && s.y > 30 && s.pj === 'eco', `caminando al norte del puerto se llega a la plaza sin cambiar de mapa (y local=${s.y.toFixed(1)})`);
-  ok((await chip()) === 'Plaza central 0/3', 'al cruzar caminando el chip de zona pasa a la plaza y a sus tres objetos');
+  await ir(10.5, 1.5, { orden: 'y', tol: 0.1 });
+  await elegir('ulises'); await tocar('KeyE');
+  ok(await M(() => !!window.__mundo.jugador.aBordo), 'Ulises sube en el muelle del puerto para cruzar el canal');
+  zona('canal');
+  await ir(11.5, 11.5, { orden: 'xy', tol: 0.08 });
+  await ir(14.5, 10.5, { orden: 'xy', tol: 0.08 }); await tocar('KeyE');
+  await ir(15.5, 10.5, { orden: 'x', tol: 0.08 }); await espera(250);
+  ok((await est()).recogidos.includes('frasco-pulpo'), 'Ulises baja en la roca y consigue el frasco del pulpo');
+  await foto('U2-frasco'); await tocar('KeyE');
+  await ir(14.5, 6.3, { orden: 'y', tol: 0.08 }); await ir(6.5, 6.3, { orden: 'x', tol: 0.08 });
+  ok(await M(() => window.__mundo.coleccionables.find(c => c.id === 'sello-barco').visible), 'la barca revela el sello escondido al acercarse');
+  await ir(6.5, 5.5, { orden: 'y', tol: 0.08 }); await tocar('KeyE');
+  await ir(6.5, 4.5, { orden: 'y', tol: 0.08 }); await espera(250);
+  ok((await est()).recogidos.includes('sello-barco') && (await chip()) === 'Canal 2/2', 'Ulises recoge el sello y completa el canal');
+  await foto('U2-sello'); await tocar('KeyE');
+  await ir(11.5, 5.5, { orden: 'x', tol: 0.08 }); await ir(11.5, -0.5, { orden: 'y', tol: 0.08 }); await tocar('KeyE');
+  zona('plaza'); await elegir('eco'); s = await est();
+  ok(await mismoMapa() && s.y > 30 && s.pj === 'eco', `navegando al norte se llega a la plaza sin cambiar de mapa (y local=${s.y.toFixed(1)})`);
+  ok((await chip()) === 'Plaza central 0/3', 'al desembarcar el chip de zona pasa a la plaza y a sus tres objetos');
   ok((await M(() => window.__mundo.eco)) === 'caracola' && (await page.textContent('#eco-texto')).includes('Caracola'), 'Eco conserva el sonido de la caracola al cruzar de zona');
   const guardado = () => page.evaluate(() => { const d = JSON.parse(localStorage.getItem('mitos-mundo-abierto-v1')); const p = d.perfiles.find(q => q.nombre === 'Ruta'); return { mapa: p.mapa, eco: p.eco, mundo: !!(p.mundos && p.mundos.mundo), llegada: p.llegada }; });
   const g0 = await guardado();
@@ -726,17 +780,17 @@ async function main() {
   await elegir('minotauro'); await tp(5.5, 24.5); await embestir(); await espera(300);
   ok((await esquema()).M === '.', 'el Minotauro rompe el muro agrietado');
   await ir(5.5, 18.5, { orden: 'y', tol: 0.15 }); await espera(300);
-  ok((await recog('plaza')).includes('riton-toro') && (await chip()) === 'Plaza central 3/3' && (await page.textContent('#total-n')) === '4/7', 'el Minotauro consigue el ritón: la plaza queda en 3/3 y el total en 4/7');
+  ok((await recog('plaza')).includes('riton-toro') && (await chip()) === 'Plaza central 3/3' && (await page.textContent('#total-n')) === '6/9', 'el Minotauro consigue el ritón: la plaza queda en 3/3 y el total en 6/9');
   await foto('31-riton');
 
-  // Volver al puerto y regresar caminando: mismo mapa, cada zona con su chip
-  await tp(11.5, 31.5);
-  await hasta('ArrowDown', ([ox, oy]) => window.__mundo.jugador.y > 74.4, 6000); await espera(700);
+  // Volver al puerto y regresar por el canal: ninguna barca se mueve artificialmente.
+  await tp(11.5, 31.5); await elegir('ulises'); await ir(11.5, 32.5, { orden: 'y', tol: 0.08 }); await tocar('KeyE');
+  zona('canal'); await ir(11.5, 14.5, { orden: 'y', tol: 0.08 }); await tocar('KeyE');
   zona('puerto'); s = await est();
-  ok(await mismoMapa() && s.y < 4 && s.pj === 'minotauro' && (await chip()) === 'Puerto 1/1', `al volver al sur se pasa al puerto sin cambiar de mapa, y el ancla sigue recogida (y local=${s.y.toFixed(1)})`);
+  ok(await mismoMapa() && s.y < 4 && s.pj === 'ulises' && (await chip()) === 'Puerto 1/1', `navegando al sur vuelve al puerto con el ancla recogida (y local=${s.y.toFixed(1)})`);
   await foto('32-puerto-vuelta');
-  await hasta('ArrowUp', ([ox, oy]) => window.__mundo.jugador.y < 73.6, 6000); await espera(700);
-  zona('plaza'); s = await est();
+  await tocar('KeyE'); zona('canal'); await ir(11.5, -0.5, { orden: 'y', tol: 0.08 }); await tocar('KeyE');
+  zona('plaza'); await elegir('minotauro'); s = await est();
   ok(await mismoMapa() && s.y > 30 && (await chip()) === 'Plaza central 3/3', 'y otra vez a la plaza, con su contador');
   ok((await esquema()).D === '.' && (await esquema()).M === '.' && (await esquema()).br === 2, 'la plaza queda como se la dejó al cruzar de zona');
 
@@ -746,7 +800,7 @@ async function main() {
   s = await est(); const e1 = await esquema();
   ok((await idMapa()) === 'mundo' && s.y > 30 && s.pj === 'minotauro' && (await chip()) === 'Plaza central 3/3', 'tras recargar sigue en la plaza, donde estaba, con el mismo personaje');
   ok(e1.D === '.' && e1.O === '.' && e1.M === '.' && e1.br === 2, 'tras recargar, el pórtico, la puerta del mar y el muro siguen abiertos');
-  ok(s.recogidos.length === 4 && (await page.textContent('#total-n')) === '4/7', 'tras recargar, los objetos siguen recogidos (4/7 en total)');
+  ok(s.recogidos.length === 6 && (await page.textContent('#total-n')) === '6/9', 'tras recargar, los objetos siguen recogidos (6/9 en total)');
   ok((await M(() => window.__mundo.eco)) === 'caracola' && (await page.textContent('#eco-texto')).includes('Caracola'), 'tras recargar, Eco recuerda la caracola');
   ok(await sogaPlaza(), 'tras recargar, la soga de la plaza sigue tendida');
   // El campo de pruebas desde la plaza, y de vuelta al mismo lugar del mundo
@@ -857,14 +911,14 @@ async function main() {
   await tp(17.5, 11.5); await ir(17.5, 5.5, { orden: 'y', tol: 0.15 }); await espera(300);
   ok((await recog('palacio')).includes('figura-serpientes'), 'Pegaso y Eco consiguen la figura con serpientes');
   await foto('38-figura');
-  ok((await chip()) === 'Palacio 3/3' && (await page.textContent('#total-n')) === '7/7', 'el palacio queda en 3/3 y la partida en 7/7');
+  ok((await chip()) === 'Palacio 3/3' && (await page.textContent('#total-n')) === '9/9', 'el palacio queda en 3/3 y la partida en 9/9');
 
   // El campo de pruebas cuenta aparte
   await entrarPruebas();
   ok((await page.textContent('#zona-n')) === '0/3' && !(await page.isVisible('#total-n')), 'el campo de pruebas cuenta aparte (0/3) y no muestra el total de la partida');
   await page.click('#btn-menu'); await page.click('#menu-pruebas'); await page.waitForFunction(() => window.__mundo.id === 'mundo'); await espera(500);
   zona('palacio');
-  ok((await page.textContent('#total-n')) === '7/7' && (await chip()) === 'Palacio 3/3', 'al volver a la partida el total sigue en 7/7');
+  ok((await page.textContent('#total-n')) === '9/9' && (await chip()) === 'Palacio 3/3', 'al volver a la partida el total sigue en 9/9');
 
   // Recarga en el palacio: todo igual
   await page.reload(); await page.waitForSelector('#pantalla-perfiles:not([hidden])');
@@ -872,14 +926,14 @@ async function main() {
   const p2 = await pal();
   ok((await idMapa()) === 'mundo' && (await page.textContent('#zona-nombre')) === 'Palacio' && p2.D === '.' && p2.G === '.' && p2.M === '.' && p2.O === '.' && p2.sogas && p2.fuente && p2.br === 2 && p2.vas === '17,29' && p2.got === 3,
     'tras recargar en el palacio todo sigue igual: puerta del sol, reja, muro, puerta de bronce, soga, címbalo y vasija');
-  ok((await page.textContent('#total-n')) === '7/7' && (await chip()) === 'Palacio 3/3', 'tras recargar, la partida sigue en 7/7');
+  ok((await page.textContent('#total-n')) === '9/9' && (await chip()) === 'Palacio 3/3', 'tras recargar, la partida sigue en 9/9');
   await tp(8.5, 24.5); await espera(900); await foto('39-palacio-medio');
   await tp(11.5, 6.5); await espera(900); await foto('40-palacio-norte');
 
   // 11. Sprites de personajes
-  const IDS = ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco'];
+  const IDS = ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco', 'ulises'];
   const sp = await page.evaluate(() => window.__sprites());
-  ok(sp.listos && IDS.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'los cinco sprites cargan (tamaño natural mayor que cero)');
+  ok(sp.listos && IDS.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'los seis sprites cargan (tamaño natural mayor que cero)');
   const ALAS = ['pegaso-ala-cerca', 'pegaso-ala-lejos', 'fenix-ala-cerca', 'fenix-ala-lejos'];
   ok(ALAS.every(id => sp.imagenes[id] && sp.imagenes[id][0] > 0 && sp.imagenes[id][1] > 0), 'las cuatro alas cargan (tamaño natural mayor que cero)');
   // Aleteo: se dibuja el personaje en un canvas aparte en dos instantes y se cuentan los píxeles que difieren
@@ -899,8 +953,8 @@ async function main() {
     ok(quieto < vuela, `quieto, ${id} casi no cambia (${quieto} píxeles contra ${vuela} volando)`);
   }
   ok(sp.listos && sp.fallidos.length === 0 && Object.keys(sp.escenario).length === sp.esperados && sp.esperados > 40 && Object.values(sp.escenario).every(d => d[0] > 0 && d[1] > 0), `los ${sp.esperados} sprites del escenario cargan y se rasterizan (fallidos: ${sp.fallidos.join(',') || 'ninguno'})`);
-  const OBJ_SPRITES = ['ancla-piedra', 'tablero-juego', 'fresco-delfines', 'riton-toro', 'tablilla-arcilla', 'hacha-doble', 'figura-serpientes'];
-  ok(['brillo', ...OBJ_SPRITES].every(n => sp.escenario[n] && sp.escenario[n][0] > 0), 'los ocho sprites de coleccionables (siete objetos y el brillo) cargan y se rasterizan');
+  const OBJ_SPRITES = ['ancla-piedra', 'tablero-juego', 'fresco-delfines', 'riton-toro', 'tablilla-arcilla', 'hacha-doble', 'figura-serpientes', 'frasco-pulpo', 'sello-barco'];
+  ok(['brillo', ...OBJ_SPRITES].every(n => sp.escenario[n] && sp.escenario[n][0] > 0), 'los diez sprites de coleccionables (nueve objetos y el brillo) cargan y se rasterizan');
   // Cada objeto se dibuja con su propio sprite; uno de prueba usa el genérico
   const huella = await page.evaluate(ids => {
     const dib = id => {
@@ -917,16 +971,20 @@ async function main() {
   const tomar = id => page.evaluate(async id => {
     window.__mundo.jugador.personaje = id; await new Promise(r => setTimeout(r, 200));
     const l = document.querySelector('canvas'), d = l.getContext('2d').getImageData(0, 0, l.width, l.height).data;
-    return Array.from(d);
+    // La imagen base queda en el navegador: solo vuelve el conteo, no millones de canales RGBA.
+    if (id === 'ninguno') { window.__baseSprites = d; return 0; }
+    const base = window.__baseSprites;
+    let dif = 0;
+    for (let k = 0; k < base.length; k += 4) if (Math.abs(d[k] - base[k]) + Math.abs(d[k + 1] - base[k + 1]) + Math.abs(d[k + 2] - base[k + 2]) > 60) dif++;
+    return dif;
   }, id);
   const pjOriginal = (await est()).pj;
-  const base = await tomar('ninguno');
+  await tomar('ninguno');
   for (const id of IDS) {
-    const img = await tomar(id); let dif = 0;
-    for (let k = 0; k < base.length; k += 4) if (Math.abs(img[k] - base[k]) + Math.abs(img[k + 1] - base[k + 1]) + Math.abs(img[k + 2] - base[k + 2]) > 60) dif++;
+    const dif = await tomar(id);
     ok(dif > 500, `se ve el sprite de ${id} en el mundo (${dif} píxeles distintos)`);
   }
-  await page.evaluate(p => { window.__mundo.jugador.personaje = p; }, pjOriginal); await espera(200);
+  await page.evaluate(p => { window.__mundo.jugador.personaje = p; delete window.__baseSprites; }, pjOriginal); await espera(200);
   // En la tira: cada tarjeta tiene contenido
   for (const id of IDS) {
     const px = await page.evaluate(id => { const c = document.querySelector(`.pj[data-id=${id}] canvas`); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; }, id);
@@ -935,11 +993,11 @@ async function main() {
 
   // 19. Mundo unido: el mapa y la migración de perfiles guardados con el formato viejo (tres mapas)
   const mundoJson = JSON.parse(fs.readFileSync(path.join(RAIZ, 'datos/mapa-mundo.json'), 'utf8'));
-  ok(mundoJson.filas.every(f => f.length === mundoJson.filas[0].length) && mundoJson.filas.length === 98, 'mapa-mundo: todas las filas tienen el mismo largo (98 filas)');
-  ok(mundoJson.zonas.map(z => z.id).join() === 'palacio,plaza,puerto' && mundoJson.zonas[0].desde === 0 && mundoJson.zonas.every((z, i, a) => i === 0 || z.desde === a[i - 1].hasta + 1) && mundoJson.zonas[2].hasta === 97,
-    'mapa-mundo: palacio, plaza y puerto, de norte a sur, cubren todas las filas sin huecos');
+  ok(mundoJson.filas.every(f => f.length === mundoJson.filas[0].length) && mundoJson.filas.length === 112, 'mapa-mundo: todas las filas tienen el mismo largo (112 filas)');
+  ok(mundoJson.zonas.map(z => z.id).join() === 'palacio,plaza,canal,puerto' && mundoJson.zonas[0].desde === 0 && mundoJson.zonas.every((z, i, a) => i === 0 || z.desde === a[i - 1].hasta + 1) && mundoJson.zonas[3].hasta === 111,
+    'mapa-mundo: palacio, plaza, canal y puerto, de norte a sur, cubren todas las filas sin huecos');
   ok(mundoJson.zonas.every(z => cat.zonas.some(q => q.id === z.id)) && Object.keys(mundoJson.sonidos).sort().join() === 'caracola,cimbalo', 'mapa-mundo: las zonas existen en el catálogo y el mundo declara el catálogo de sonidos una vez');
-  ok(mundoJson.objetos.filter(o => o.tipo === 'coleccionable').length === 7, 'mapa-mundo: los siete coleccionables están en el mundo');
+  ok(mundoJson.objetos.filter(o => o.tipo === 'coleccionable').length === 9, 'mapa-mundo: los nueve coleccionables están en el mundo');
   const resto = o => /^#/.test(mundoJson.filas[o.y][o.x]) ? false : true;
   ok(mundoJson.objetos.every(resto) && mundoJson.braseros.every(resto) && mundoJson.fuentes.every(resto), 'mapa-mundo: objetos, braseros y fuentes no quedan dentro de una pared');
   // Dos perfiles con el formato viejo, que entran al próximo arranque (después de que la página guarde lo suyo)
@@ -972,7 +1030,7 @@ async function main() {
   ok(mg.muro === '.' && mg.reja === '.' && mg.enlace && mg.vas === '17,29', 'la migración conserva el muro roto de la plaza (trasladado), la reja abierta y la vasija movida del palacio');
   ok(mg.brPlaza && !mg.brPlaza2 && mg.brPalacio && !mg.brPalacio2 && mg.solPalacio === 'D', 'la migración conserva los braseros encendidos de cada zona, y no enciende los demás');
   ok(mg.sogaPalacio && mg.sogaPlaza && mg.sogasTendidas === 2, 'la migración conserva las sogas tendidas de la plaza y del palacio');
-  ok(mg.eco === 'caracola' && mg.got === 'ancla-piedra,tablilla-arcilla' && mg.total === '2/7', 'la migración conserva el sonido de Eco y los coleccionables (2/7)');
+  ok(mg.eco === 'caracola' && mg.got === 'ancla-piedra,tablilla-arcilla' && mg.total === '2/9', 'la migración conserva el sonido de Eco y los coleccionables (2/9)');
   ok(mg.perfil.mapa === 'mundo' && mg.perfil.mundoUnido === true && mg.perfil.mundos.plaza.muros.join() === '5,22' && mg.perfil.mundos.palacio.rejas.join() === '19,29' && mg.perfil.mundos.mundo.muros.join() === '5,62' && mg.perfil.mundos.mundo.braseros.slice().sort().join(' ') === '2,51 3,31',
     'el perfil queda en el mundo, marcado como migrado, con las claves viejas intactas y las nuevas trasladadas');
   await foto('41-migrado');
@@ -1084,8 +1142,8 @@ async function main() {
   ok(true, 'carga sin conexión desde el service worker');
   await page.click('.perfil:has-text("Ruta")'); await page.waitForFunction(() => window.__mundo); await espera(500);
   const spOff = await page.evaluate(() => window.__sprites());
-  ok(spOff.listos && IDS.every(id => spOff.imagenes[id] && spOff.imagenes[id][0] > 0), 'sin conexión el juego arranca y los cinco sprites cargan');
-  ok(['brillo', ...OBJ_SPRITES].every(n => spOff.escenario[n] && spOff.escenario[n][0] > 0), 'sin conexión los ocho sprites de coleccionables cargan');
+  ok(spOff.listos && IDS.every(id => spOff.imagenes[id] && spOff.imagenes[id][0] > 0), 'sin conexión el juego arranca y los seis sprites cargan');
+  ok(['brillo', ...OBJ_SPRITES].every(n => spOff.escenario[n] && spOff.escenario[n][0] > 0), 'sin conexión los diez sprites de coleccionables cargan');
   ok(ALAS.every(id => spOff.imagenes[id] && spOff.imagenes[id][0] > 0), 'sin conexión las cuatro alas cargan');
   const tiraOff = await page.evaluate(() => { const c = document.querySelector('.pj[data-id=eco] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; });
   ok(tiraOff > 500, 'sin conexión la tira muestra los sprites');

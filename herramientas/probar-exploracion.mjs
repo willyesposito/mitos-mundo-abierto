@@ -26,7 +26,7 @@ for(const o of m.coleccionables)o.recogido=true;
 ok(objetivoCercano(m)===null,'sin pendientes desaparece el marcador');
 const restaurado=crearMundo(mapa,{}, {...m.estado(),muros:['5,62']},[11.5,71.5]);
 ok(restaurado.celdas[62][5]==='.'&&restaurado.sogas.some(s=>s.a[1]===63&&s.tendida),'se conserva el progreso de muro y soga al restaurar');
-Object.assign(m.jugador,{y:90});ok(lugaresPlaza(m).length===0,'la guía de plaza no aparece en puerto');
+Object.assign(m.jugador,{y:mapa.zonas.find(z=>z.id==='puerto').desde+16});ok(lugaresPlaza(m).length===0,'la guía de plaza no aparece en puerto');
 for(const [x,y] of [[21,50],[22,52],[21,66],[22,68]])ok(mapa.filas[y][x]==='.', 'recoveco caminable '+x+','+y);
 ok(mapa.filas.every(f=>f.length===24),'el mapa conserva dimensiones y coordenadas');
 console.log(n+' chequeos de exploración OK');

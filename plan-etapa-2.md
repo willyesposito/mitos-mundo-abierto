@@ -31,7 +31,7 @@ Qué le hizo a Polifemo para escapar, los compañeros que pierde en el viaje (el
 
 ### Rasgo visual
 
-**Pilos**, el gorro cónico de navegante. Es el atributo con que Ulises aparece en la cerámica y la escultura griegas: firme en la iconografía. Cuerpo humano, como Minotauro, Ariadna y Eco (D19). El diseño, el color dentro de la paleta cerrada de D17 y las cuatro direcciones (D22) salen del chat de diseño de Willy, no de Code.
+**Pilos**, el gorro cónico de navegante. Es el atributo con que Ulises aparece en la cerámica y la escultura griegas: firme en la iconografía. Cuerpo humano, como Minotauro, Ariadna y Eco (D19). El diseño, el color dentro de la paleta cerrada de D17 y las cuatro direcciones (D22) estaban previstos para el chat de diseño; el usuario autorizó después diseñarlos aquí en Codex (D33). SVG integrados; validación visual en dispositivo pendiente.
 
 | Personaje | Firme en el mito | Lo decide el diseño |
 |---|---|---|
@@ -92,12 +92,12 @@ Al dibujar el mapa, respetar MEMORY: una pared de 3 tapa unas dos filas hacia el
 
 ## Abierto
 
-- **Cómo se ve la boca baja:** en la vista cenital el techo de roca tapa la barca. Code propone si se dibuja la roca translúcida mientras la barca pasa abajo, igual que las siluetas detrás de las paredes.
-- **Ficha nueva:** como la etapa 1 ya está validada, el aviso de ficha nueva de la interfaz (A4) se tiene que ver la primera vez que aparece Ulises en un perfil con progreso. A verificar al construir.
+- **Cómo se ve la boca baja:** implementada con SVG de roca y transparencia permanente de 0,55, conservando el tratamiento de U1 (D33). Lectura real en dispositivo pendiente.
+- **Ficha nueva:** implementado el aviso una sola vez en perfiles anteriores con progreso, con pruebas de conservación, acceso a ficha y ausencia de repetición. Los perfiles nuevos no reciben un aviso de novedad histórica. Validación de uso en dispositivo pendiente.
 
 ## Sesiones de Code
 
-Cada sesión se construye cuando `node herramientas/probar.js` pasa y se valida cuando Willy la probó en el celular. El estado vive en `ROADMAP.md`. Los sprites de Ulises, la barca con remo, la boca baja y los dos objetos salen del chat de diseño de Willy y tienen que estar antes de U2 (U1 corre con marcadores, como en A0).
+Cada sesión se construye cuando `node herramientas/probar.js` pasa y se valida cuando Willy la probó en el celular. El estado vive en `ROADMAP.md`. Los sprites de Ulises, la barca con remo, la boca baja y los dos objetos tienen que estar antes de U2 (U1 corre con marcadores, como en A0). Fueron diseñados aquí con autorización posterior del usuario (D33); sigue pendiente cotejar visualmente los dos objetos con las piezas originales antes de publicar.
 
 ### U1: poder de Ulises en el campo de pruebas
 - **Alcance:**

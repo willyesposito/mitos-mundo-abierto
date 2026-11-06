@@ -77,7 +77,7 @@ function dibujarMundo(ctx, m, v, personajes) {
   // Solo entra lo que cae en cámara: el mundo es largo y corre en un celular
   const ver = (fila, minFila = fila) => fila >= y0 - 2 && minFila <= y1 + 4;
   for (const e of m.empujables) if (ver(Math.round(e.py))) items.push({ fila: Math.round(e.py), prof: e.py, tipo: 'empujable', e });
-  for (const c of m.coleccionables) if (!c.recogido && ver(Math.floor(c.y))) items.push({ fila: Math.floor(c.y), prof: c.y, tipo: 'objeto', c });
+  for (const c of m.coleccionables) if (!c.recogido && c.visible !== false && ver(Math.floor(c.y))) items.push({ fila: Math.floor(c.y), prof: c.y, tipo: 'objeto', c });
   for (const b of m.braseros) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.5, tipo: 'brasero', b });
   for (const f of m.fuentes) if (ver(f.ty)) items.push({ fila: f.ty, prof: f.y, tipo: 'fuente', f });
   for (const b of m.barcas) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.4, tipo: 'barca', b });
@@ -106,7 +106,7 @@ function dibujarMundo(ctx, m, v, personajes) {
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (m.celdas[y][x] === 'r') dibujarTechoBoca(ctx, x, y);
 
   // Siluetas tenues por encima de todo: se ve al personaje y a los objetos detrás de un muro.
-  for (const c of m.coleccionables) if (!c.recogido && ver(Math.floor(c.y))) dibujarSilueta(ctx, m, c);
+  for (const c of m.coleccionables) if (!c.recogido && c.visible !== false && ver(Math.floor(c.y))) dibujarSilueta(ctx, m, c);
   ctx.globalAlpha = 0.35;
   if (j.estado !== 'cayendo' || j.z > -1.2) dibujarJugador(ctx, m, personajes, false);
   ctx.globalAlpha = 1;
@@ -303,29 +303,21 @@ function dibujarBarca(ctx, m, b) {
   ctx.restore();
 }
 
-// Barca con remo (la que navega Ulises). Marcador: la barca de adorno con un remo apoyado; el sprite definitivo sale del chat de diseño.
+// Barca navegable: casco abierto sin mástil y remo claro, distintos del adorno del puerto.
 function dibujarBarcaRemo(ctx, b) {
   const cx = b.x * TW, cy = b.y * TH, k = 1.25 * TW / 96;
   ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k);
-  pintar(ctx, 'barca', 0, 0);
-  ctx.restore();
-  ctx.save(); ctx.translate(cx, cy); ctx.lineCap = 'round';
-  for (const [color, ancho] of [[COL.tinta, 5], [COL.cal, 2.4]]) {
-    ctx.strokeStyle = color; ctx.lineWidth = ancho;
-    ctx.beginPath(); ctx.moveTo(-17, -16); ctx.lineTo(-9, 8); ctx.stroke();
-  }
+  pintar(ctx, 'barca-remo', 0, 0);
   ctx.restore();
 }
 // Techo de roca de la boca baja: translúcido, para ver lo que pasa por abajo.
 function dibujarTechoBoca(ctx, x, y) {
   const px = x * TW, py = y * TH - 1.3 * LH;
   ctx.save(); ctx.globalAlpha = 0.55;
-  ctx.fillStyle = '#8c7a5c'; ctx.fillRect(px, py, TW, TH);
-  ctx.fillStyle = '#6b5a40'; ctx.fillRect(px, py + TH, TW, 9);
-  ctx.strokeStyle = COL.tinta; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, TW - 2, TH + 8);
+  pintar(ctx, 'boca-baja', px, py);
   ctx.restore();
 }
-// Ulises sin sprite: figura de marcador (cuerpo humano y pilos) hasta que llegue el diseño definitivo.
+// Respaldo para un personaje cuyo sprite todavía no esté declarado.
 function dibujarMarcador(ctx, p, o) {
   const { x, y, fx, escala } = o;
   ctx.save(); ctx.translate(x, y); ctx.scale(escala * (fx < 0 ? -1 : 1), escala);
@@ -548,7 +540,7 @@ function dibujarSenales(ctx, m) {
 }
 
 // Sprite propio de cada objeto del catálogo; los de prueba usan el genérico
-const OBJETOS = ['ancla-piedra', 'tablero-juego', 'fresco-delfines', 'riton-toro', 'tablilla-arcilla', 'hacha-doble', 'figura-serpientes'];
+const OBJETOS = ['ancla-piedra', 'tablero-juego', 'fresco-delfines', 'riton-toro', 'tablilla-arcilla', 'hacha-doble', 'figura-serpientes', 'frasco-pulpo', 'sello-barco'];
 export const tieneSpriteObjeto = id => OBJETOS.includes(id);
 const spriteObjeto = id => OBJETOS.includes(id) ? id : 'coleccionable';
 
@@ -654,7 +646,7 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
 // Personajes: SVG con 1 unidad = 1 px de juego y los pies en (0, 0): [x, y, ancho, alto] de su viewBox.
 const SPRITES = {
   pegaso: [-22, -51, 44, 52], minotauro: [-18, -51, 36, 52], ariadna: [-18, -51, 36, 52],
-  fenix: [-18, -51, 36, 52], eco: [-18, -51, 36, 52],
+  fenix: [-18, -51, 36, 52], eco: [-18, -51, 36, 52], ulises: [-18, -51, 36, 52],
   // Alas de Pegaso y Fénix: piezas aparte, con el origen (0, 0) en la articulación del hombro, donde giran
   'pegaso-ala-cerca': [-27, -28, 34, 34], 'pegaso-ala-lejos': [-27, -28, 34, 34],
   'fenix-ala-cerca': [-27, -28, 34, 34], 'fenix-ala-lejos': [-27, -28, 34, 34],
@@ -669,7 +661,7 @@ const ALAS = {
 const ORIGEN = {
   bloque: [-20, -57], vasija: [-22, -42], 'brasero-apagado': [-20, -30], 'brasero-encendido': [-20, -30], llama: [-10, -38],
   'fuente-caracola': [-22, -40], 'fuente-cimbalo': [-20, -36], argolla: [-14, -30], 'argolla-viva': [-14, -32],
-  coleccionable: [-22, -22], barca: [-52, -32], brillo: [-26, -26],
+  coleccionable: [-22, -22], barca: [-52, -32], 'barca-remo': [-48, -28], brillo: [-26, -26],
   ...Object.fromEntries(OBJETOS.map(id => [id, [-22, -22]])),
 };
 const ESCENARIO = [
@@ -678,11 +670,11 @@ const ESCENARIO = [
   'baldosa-0', 'baldosa-1', 'tope-claro-0', 'tope-claro-1', 'cara-terraza', 'cara-techo-0', 'cara-techo-1', 'mar',
   'placa', 'placa-activa', 'reja-cerrada', 'grieta', 'puerta-sol', 'puerta-sonido', 'escombros', 'umbral-reja', 'umbral-sol',
   'bloque', 'vasija', 'brasero-apagado', 'brasero-encendido', 'llama', 'fuente-caracola', 'fuente-cimbalo',
-  'argolla', 'argolla-viva', 'coleccionable', 'barca',
+  'argolla', 'argolla-viva', 'coleccionable', 'barca', 'barca-remo', 'boca-baja',
   ...OBJETOS, 'brillo',
 ];
 // Las poses comparten el mismo encuadre: el origen del pie no salta entre cuadros.
-for (const id of ['pegaso','minotauro','ariadna','fenix','eco']) {
+for (const id of ['pegaso','minotauro','ariadna','fenix','eco','ulises']) {
   for (const v of ['', '-frente', '-espalda']) {
     if (v) SPRITES[id+v]=SPRITES[id];
     for (const paso of [1,2]) SPRITES[id+v+'-paso-'+paso]=SPRITES[id];
@@ -737,7 +729,7 @@ function recorte(ctx, n, sx, sy, sw, sh, dx, dy, extra = 0) {
   if (s) ctx.drawImage(s.c, sx * s.k, sy * s.k, sw * s.k, sh * s.k, dx, dy, sw + extra, sh + extra);
 }
 
-// Llama a `f` cuando todos los sprites (cinco cuerpos, cuatro alas y escenario) terminaron de cargar (enseguida si ya terminaron).
+// Llama a `f` cuando todos los sprites (seis cuerpos, cuatro alas y escenario) terminaron de cargar (enseguida si ya terminaron).
 export function alTenerSprites(f) { if (spritesListos) f(); else alListos.push(f); }
 // Para las pruebas: estado de la carga, tamaño natural de cada sprite de personaje cargado, y el escenario.
 export function estadoSprites() {

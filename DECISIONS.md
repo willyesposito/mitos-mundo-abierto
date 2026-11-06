@@ -203,3 +203,15 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** adaptar HUD, cámara y controles a la superficie visible; ocultar joystick en PC con puntero fino y mantener interacción táctil en tablet y celular. Priorizar encontrar actividades con lugares elegibles y pistas que no revelan la solución. Primera revisión espacial: plaza, con senderos curvos y dos recovecos laterales.
 - **Compatibilidad:** mecanismos y objetos conservan coordenadas; solo se abren 16 casillas de parapeto. La guía usa progreso existente, sin modificar guardados.
 - **Detalle:** `jugabilidad-adaptable-codex.md`.
+
+### D33. Arte de Ulises y del canal diseñado en Codex
+- **Estado:** autorizado por el usuario en esta conversación; propuesta integrada para revisión, sin publicación.
+- **Decisión:** diseñar aquí los SVG de Ulises, barca con remo, boca baja y dos coleccionables, en lugar de esperar al chat de diseño. Se conserva la paleta D17 y el sistema de poses D22. Ulises lleva pilos ocre con banda egeo, barba, túnica óxido y capa corta de lino; son decisiones visuales, no afirmaciones de canon. La barca navegable tiene casco abierto y remo diagonal, diferenciada de las decorativas. El techo de roca conserva la transparencia 0,55 de U1.
+- **Objetos:** frasco y sello se proponen según las descripciones y referencias verificadas del plan de etapa 2. El acceso actual a Smarthistory y AncMed respondió HTTP 403; no se afirma una nueva comparación visual con las piezas originales. Antes de publicar estos objetos queda ese cotejo visual externo. No se agregan inscripciones.
+- **Alcance:** 14 SVG locales, seis personajes con sprites y caché offline. La autorización no implica aprobación visual en dispositivo, merge ni publicación.
+
+### D34. Encaje técnico del canal y compatibilidad del guardado
+- **Estado:** implementación de D30 para revisión; sin merge ni publicación.
+- **Decisión:** canal en filas 74–87 y puerto desplazado 14 filas; plaza y palacio conservan coordenadas. Bocas en columna 11 y amarres en columna 10 de bolsillos de agua de tres casillas para poder cruzar sin chocar con la barca de la otra orilla. Frasco en una roca cerca del muelle sur; sello al noroeste, revelado por una barca a dos casillas o menos y guardado separado de la recolección.
+- **Compatibilidad:** la unión de mapas anteriores a D23 usa el desplazamiento original del puerto; después `migrarAlCanal` traslada una sola vez el estado y la llegada del puerto. Las llegadas antiguas sobre casillas convertidas en agua se llevan al muelle firme contiguo. No se alteran mapas antiguos de respaldo ni el campo de pruebas. Si una recarga en una roca deja todas las barcas inaccesibles, se acerca una a una orilla libre de esa roca; si ya hay una accesible se conserva su posición.
+- **Por qué:** evita el desplazamiento doble, el bloqueo entre dos barcas y que un perfil quede varado en una roca. Todo ello mantiene las reglas de D29–D31.
