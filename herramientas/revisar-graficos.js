@@ -27,7 +27,7 @@ async function revisar(){
    // Espera al seguimiento de cámara, no a una operación del juego.
    await page.waitForTimeout(750);
   };
-  for(const [nombre,x,y,id] of [['puerto',11.5,90.5,'pegaso'],['plaza',13.5,65.5,'ariadna'],['palacio',8.5,25.5,'eco']]){
+  for(const [nombre,x,y,id] of [['puerto',11.5,104.5,'pegaso'],['plaza',13.5,65.5,'ariadna'],['palacio',8.5,25.5,'eco']]){
    await ubicar(x,y,id);await page.screenshot({path:path.join(salida,nombre+'-vertical.png')});
   }
   const medidas=await page.evaluate(()=>{

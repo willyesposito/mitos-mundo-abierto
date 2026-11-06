@@ -8,7 +8,7 @@ import { crearMundo } from '../mundo.js';
 const raiz = new URL('../', import.meta.url);
 let n = 0;
 const verificar = (cond, mensaje) => { assert.ok(cond, mensaje); console.log('OK ' + mensaje); n++; };
-for (const id of ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco']) {
+for (const id of ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco', 'ulises']) {
   for (const [fx, fy, vista] of [[1,0,'costado'],[-1,0,'costado'],[0,1,'frente'],[0,-1,'espalda']]) {
     for (const caminando of [false,true]) for (const paso of [.2, .9]) {
       const o = { fx, fy, caminando, paso };
@@ -37,6 +37,6 @@ for (const [W,H] of [[360,640],[390,844],[412,915],[1536,882]]) {
 const sw = fs.readFileSync(new URL('sw.js',raiz),'utf8');
 const archivos = vm.runInNewContext(sw.slice(0,sw.indexOf("self.addEventListener")) + '\nARCHIVOS;');
 for (const f of archivos) verificar(f === './' || fs.existsSync(new URL(f,raiz)), 'recurso de caché existe: '+f);
-for (const dir of ['sprites/personajes/','sprites/ambiente/']) for (const f of fs.readdirSync(new URL(dir,raiz))) verificar(archivos.includes(dir+f), 'sprite nuevo incluido en caché: '+f);
+for (const dir of ['sprites/personajes/','sprites/ambiente/','sprites/coleccionables/','sprites/escenario/']) for (const f of fs.readdirSync(new URL(dir,raiz))) verificar(archivos.includes(dir+f), 'sprite nuevo incluido en caché: '+f);
 verificar(archivos.includes('ambiente.js') && archivos.includes('animacion.js'), 'módulos gráficos disponibles offline');
 console.log(n+' verificaciones gráficas OK');

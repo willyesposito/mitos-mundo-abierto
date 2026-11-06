@@ -25,7 +25,9 @@ export function crearAmbiente(m) {
   if (m.id !== 'mundo') return [];
   const cerca = (x, y, a, b, r) => Math.hypot(x - a, y - b) < r;
   const especiales = [...m.coleccionables.map(c => [c.x, c.y]), ...m.braseros.map(c => [c.x + .5, c.y + .5]), ...m.fuentes.map(c => [c.x, c.y])];
-  return grupos.filter(([tipo, x, y]) => {
+  const puerto = m.zonas?.find(z => z.id === 'puerto');
+  const desplazamiento = puerto ? puerto.desde - 74 : 0;
+  return grupos.map(([tipo, x, y]) => [tipo, x, y >= 74 ? y + desplazamiento : y]).filter(([tipo, x, y]) => {
     const celda = m.origen[Math.floor(y)]?.[Math.floor(x)];
     if (agua.has(tipo)) return celda === '~';
     if (celda !== '.') return false;

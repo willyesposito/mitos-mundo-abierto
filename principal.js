@@ -5,7 +5,7 @@ import { crearDibujo, estadoSprites, dibujarPersonaje, dibujarObjeto } from './d
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
 import { crearSonido } from './sonido.js';
-import { actualizarPerfil, registrarObjeto, guardarMundo, migrarAlMundo } from './nucleo.js';
+import { actualizarPerfil, registrarObjeto, guardarMundo, migrarAlMundo, migrarAlCanal } from './nucleo.js';
 
 const $ = id => document.getElementById(id);
 const pedir = u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
@@ -107,12 +107,22 @@ async function arrancar() {
 
   function iniciar(p) {
     perfil = p;
+    // Solo los perfiles anteriores con progreso necesitan enterarse de la ficha agregada.
+    // Un mapa guardado con listas vacías no significa que se haya resuelto algo.
+    const clavesProgreso = ['muros', 'rejas', 'empujables', 'braseros', 'soles', 'fuentes', 'puertas', 'sogas', 'barcas'];
+    const tieneProgreso = Object.values(perfil.objetos || {}).some(Boolean) || !!perfil.eco ||
+      Object.values(perfil.mundos || {}).some(estado => estado && (estado.eco || clavesProgreso.some(k =>
+        estado[k] && typeof estado[k] === 'object' && Object.keys(estado[k]).length > 0)));
+    const avisarUlises = !perfil.fichaUlisesPresentada && tieneProgreso;
+    if (!perfil.fichaUlisesPresentada) actualizarPerfil(perfil, { fichaUlisesPresentada: true });
     migrarAlMundo(perfil, mapas.mundo.zonas);   // perfiles viejos: puerto, plaza y palacio pasan al mundo unido
+    migrarAlCanal(perfil, mapas.mundo);
     cargarMapa('mundo', perfil.llegada, perfil.personaje, false);
     ui.marcarPersonaje(mundo.jugador.personaje);
     ui.pistaCambio(!perfil.vistoCambio);
     ui.recogidosMenu = perfil.objetos;
     reanudar();
+    if (avisarUlises) ui.aviso('Nueva ficha: Ulises', 'Elegí a Ulises y tocá el botón de ficha para conocer su poder: Navegar.', 6500);
   }
 
   function reanudar() { if (corriendo || !mundo) return; corriendo = true; ultimo = performance.now(); requestAnimationFrame(bucle); }
@@ -120,7 +130,7 @@ async function arrancar() {
   function procesarEventos() {
     let cambioMundo = false;
     for (const e of mundo.eventos.splice(0)) {
-      if (['muro', 'reja', 'empuje', 'brasero', 'sol', 'golpe', 'puerta', 'escucha', 'soga', 'barca'].includes(e.tipo)) cambioMundo = true;
+      if (['muro', 'reja', 'empuje', 'brasero', 'sol', 'golpe', 'puerta', 'escucha', 'soga', 'barca', 'revelado'].includes(e.tipo)) cambioMundo = true;
       if (e.tipo === 'objeto') {
         registrarObjeto(perfil, e.id);
         ui.contadores(perfil.objetos); ui.pulsarContadores(); ui.avisoObjeto(e.id);

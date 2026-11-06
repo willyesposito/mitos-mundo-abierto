@@ -43,8 +43,12 @@ Plan en `plan-arte.md`. Decisiones: D16 a D22. Orden de inicio a definir por Wil
 
 Contenido en `plan-etapa-2.md`.
 
+Continuación: orden, dependencias de arte y contrato de migración en `plan-continuacion-etapa-2.md`.
+
+- [x] **Aviso de ficha de Ulises en perfiles anteriores:** construido para revisión. Aviso una sola vez si hay progreso, sin interrumpir ni cambiar personaje; marca aditiva sin mover coordenadas. Suite rápida: 50 OK, 0 fallas (15 chequeos nuevos). Captura revisada; validación física pendiente. No incluye U2.
+
 - [x] **U1 Poder de Ulises**: construida (`probar.js --rapido` con los chequeos de U1). Decisiones: D29, D31. Corrió con marcadores, sin esperar los sprites. Falta probarla en el celular.
-- [ ] **U2 El canal**: diseñada. Decisión: D30. Necesita los sprites del chat de diseño (Ulises, barca con remo, boca baja y los dos objetos). Incluye la migración del guardado del puerto: paso riesgoso, con corrida completa de `probar.js`.
+- [x] **U2 El canal**: construido para revisión. Decisiones: D30, D33 y D34. Arte local autorizado (14 SVG), canal, dos barcas, objetos y migración implementados. Suite completa final: 293 OK, 0 fallas, incluye arranque offline; además 76 chequeos de canal/migración, 478 gráficos y 22 de exploración aprobados. Capturas revisadas. Pendiente validación en dispositivo y cotejo visual externo del frasco y sello por HTTP 403 de fuentes citadas. No publicado ni mergeado.
 - [ ] **Laberinto**: pendiente de diseño.
 - [ ] **Cueva del monte**: pendiente de diseño.
 

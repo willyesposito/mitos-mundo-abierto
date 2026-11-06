@@ -2,7 +2,7 @@
 export function posePersonaje(id, o, reducir = false) {
   const vertical = Math.abs(o.fy || 0) > Math.abs(o.fx || 0);
   const vista = vertical ? ((o.fy || 0) < 0 ? 'espalda' : 'frente') : 'costado';
-  let nombre = id + (vista === 'costado' ? (['ariadna', 'eco', 'minotauro'].includes(id) ? '-costado' : '') : '-' + vista);
+  let nombre = id + (vista === 'costado' ? (['ariadna', 'eco', 'minotauro', 'ulises'].includes(id) ? '-costado' : '') : '-' + vista);
   if (o.volando && vista !== 'costado' && ['pegaso', 'fenix'].includes(id)) nombre += '-vuelo';
   else if (o.caminando && !reducir) {
     // Los cuadros siguen la distancia recorrida: al soltar el control los pies se detienen.
