@@ -12,7 +12,9 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 
 ## Reglas del juego
 
-- Un lugar puede requerir un poder. Los 6 personajes están disponibles desde el inicio: requerir un poder significa cambiar de personaje, no conseguir uno.
+- Un lugar puede requerir un poder. La jugadora elige 1 de los 6 personajes para empezar y desbloquea al resto jugando: cada personaje se desbloquea conversando con otros, juntando saberes sobre él y resolviendo su cadena de charlas; al resolverla, obtiene su poder. Requerir un poder significa haberlo desbloqueado y cambiar a ese personaje. Lo desbloqueado nunca se pierde.
+- Las charlas son árboles de diálogo con elecciones: elegir una réplica cambia lo que sigue. Elegir mal nunca castiga ni cierra nada: lleva a otra rama y la charla se puede repetir. Lo aprendido en una charla puede ser la llave de otra.
+- Los personajes tienen habilidades (fuerza, astucia, valentía, magia, liderazgo, bondad, de 1 a 10) tomadas de las fichas de `JuegoMitosFeli`. Cambian la mecánica del juego: qué opciones aparecen en las charlas y qué situaciones puede resolver cada uno. Falta diseñar el detalle (qué habilidad habilita qué) antes de programarlo. Los nórdicos y romanos del otro juego quedan afuera por ahora. No se comparte progreso con ese juego.
 - Saltos generosos, caer no castiga: si cae al vacío o al agua, reaparece en el último piso firme sin perder nada. Un coleccionable obtenido nunca se pierde.
 - Sin timers ni cuentas regresivas. Nada se derrumba si no llega a tiempo.
 - La sombra bajo el personaje es siempre visible al saltar o volar.
@@ -42,7 +44,7 @@ Audiencia, en términos de diseño: lectora fuerte, disfruta el desafío intelec
 | Eco | Voz: guarda un sonido y lo repite a 6 casillas, atravesando paredes | ondas de voz |
 | Ulises | Navegar: sube a una barca con remo, la mueve por el agua y baja en tierra firme (D29) | pilos |
 
-Todos caminan, corren y saltan. El poder es lo único que los distingue en mecánica. Pegaso es un caballo alado y Fénix un ave de perfil con cola larga; sus alas son piezas aparte que aletean por código (D20). Minotauro, Ariadna, Eco y Ulises tienen cuerpo humano (D19); Ulises, por ahora, es un marcador sin sprite. El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
+Todos caminan, corren y saltan. Lo que los distingue en mecánica es el poder y, según el diseño pendiente, sus habilidades. Pegaso es un caballo alado y Fénix un ave de perfil con cola larga; sus alas son piezas aparte que aletean por código (D20). Minotauro, Ariadna, Eco y Ulises tienen cuerpo humano (D19); Ulises, por ahora, es un marcador sin sprite. El arte son sprites SVG en `sprites/personajes/` (D16, D18, `plan-arte.md`).
 
 ## Mapa de archivos
 
