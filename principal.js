@@ -5,7 +5,8 @@ import { crearDibujo, estadoSprites, dibujarPersonaje, dibujarObjeto } from './d
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
 import { crearSonido } from './sonido.js';
-import { actualizarPerfil, registrarObjeto, guardarMundo, migrarAlMundo, migrarAlCanal } from './nucleo.js';
+import { actualizarPerfil, registrarObjeto, guardarMundo, migrarAlMundo, migrarAlCanal, migrarDesbloqueo, desbloquearPersonaje, registrarSaber, registrarCarta, resolverCharla } from './nucleo.js';
+import { crearSesion, tieneEfectos, nombreDe } from './charlas.js';
 
 const $ = id => document.getElementById(id);
 const SONIDO_ANIMAL = { gato: 'maulla', cabra: 'bala', gaviota: 'grazna', golondrina: 'trina', delfin: 'chasquea' };   // pulpo y lirios no suenan (D35)
@@ -13,9 +14,10 @@ const pedir = u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.
 
 async function arrancar() {
   const IDS_MAPAS = ['mundo', 'pruebas'];
-  const [{ personajes }, catalogo, ...listaMapas] = await Promise.all([
-    pedir('datos/personajes.json'), pedir('datos/coleccionables.json'), ...IDS_MAPAS.map(i => pedir(`datos/mapa-${i}.json`)),
+  const [{ personajes }, catalogo, indiceCharlas, ...listaMapas] = await Promise.all([
+    pedir('datos/personajes.json'), pedir('datos/coleccionables.json'), pedir('datos/charlas/indice.json'), ...IDS_MAPAS.map(i => pedir(`datos/mapa-${i}.json`)),
   ]);
+  const charlasPorId = Object.fromEntries((await Promise.all(indiceCharlas.charlas.map(i => pedir(`datos/charlas/${i}.json`)))).map(c => [c.id, c]));
   const mapas = Object.fromEntries(listaMapas.map(m => [m.id, m]));
   let mapa = mapas.mundo;
 
@@ -31,26 +33,61 @@ async function arrancar() {
 
   const entrada = crearControles({
     zona: $('zona-joystick'), joystick: $('joystick'), palanca: $('palanca'),
-    btnSalto: $('btn-salto'), btnPoder: $('btn-poder'),
+    btnSalto: $('btn-salto'), btnPoder: $('btn-poder'), btnHablar: $('btn-hablar'),
     alCambiar(i) {
       if (!mundo || ui.menuAbierto()) return;
-      const k = i < 0 ? (personajes.findIndex(p => p.id === mundo.jugador.personaje) + 1) % personajes.length : i;
-      elegirPersonaje(personajes[k].id);
+      // Los números y C recorren solo a los desbloqueados, en el orden de la tira
+      const libres = personajes.filter(p => perfil.desbloqueados.includes(p.id));
+      const k = i < 0 ? (libres.findIndex(p => p.id === mundo.jugador.personaje) + 1) % libres.length : i;
+      if (libres[k]) elegirPersonaje(libres[k].id);
     },
+    alHablar: hablar,
     alMenu() { if (!mundo) return; ui.menuAbierto() ? ui.cerrarMenu() : abrirMenu(); },
     alFicha() { if (!mundo) return; ui.fichaAbierta() ? ui.cerrarMenu() : (ui.menuAbierto() || (corriendo = false, entrada.x = entrada.y = 0, ui.abrirFicha())); },
   });
 
   function elegirPersonaje(id) {
-    if (!mundo) return;
+    if (!mundo || !perfil.desbloqueados.includes(id)) return;
     mundo.cambiarPersonaje(id);
   }
+
+  // Un personaje nuevo aparece en la tira sin cambiar al activo ni interrumpir el movimiento.
+  function desbloquear(id, avisar = true) {
+    if (!desbloquearPersonaje(perfil, id)) return false;
+    ui.mostrarTira(perfil.desbloqueados);
+    const p = personajes.find(q => q.id === id);
+    if (avisar && p) ui.aviso('Se suma un personaje', p.nombre, 4200);
+    return true;
+  }
+
+  // Hablar con el interlocutor cercano: el juego queda en pausa mientras dura la charla.
+  function hablar() {
+    if (!mundo || ui.menuAbierto()) return;
+    const q = mundo.interlocutorCercano();
+    const charla = q && charlasPorId[q.charla];
+    if (!charla) return;
+    corriendo = false; entrada.x = entrada.y = 0; entrada.poderMantenido = false; entrada.poderPulsado = false;
+    ui.hablarVisible(false);
+    const sesion = crearSesion(charla, { saberes: perfil.saberes, resuelta: !!perfil.charlas[charla.id]?.resuelta });
+    ui.abrirCharla(sesion);
+    aplicarPaso(sesion.inicial, sesion);
+  }
+  // Guarda al momento lo aprendido y los efectos de cada paso: cerrar a mitad no pierde nada.
+  function aplicarPaso(r, sesion) {
+    for (const id of r.da) registrarSaber(perfil, id);
+    if (r.efecto) {
+      for (const id of r.efecto.desbloquea || []) desbloquear(id);
+      if (r.efecto.carta) registrarCarta(perfil, r.efecto.carta);
+      resolverCharla(perfil, sesion.charla.id);
+    } else if (r.fin && !tieneEfectos(sesion.charla)) resolverCharla(perfil, sesion.charla.id);
+  }
+  ui.alPasoCharla = aplicarPaso;
   ui.alElegirPersonaje = elegirPersonaje;
 
   function abrirMenu() { recordarLugar(true); corriendo = false; ui.abrirMenu(perfil.objetos); }
   ui.alCerrarMenu = () => { if (mundo) reanudar(); };
   ui.alAbrirFicha = () => { corriendo = false; entrada.x = entrada.y = 0; entrada.poderMantenido = false; };
-  ui.alCambiarPerfil = () => { corriendo = false; mundo = null; entrada.x = entrada.y = 0; ui.mostrarPerfiles(iniciar); };
+  ui.alCambiarPerfil = () => { corriendo = false; mundo = null; entrada.x = entrada.y = 0; ui.hablarVisible(false); ui.mostrarPerfiles(iniciar); };
 
   // Zona donde está parado el personaje: el mundo declara qué filas son de cada zona.
   function zonaDe(y) {
@@ -80,7 +117,9 @@ async function arrancar() {
     mapa = mapas[id];
     const guardado = { ...((perfil.mundos || {})[id] || {}), eco: perfil.eco || ((perfil.mundos || {})[id] || {}).eco };
     mundo = crearMundo(mapa, perfil.objetos, guardado, llegada);
-    mundo.jugador.personaje = personajes.some(x => x.id === personaje) ? personaje : 'pegaso';
+    const libres = personajes.filter(x => perfil.desbloqueados.includes(x.id));
+    mundo.jugador.personaje = libres.some(x => x.id === personaje) ? personaje : (libres[0] || personajes[0]).id;
+    for (const q of mundo.interlocutores) { const c = charlasPorId[q.charla]; q.nombre = c ? nombreDe(c) : ''; q.color = c ? c.color : '#5f7a3a'; }
     if (fundido) { mundo.jugador.estado = 'volviendo'; mundo.velo = 1; }
     ui.usarMapa(mapa);
     zonaActual = zonaDe(mundo.jugador.y); ui.usarZona(zonaActual);
@@ -91,7 +130,7 @@ async function arrancar() {
     ajustar(); centrarCamara(true);
     exponer();
   }
-  function exponer() { if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sprites = estadoSprites; window.__dibujarPersonaje = dibujarPersonaje; window.__dibujarObjeto = dibujarObjeto; window.__sonidos = sonido.registro; } }
+  function exponer() { if (new URLSearchParams(location.search).has('prueba')) { window.__mundo = mundo; window.__sprites = estadoSprites; window.__dibujarPersonaje = dibujarPersonaje; window.__dibujarObjeto = dibujarObjeto; window.__sonidos = sonido.registro; window.__desbloquear = id => desbloquear(id, false); } }
 
   // Único cambio de mapa que queda: ir al campo de pruebas desde el menú y volver al mundo donde se estaba.
   // `id` nulo es volver al mundo desde el campo de pruebas.
@@ -118,6 +157,8 @@ async function arrancar() {
     if (!perfil.fichaUlisesPresentada) actualizarPerfil(perfil, { fichaUlisesPresentada: true });
     migrarAlMundo(perfil, mapas.mundo.zonas);   // perfiles viejos: puerto, plaza y palacio pasan al mundo unido
     migrarAlCanal(perfil, mapas.mundo);
+    migrarDesbloqueo(perfil, personajes.map(q => q.id));   // perfiles anteriores: los seis quedan desbloqueados
+    ui.mostrarTira(perfil.desbloqueados);
     cargarMapa('mundo', perfil.llegada, perfil.personaje, false);
     ui.marcarPersonaje(mundo.jugador.personaje);
     ui.pistaCambio(!perfil.vistoCambio);
@@ -203,6 +244,7 @@ async function arrancar() {
     while (dt > 0) { const s = Math.min(dt, 1 / 60); mundo.actualizar(s, entrada); dt -= s; }
     procesarEventos();
     actualizarZona(); recordarLugar(false);
+    ui.hablarVisible(!!mundo.interlocutorCercano());
     const j = mundo.jugador;
     centrarCamara(j.estado === 'volviendo' && j.estadoT < 0.02, total);
     dibujo.dibujar(mundo, vista);

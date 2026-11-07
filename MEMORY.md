@@ -54,4 +54,8 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Acabado de caminos:** revisar las intersecciones en una captura real antes de publicar. Los ramales deben formar una superficie continua, sin bordes internos cruzados ni cortes entre casillas; los jardines requieren un acabado integrado, no manchas lisas sueltas. Por qué: la primera revisión espacial dejó uniones y superficies visualmente sin terminar.
 
 - **U1 y U2 validadas en el celular el 2026-11-07.** El botón de poder va sin palabras, solo ícono, por pedido de Willy: las palabras podían confundir en pantalla chica (D35).
+- **Charlas: tono sin suavizar de más, pero sin violencia explícita y aptas para 10 años o más.** Por qué: lo pidió Guille al diseñar las charlas (2026-11-07); el suavizado general de contenido fuerte sigue valiendo.
+- **Una charla por archivo en `datos/charlas/` con índice; el texto de cada pantalla hasta ~220 caracteres y cada opción hasta ~60.** Por qué: cabe en celular vertical sin scroll.
+- **Las habilidades de las fichas (1 a 10) no existen para velocidad:** la escala de velocidad es criterio de juego, no canon, y se ajusta si Guille lo pide.
+- **`window.__desbloquear` solo existe con `?prueba`:** las pruebas viejas la usan para saltar la elección inicial.
 - **En las charlas, cuanta más información del mito, mejor: se puede sumar canon de fuentes clásicas (por ejemplo Ovidio) además de la ficha, siempre cotejado y sin violencia explícita, para chicos de 10 años o más.** Por qué: Guille lo pidió al aprobar la charla de Dédalo (2026-11-07).

@@ -1,0 +1,35 @@
+{
+  "id": "teseo",
+  "interlocutor": "Teseo",
+  "color": "#5f7a3a",
+  "nivel": "dorado",
+  "habilidades": {"fuerza": 6, "astucia": 9, "valentia": 9, "magia": 1, "liderazgo": 8, "bondad": 7, "velocidad": 6},
+  "estado": "borrador",
+  "inicio": "n1",
+  "nodos": {
+    "n1": {
+      "texto": "Soy Teseo, príncipe de Atenas. Viajé a Creta para enfrentar a una criatura que vivía en un laberinto del que nadie sabía salir.",
+      "opciones": [
+        {"texto": "¿Cómo pensabas salir?", "va": "n2", "sinSaber": {"saber": "hilo"}},
+        {"texto": "¿Quién vivía en el laberinto?", "va": "n3", "sinSaber": {"saber": "asterion"}},
+        {"texto": "Ya entendí", "va": "n4", "requiere": {"saber": "hilo"}}
+      ]
+    },
+    "n2": {
+      "texto": "Una princesa me dio un ovillo de hilo. Lo fui desenrollando por el camino y, para volver, solo tuve que seguirlo. Un buen plan vale tanto como la fuerza.",
+      "da": ["hilo"],
+      "opciones": [{"texto": "Seguir", "va": "n1"}]
+    },
+    "n3": {
+      "texto": "La criatura era el Minotauro. Su nombre era Asterión, que quiere decir «el estrellado». Era hijo de la reina Pasífae y medio hermano de Ariadna. El rey Minos le encargó a Dédalo un laberinto para encerrarlo.",
+      "da": ["asterion"],
+      "opciones": [{"texto": "Seguir", "va": "n1"}]
+    },
+    "n4": {
+      "texto": "Entonces ya sabés lo que yo: el laberinto se salía con un hilo, y quien vivía adentro tenía nombre. Asterión no eligió su laberinto. Si querés, puede acompañarte.",
+      "requiere": {"saber": "asterion"},
+      "efecto": {"desbloquea": ["minotauro"], "carta": "teseo"},
+      "opciones": [{"texto": "Gracias"}]
+    }
+  }
+}
