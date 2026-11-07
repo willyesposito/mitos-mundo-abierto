@@ -12,7 +12,7 @@ Límites para el celular en vertical: cada pantalla de Dédalo tiene hasta unos 
 
 ## Canon que usa
 
-Todo es de canon firme, salvo lo marcado en "A verificar".
+Todo es de canon firme y está cotejado (ver más abajo).
 
 - Dédalo es un artesano ateniense, el mejor de su tiempo, que trabaja para el rey Minos en Creta.
 - Minos le encarga el laberinto para guardar al Minotauro (Asterión). El laberinto es tan intrincado que el propio Dédalo casi no encuentra la salida.
@@ -22,9 +22,14 @@ Todo es de canon firme, salvo lo marcado en "A verificar".
 
 **Se deja afuera:** por qué Dédalo salió de Atenas, cómo fue concebido el Minotauro, el tributo de jóvenes y cualquier detalle del enfrentamiento. La charla dice que Teseo lo venció, igual que la ficha del Minotauro.
 
-**A verificar antes de publicar:**
-- El armado de las alas (plumas de menor a mayor, atadas con hilo y fijadas con cera, con una curva suave) está en Ovidio, *Metamorfosis*, libro VIII. Hay que cotejarlo contra una edición antes de dejarlo escrito así.
-- La ficha de Dédalo de `JuegoMitosFeli` no está en este repo. El texto sale del canon general, no de la ficha: hay que cotejarlo con ella.
+**Cotejado (2026-11-07):**
+- Con la ficha de Dédalo de `JuegoMitosFeli` (`personajes.json`, id `dedalo`, tier plateado): el texto coincide (inventor de Atenas, laberinto, alas de plumas y cera, advertencia a Ícaro, cae al mar que lleva su nombre, llega a Sicilia).
+- Con Ovidio, *Metamorfosis* VIII (traducción de David Drake, https://david-drake.com/2007/metamorphoses-daedalus/): las plumas se ordenan de menor a mayor, se cosen al medio con hilo, se fijan en la base con cera y el armazón se curva. La advertencia es volar a media altura: bajo, la espuma pesa las alas; alto, el sol las quema. Dédalo casi no encuentra la salida de su propio laberinto.
+- Un ajuste: la ficha dice solo "no vueles demasiado alto". La charla suma lo del mar porque está en Ovidio. Si preferís ceñirte a la ficha, se saca esa mitad de la frase en N4b.
+
+## Habilidades (de la ficha)
+
+Fuerza 3, astucia 10, valentía 6, magia 4, liderazgo 4, bondad 6. Astucia en el máximo de la escala y fuerza baja. Todavía no condicionan nada en esta charla; cuando se diseñe qué habilita cada habilidad, la astucia de Dédalo es la candidata natural para una opción que solo él ofrece.
 
 ## Cómo se juega
 
@@ -131,12 +136,12 @@ Un archivo por charla en `datos/charlas/`, por ejemplo `dedalo.json`. Texto en e
 
 - `va` apunta a un nodo; sin `va` o con `opciones` vacío, la charla termina.
 - `da` lista los saberes que se guardan al llegar a ese nodo.
-- `requiere` sobre un nodo o una opción la oculta hasta tener ese saber. Más adelante podría pedir una habilidad (por ejemplo astucia con un mínimo); no se usa acá porque las habilidades de Dédalo no están definidas.
+- `requiere` sobre un nodo o una opción la oculta hasta tener ese saber. Más adelante podría pedir una habilidad (por ejemplo astucia con un mínimo); no se usa acá porque todavía no se diseñó qué habilita cada habilidad.
 - Una opción que sale de una rama "distinta" vuelve al nodo bueno con `va`: no hay campo de castigo ni de fracaso.
 
 ## Preguntas abiertas
 
-1. **Dónde está Dédalo.** El taller de Dédalo está "sin fecha" en el roadmap. Alguna zona del mapa tiene que alojarlo. No lo resuelvo acá.
-2. **Habilidades de Dédalo.** Las fichas no las traen acá y no las invento.
-3. **Cotejo con la ficha** de `JuegoMitosFeli` y con la edición de Ovidio (ver "A verificar").
-4. **¿Querés que Pegaso o Fénix reaccionen** a las plumas de N2? Es un guiño con lo que ya hay en el ambiente; lo dejo como idea, no lo construyo.
+1. **El taller.** Hay que armar un taller para Dédalo, en una habitación o al aire libre (decisión de Guille, 2026-11-07). Falta elegir en qué zona va y construirlo: es un cambio de mapa y de código, no de este documento. Lo que necesita el taller: un banco con plumas y cera visibles y un lugar donde se pueda parar a hablar con él. La regla de la zona elegida (alturas, paredes) se resuelve al diseñarlo.
+2. **Guiño de Pegaso o Fénix** a las plumas de N2: aprobado como idea (2026-11-07), sin construir.
+3. **Fuera de esta charla, pero en la ficha:** el capítulo "El Hilo y la Caracola" (Dédalo pasa un hilo por una caracola con una hormiga y una gota de miel) sirve para una segunda charla de acertijo si se quiere. No lo agregué.
+4. **El otro juego tiene un oráculo** (`oraculo.html`, `oraculo.js`). Conviene mirarlo cuando se diseñe el oráculo de este juego, antes de inventar uno desde cero.
