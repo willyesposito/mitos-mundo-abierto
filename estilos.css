@@ -115,7 +115,7 @@ body.con-pista #tira { box-shadow: 0 0 0 5px var(--oro-palido); }
 .boton-accion.apagado { opacity: .38; filter: grayscale(.5); }
 
 #tira {
-  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; padding: 18px 6px 8px; position: relative;
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; padding: 18px 6px 8px; position: relative;
   background: var(--cal); border: 2px solid var(--tinta); border-top: 8px solid var(--egeo); border-radius: 16px 16px 0 0;
 }
 .pj {
@@ -332,3 +332,80 @@ button:focus-visible { outline: 3px solid var(--egeo); outline-offset: 3px; }
   .pj .insignia { width: 19px; height: 19px; }
   .pj.activo { transform: translateY(-5px); }
 }
+
+/* ---- Botón de hablar: aparece solo junto a un interlocutor, encima del botón de poder sin tocarlo ---- */
+#botones { position: relative; }
+#btn-hablar {
+  position: absolute; left: 14px; bottom: calc(100% + 2px); width: 64px; height: 64px;
+  background: var(--egeo); color: var(--cal); box-shadow: inset 0 -6px 0 #164e70, 0 4px 0 rgba(59,43,29,.4);
+}
+#btn-hablar .ico { width: 38px; height: 38px; }
+@media (max-width: 380px) { #btn-hablar { left: 10px; width: 58px; height: 58px; } #btn-hablar .ico { width: 34px; height: 34px; } }
+@media (hover: hover) and (pointer: fine) {
+  #btn-hablar { position: static; width: 86px; height: 70px; border-radius: 12px; gap: 1px; }
+  #btn-hablar .ico { width: 30px; height: 30px; }
+}
+@media (max-height: 540px) and (orientation: landscape) and (pointer: coarse) {
+  #btn-hablar { left: 6px; width: 54px; height: 54px; } #btn-hablar .ico { width: 30px; height: 30px; }
+}
+
+/* ---- Ficha: habilidades de 1 a 10 ---- */
+.caja-habilidades { margin: 10px 0 8px; padding: 10px 12px 6px; background: #fffaf0; border: 2px solid var(--cal-sombra); border-radius: 12px; }
+.tarjeta.ficha .caja-habilidades h3 { margin: 0 0 6px; }
+.tarjeta.ficha #ficha-habilidades { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+#ficha-habilidades li { display: grid; grid-template-columns: 92px minmax(0, 1fr) 24px; align-items: center; gap: 8px; margin: 0; font-size: 15px; }
+.hab-nombre { color: var(--tinta); }
+.hab-barra { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 2px; }
+.hab-barra i { height: 12px; border-radius: 3px; background: rgba(203,185,148,.55); border: 1px solid var(--cal-sombra); }
+.hab-barra i.lleno { background: var(--oxido); border-color: var(--oxido-oscuro); }
+.hab-valor { text-align: right; color: var(--oxido-oscuro); }
+
+/* ---- Elección del personaje inicial ---- */
+.tarjeta.eleccion { padding-bottom: 20px; }
+.tarjeta.eleccion::after { display: none; }
+#eleccion-lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 4px; }
+.carta-eleccion {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px 8px; min-height: 140px;
+  background: #fffaf0; color: var(--tinta); border: 3px solid var(--cal-sombra); border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.2);
+  font-size: 15px; touch-action: manipulation;
+}
+.carta-eleccion canvas { display: block; width: 84px; height: 84px; border-radius: 50%; background: rgba(217,164,65,.3); }
+.carta-eleccion strong { font-size: 18px; color: var(--oxido-oscuro); }
+.carta-eleccion small { font-size: 13px; }
+.carta-eleccion:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+.carta-eleccion:hover, .carta-eleccion:focus-visible { border-color: var(--oxido); }
+
+/* ---- Charla: panel inferior sobre el mundo ---- */
+#pantalla-charla {
+  position: fixed; z-index: 10; top: var(--vista-y, 0px); left: var(--vista-x, 0px);
+  width: var(--vista-ancho, 100vw); height: 100vh; height: var(--vista-alto, 100dvh);
+  display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
+  padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+}
+.tarjeta-charla {
+  position: relative; pointer-events: auto; width: min(100%, 560px); max-height: 66%; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+  padding: 22px 16px calc(14px + env(safe-area-inset-bottom)); text-align: left;
+  background: var(--cal); color: var(--noche); border: 4px solid var(--oxido); border-bottom: 0; border-radius: 18px 18px 0 0; box-shadow: 0 -6px 0 rgba(0,0,0,.25);
+}
+.tarjeta-charla::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 10px; background: var(--egeo); border-bottom: 2px solid var(--tinta); }
+.tarjeta-charla .cerrar { position: absolute; top: 14px; right: 8px; width: 44px; height: 44px; padding: 7px; }
+.charla-cabecera { display: flex; align-items: center; gap: 10px; padding-right: 48px; margin-bottom: 6px; }
+.marcador-charla {
+  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: var(--cal); font-size: 20px; font-weight: bold; border: 2px solid var(--tinta);
+}
+.tarjeta-charla h2 { margin: 0; color: var(--oxido-oscuro); font-size: 24px; }
+#charla-texto { margin: 0 0 12px; font-size: 19px; line-height: 1.4; }
+#charla-opciones { display: flex; flex-direction: column; gap: 8px; }
+.opcion-charla {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 14px; text-align: left;
+  font-size: 17px; font-weight: bold; line-height: 1.25; background: var(--egeo); color: var(--cal);
+  border: 3px solid #164e70; border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.28); touch-action: manipulation;
+}
+.opcion-charla.seguir { background: var(--oxido); border-color: var(--oxido-oscuro); justify-content: center; }
+.opcion-charla:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.28); }
+.opcion-charla .num { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .opcion-charla .num { display: inline-block; flex: 0 0 auto; min-width: 22px; text-align: center; padding: 1px 4px; border: 1px solid var(--cal); border-radius: 4px; font-size: 13px; }
+}
+@media (max-height: 520px) { .tarjeta-charla { max-height: 82%; } #charla-texto { font-size: 17px; } }

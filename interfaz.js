@@ -43,6 +43,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   $('btn-menu').innerHTML = ICONOS.menu;
   $('btn-ficha').innerHTML = ICONOS.ficha;
   $('btn-salto').querySelector('.ico').innerHTML = ICONOS.saltar;
+  $('btn-hablar').querySelector('.ico').innerHTML = ICONOS.hablar;
   pintarZona();
 
   // --- Tira de personajes ---
@@ -62,6 +63,14 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     const n = document.createElement('span'); n.textContent = p.nombre;
     ret.append(c, ins); b.append(ret, n); tira.append(b);
   }
+  // La tira muestra solo a los desbloqueados; los demás quedan escondidos hasta que se ganen.
+  let desbloqueados = new Set(personajes.map(p => p.id));
+  const visibles = () => personajes.filter(p => desbloqueados.has(p.id));
+  ui.mostrarTira = ids => {
+    desbloqueados = new Set(ids);
+    tira.querySelectorAll('.pj').forEach(b => { b.hidden = !desbloqueados.has(b.dataset.id); });
+  };
+  ui.desbloqueados = () => visibles().map(p => p.id);
   ui.alElegirPersonaje = null;
   // Tocar elige; mantener apretado abre la ficha
   let largo = null, fueLargo = false;
@@ -116,6 +125,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   // --- Fichas de personaje ---
   const ficha = $('pantalla-ficha');
   let fichaId = null;
+  const HABILIDADES = [['fuerza', 'Fuerza'], ['astucia', 'Astucia'], ['valentia', 'Valentía'], ['magia', 'Magia'], ['liderazgo', 'Liderazgo'], ['bondad', 'Bondad'], ['velocidad', 'Velocidad']];
   function pintarFicha(id) {
     const p = porId[id]; if (!p || !p.ficha) return;
     fichaId = id;
@@ -137,10 +147,20 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
         const li = document.createElement('li'); li.textContent = linea.slice(2); ul.append(li);
       } else { ul = null; const q = document.createElement('p'); q.textContent = linea; caja.append(q); }
     }
+    const hab = $('ficha-habilidades'); hab.replaceChildren();
+    for (const [clave, nombre] of HABILIDADES) {
+      const v = Math.max(0, Math.min(10, (p.habilidades || {})[clave] || 0));
+      const li = document.createElement('li'); li.setAttribute('role', 'img'); li.setAttribute('aria-label', `${nombre}: ${v} de 10`);
+      const et = document.createElement('span'); et.className = 'hab-nombre'; et.textContent = nombre;
+      const barra = document.createElement('span'); barra.className = 'hab-barra'; barra.setAttribute('aria-hidden', 'true');
+      for (let k = 1; k <= 10; k++) { const pt = document.createElement('i'); if (k <= v) pt.className = 'lleno'; barra.append(pt); }
+      const num = document.createElement('b'); num.className = 'hab-valor'; num.textContent = v;
+      li.append(et, barra, num); hab.append(li);
+    }
     const sn = $('ficha-senal'); sn.innerHTML = '';
     const bs = document.createElement('b'); bs.textContent = 'Buscá:'; sn.append(bs, ' ' + p.ficha.senal);
-    const n = personajes.length, i = personajes.findIndex(q => q.id === id);
-    const ant = personajes[(i + n - 1) % n], sig = personajes[(i + 1) % n];
+    const lista = visibles(), n = lista.length, i = Math.max(0, lista.findIndex(q => q.id === id));
+    const ant = lista[(i + n - 1) % n], sig = lista[(i + 1) % n];
     $('ficha-anterior').innerHTML = ICONOS.anterior; $('ficha-anterior').append(ant.nombre);
     $('ficha-siguiente').textContent = sig.nombre; $('ficha-siguiente').insertAdjacentHTML('beforeend', ICONOS.siguiente);
     ficha.querySelector('.tarjeta').scrollTop = 0;
@@ -154,7 +174,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
   }
   ui.abrirFicha = abrirFicha;
   ui.fichaAbierta = () => !ficha.hidden;
-  const vecino = d => pintarFicha(personajes[(personajes.findIndex(p => p.id === fichaId) + d + personajes.length) % personajes.length].id);
+  const vecino = d => { const l = visibles(); pintarFicha(l[(Math.max(0, l.findIndex(p => p.id === fichaId)) + d + l.length) % l.length].id); };
   $('ficha-anterior').addEventListener('click', () => vecino(-1));
   $('ficha-siguiente').addEventListener('click', () => vecino(1));
   $('ficha-cerrar').addEventListener('click', () => ui.cerrarMenu());
@@ -231,17 +251,99 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     const msg = $('msg-perfiles'); msg.hidden = !lleno;
     msg.textContent = lleno ? 'Hay cinco perfiles. Para crear otro, borrá uno.' : '';
   }
+  // Un perfil nuevo elige con quién empezar antes de entrar al mundo; el perfil se crea al elegir.
+  const eleccion = $('pantalla-eleccion');
+  const ORDEN_ELECCION = ['ariadna', 'minotauro', 'pegaso', 'fenix', 'eco', 'ulises'];
+  let nombreNuevo = '';
+  function pintarEleccion() {
+    const lista = $('eleccion-lista'); lista.replaceChildren();
+    const ordenados = [...personajes].sort((a, b) => {
+      const ia = ORDEN_ELECCION.indexOf(a.id), ib = ORDEN_ELECCION.indexOf(b.id);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+    for (const p of ordenados) {
+      const b = document.createElement('button'); b.className = 'carta-eleccion'; b.dataset.id = p.id;
+      const c = document.createElement('canvas'); c.width = 168; c.height = 168; c.setAttribute('aria-hidden', 'true');
+      const cx = c.getContext('2d');
+      alTenerSprites(() => {
+        cx.clearRect(0, 0, c.width, c.height);
+        dibujarPersonaje(cx, p, { x: 84, y: 156, fx: 0, fy: 1, t: 0, caminando: false, volando: false, escala: 3.4, paso: 0 });
+      });
+      const n = document.createElement('strong'); n.textContent = p.nombre;
+      const q = document.createElement('small'); q.textContent = 'Poder: ' + p.poder.nombre;
+      b.append(c, n, q);
+      b.addEventListener('click', () => {
+        const perfil = crearPerfil(nombreNuevo, { personaje: p.id, personajes });
+        if (!perfil) { eleccion.hidden = true; pintarPerfiles(); pantallaPerfiles.hidden = false; return; }
+        $('nombre-nuevo').value = '';
+        eleccion.hidden = true; ui.alElegirPerfil(perfil);
+      });
+      lista.append(b);
+    }
+  }
+  $('eleccion-volver').addEventListener('click', () => { eleccion.hidden = true; pantallaPerfiles.hidden = false; });
   $('form-nuevo').addEventListener('submit', ev => {
     ev.preventDefault();
-    const p = crearPerfil($('nombre-nuevo').value);
-    if (!p) return;
-    $('nombre-nuevo').value = '';
-    pantallaPerfiles.hidden = true; ui.alElegirPerfil(p);
+    nombreNuevo = $('nombre-nuevo').value.trim();
+    if (!nombreNuevo) return;
+    pintarEleccion();
+    pantallaPerfiles.hidden = true; eleccion.hidden = false;
+    eleccion.querySelector('.tarjeta').scrollTop = 0;
   });
+
+  // --- Charlas: panel inferior sobre el mundo; el juego queda en pausa mientras está abierto ---
+  const panelCharla = $('pantalla-charla');
+  let sesionCharla = null;
+  ui.alPasoCharla = null;
+  ui.charlaAbierta = () => !panelCharla.hidden;
+  ui.hablarVisible = v => { const b = $('btn-hablar'); if (b.hidden === v) b.hidden = !v; };
+  ui.abrirCharla = sesion => {
+    sesionCharla = sesion;
+    $('charla-nombre').textContent = sesion.nombre;
+    const mk = $('charla-marcador'); mk.textContent = sesion.nombre.slice(0, 1).toUpperCase(); mk.style.background = sesion.charla.color || '#5f7a3a';
+    $('pista-cambio').style.visibility = 'hidden';   // la pista del primer cambio no se asoma sobre la charla
+    panelCharla.hidden = false;
+    pintarCharla();
+  };
+  function pintarCharla() {
+    const s = sesionCharla;
+    $('charla-texto').textContent = s.nodo.texto;
+    const cont = $('charla-opciones'); cont.replaceChildren();
+    const ops = s.opciones();
+    ops.forEach((o, i) => {
+      const b = document.createElement('button'); b.className = 'opcion-charla'; b.dataset.indice = i;
+      const num = document.createElement('span'); num.className = 'num'; num.textContent = i + 1;
+      const tx = document.createElement('span'); tx.className = 'tx'; tx.textContent = o.texto;
+      b.append(num, tx); b.addEventListener('click', () => elegirCharla(i)); cont.append(b);
+    });
+    if (!ops.length) {   // un nodo sin nada que elegir: un botón para seguir
+      const b = document.createElement('button'); b.className = 'opcion-charla seguir'; b.dataset.seguir = '1';
+      const tx = document.createElement('span'); tx.className = 'tx'; tx.textContent = 'Seguir';
+      b.append(tx); b.addEventListener('click', () => elegirCharla(-1)); cont.append(b);
+    }
+    panelCharla.querySelector('.tarjeta-charla').scrollTop = 0;
+  }
+  function elegirCharla(i) {
+    if (!sesionCharla) return;
+    const r = i < 0 ? sesionCharla.seguir() : sesionCharla.elegir(i);
+    if (ui.alPasoCharla) ui.alPasoCharla(r, sesionCharla);
+    if (r.fin) ui.cerrarMenu(); else pintarCharla();
+  }
+  $('charla-cerrar').addEventListener('click', () => ui.cerrarMenu());
+  // Teclado (extra): números eligen, Enter o Espacio continúan, Escape cierra. Mientras la charla está abierta nada más llega al juego.
+  addEventListener('keydown', ev => {
+    if (panelCharla.hidden || ev.code === 'Escape' || ev.code === 'Tab' || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    ev.stopImmediatePropagation(); ev.preventDefault();
+    if (ev.repeat) return;
+    const n = sesionCharla ? sesionCharla.opciones().length : 0;
+    const m = /^(?:Digit|Numpad)([1-9])$/.exec(ev.code);
+    if (m) { if (Number(m[1]) <= n) elegirCharla(Number(m[1]) - 1); }
+    else if (ev.code === 'Enter' || ev.code === 'NumpadEnter' || ev.code === 'Space') { if (n === 0) elegirCharla(-1); else if (n === 1) elegirCharla(0); }
+  }, true);
 
   // --- Menú ---
   const menu = $('pantalla-menu');
-  ui.menuAbierto = () => !menu.hidden || !ficha.hidden;
+  ui.menuAbierto = () => !menu.hidden || !ficha.hidden || !panelCharla.hidden;
   ui.alCerrarMenu = null; ui.alCambiarPerfil = null; ui.alCambiarMapa = null;
   ui.abrirMenu = recogidos => {
     $('menu-pruebas').textContent = mapa.id === 'pruebas' ? 'Salir del campo de pruebas' : 'Campo de pruebas';
@@ -250,7 +352,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     $('menu-principal').hidden = false; $('menu-lista').hidden = true; $('menu-titulo').textContent = 'Pausa';
     ui.recogidosMenu = recogidos; menu.hidden = false;
   };
-  ui.cerrarMenu = () => { menu.hidden = true; ficha.hidden = true; if (ui.alCerrarMenu) ui.alCerrarMenu(); };
+  ui.cerrarMenu = () => { menu.hidden = true; ficha.hidden = true; panelCharla.hidden = true; sesionCharla = null; $('pista-cambio').style.visibility = ''; if (ui.alCerrarMenu) ui.alCerrarMenu(); };
   $('menu-seguir').addEventListener('click', ui.cerrarMenu);
   $('menu-perfiles').addEventListener('click', () => { menu.hidden = true; if (ui.alCambiarPerfil) ui.alCambiarPerfil(); });
   $('menu-pruebas').addEventListener('click', () => { menu.hidden = true; if (ui.alCambiarMapa) ui.alCambiarMapa(mapa.id === 'pruebas' ? null : 'pruebas'); });
@@ -270,7 +372,7 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     $('menu-principal').hidden = true; $('menu-lista').hidden = false;
   });
   $('menu-volver').addEventListener('click', () => { $('menu-principal').hidden = false; $('menu-lista').hidden = true; $('menu-titulo').textContent = 'Pausa'; });
-  $('btn-menu').addEventListener('click', () => ui.abrirMenu(ui.recogidosMenu || {}));
+  $('btn-menu').addEventListener('click', () => { if (panelCharla.hidden) ui.abrirMenu(ui.recogidosMenu || {}); });
 
   return ui;
 }

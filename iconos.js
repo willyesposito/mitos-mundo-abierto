@@ -16,7 +16,10 @@ const cuernos = S('<path d="M8 15c-4-1-6-5-5-10 1.5 3 3.5 4.5 6.5 5M16 15c4-1 6-
 const ovillo = S('<circle cx="11" cy="12" r="6.5" fill="#d9a441"/><path d="M6 9.5c3 1 7 1 10 0M5 13c3.5 1.5 8 1.5 12 0M8 17c2-3 3-7 2.5-11.3M13.5 18c.5-4 0-8.5-1.5-12" fill="none" stroke="#8f3a24" stroke-width="1"/><path d="M17.5 12c2 1 3.5 3 3.5 6" fill="none"/>');
 const chev = (izq, fill) => S(`<path d="${izq ? 'M15.5 3.5L7 12l8.5 8.5 2.5-2.5-6-6 6-6z' : 'M8.5 3.5L17 12l-8.5 8.5L6 18l6-6-6-6z'}" fill="${fill}"/>`);
 
+const globo = S('<path d="M4.500 4h15a2.500 2.500 0 012.500 2.500v8a2.500 2.500 0 01-2.500 2.500H13l-5 4v-4H4.500A2.500 2.500 0 012 14.500v-8A2.500 2.500 0 014.500 4z" fill="#f4ecd8"/><path d="M2 13.500v1A2.500 2.500 0 004.500 17H8v4l5-4h6.500a2.500 2.500 0 002.500-2.500v-1z" fill="#cbb994" stroke="none"/><circle cx="7.500" cy="10" r="1.500" fill="#b5482e" stroke="none"/><circle cx="12" cy="10" r="1.500" fill="#b5482e" stroke="none"/><circle cx="16.500" cy="10" r="1.500" fill="#b5482e" stroke="none"/>');
+
 export const ICONOS = {
+  hablar:   globo,
   saltar:   S('<ellipse cx="12" cy="21" rx="5.5" ry="1.6" fill="#3b2b1d" opacity="0.28" stroke="none"/><path d="M12 3l7 7.5h-4.2V17H9.2v-6.5H5z" fill="#f4ecd8"/><path d="M9.2 14h5.6v3H9.2z" fill="#cbb994"/>'),
   volar:    S(ala + `<g transform="translate(24 0) scale(-1 1)">${ala}</g><ellipse cx="12" cy="16.2" rx="1.6" ry="2.8" fill="#e6b866"/>`),
   embestir: S('<path d="M2 8h5M1 12h6M2 16h5" fill="none" stroke="#cbb994" stroke-width="1.8"/><path d="M11 15c-3-1-4.5-4.5-3.5-9 1 2.5 2.5 3.8 5 4.200M19 15c3-1 4.5-4.5 3.5-9-1 2.5-2.5 3.8-5 4.2" fill="#f4ecd8" transform="translate(-1 0)"/><path d="M9.5 11h9v4a4.5 4.5 0 01-9 0z" fill="#8a5a3c" transform="translate(-1 0)"/>'),

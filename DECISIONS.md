@@ -223,3 +223,13 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Descartado:** toque directo sobre el mapa (detección nueva, compite con el joystick); sonidos grabados (rompen "sin archivos").
 - **Abierto:** en el celular nada indica que el botón también llama; lo valida la jugadora.
 - **Detalle:** `plan-ambiente-interactivo.md`.
+
+### D36. Desbloquear personajes con charlas y habilidades
+- **Estado:** tomada (Guille, 2026-11-07), sesión 1 construida para revisión.
+- **Decisión:** la jugadora elige 1 de los 6 personajes al empezar y desbloquea al resto conversando con personas del mapa (árboles de diálogo con elecciones; lo aprendido, un "saber", abre opciones). Resolver la cadena de un personaje le da su poder. Los personajes tienen siete habilidades (fuerza, astucia, valentía, magia, liderazgo, bondad y velocidad, de 1 a 10), copiadas de las fichas de `JuegoMitosFeli` salvo velocidad, que es criterio propio. Nórdicos y romanos quedan afuera por ahora; no se comparte progreso con ese juego.
+- **Por qué:** el desafío es descubrir y conversar, no la puntería, y las fichas del otro repo ya traen historia, "¿Por qué?" y pistas para escribir las charlas sin inventar mitos.
+- **Alcance de la sesión 1:** solo el Minotauro queda bajo llave (campo `bajoLlave`); Pegaso, Fénix, Eco y Ulises siguen libres hasta tener su cadena. Cadena: Ariadna al inicio, Teseo (dorado) y Minotauro. Las habilidades solo se muestran en la ficha, todavía no condicionan nada. Perfiles anteriores: los 6 desbloqueados.
+- **Formato de charla:** un archivo por charla en `datos/charlas/`, con índice. Nodos con `texto`, `opciones` (`va`, `requiere`, `sinSaber`), `da` y `efecto`. Elegir mal nunca castiga.
+- **Tono:** sin suavizar de más, pero sin violencia explícita, apto para 10 años o más (Guille, 2026-11-07).
+- **Abierto:** los textos de Teseo están en borrador; la charla de Dédalo (PR #27) entra con este formato; poderes nuevos solo para dorados; qué habilidad habilita qué; la escala de velocidad es mía, no canon.
+- **Detalle:** `plan-desbloqueo.md`.

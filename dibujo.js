@@ -82,6 +82,7 @@ function dibujarMundo(ctx, m, v, personajes) {
   for (const f of m.fuentes) if (ver(f.ty)) items.push({ fila: f.ty, prof: f.y, tipo: 'fuente', f });
   for (const b of m.barcas) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.4, tipo: 'barca', b });
   for (const b of m.barcasRemo) if (ver(Math.floor(b.y))) items.push({ fila: Math.floor(b.y), prof: b.y - 0.6, tipo: 'barcaRemo', b });
+  for (const q of m.interlocutores) if (ver(Math.floor(q.y))) items.push({ fila: Math.floor(q.y), prof: q.y, tipo: 'interlocutor', q });
   // Las argollas y las sogas se dibujan después de todas las baldosas por las que pasan
   for (const s of m.sogas) {
     const maxFila = Math.max(s.a[1], s.b[1]);
@@ -328,6 +329,31 @@ function dibujarMarcador(ctx, p, o) {
   ctx.restore();
 }
 
+// Interlocutor sin sprite: marcador con su color y la inicial. Si se le puede hablar, un globo de diálogo flota arriba.
+function dibujarInterlocutor(ctx, m, q) {
+  const gx = q.x * TW, gy = q.y * TH - Math.max(m.suelo(q.x, q.y), 0) * LH;
+  ctx.fillStyle = 'rgba(20,10,30,.42)';
+  ctx.beginPath(); ctx.ellipse(gx, gy, 12, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+  dibujarMarcador(ctx, { color: q.color || '#5f7a3a' }, { x: gx, y: gy, fx: 1, escala: 1 });
+  ctx.save(); ctx.translate(gx, gy);
+  ctx.font = 'bold 15px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = COL.cal; ctx.fillText((q.nombre || '?').slice(0, 1).toUpperCase(), 0, -14);
+  ctx.restore();
+  if (m.interlocutorCercano() === q) {
+    const salto = reducirMovimiento() ? 0 : Math.sin(m.t * 4) * 2.5, by = gy - 68 + salto;
+    ctx.save(); ctx.translate(gx, by);
+    ctx.lineWidth = 2; ctx.strokeStyle = COL.tinta; ctx.lineJoin = 'round'; ctx.fillStyle = COL.cal;
+    ctx.beginPath();
+    ctx.moveTo(-14, -9); ctx.lineTo(14, -9); ctx.quadraticCurveTo(18, -9, 18, -5); ctx.lineTo(18, 5);
+    ctx.quadraticCurveTo(18, 9, 14, 9); ctx.lineTo(-1, 9); ctx.lineTo(-6, 15); ctx.lineTo(-6, 9); ctx.lineTo(-14, 9);
+    ctx.quadraticCurveTo(-18, 9, -18, 5); ctx.lineTo(-18, -5); ctx.quadraticCurveTo(-18, -9, -14, -9); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = COL.oxido;
+    for (const dx of [-8, 0, 8]) { ctx.beginPath(); ctx.arc(dx, 0, 2.2, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
+}
+
 // ---------- Objetos y personajes ----------
 function dibujarItem(ctx, m, it, personajes) {
   if (it.tipo === 'ambiente') dibujarAmbiente(ctx, m, it.e);
@@ -337,6 +363,7 @@ function dibujarItem(ctx, m, it, personajes) {
   else if (it.tipo === 'fuente') dibujarFuente(ctx, m, it.f);
   else if (it.tipo === 'barca') dibujarBarca(ctx, m, it.b);
   else if (it.tipo === 'barcaRemo') dibujarBarcaRemo(ctx, it.b);
+  else if (it.tipo === 'interlocutor') dibujarInterlocutor(ctx, m, it.q);
   else if (it.tipo === 'soga') dibujarSoga(ctx, it.s);
   else if (it.tipo === 'argolla') dibujarArgolla(ctx, it.s, it.p);
   else if (it.tipo === 'objeto') dibujarObjeto(ctx, m, it.c);

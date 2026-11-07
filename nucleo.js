@@ -21,12 +21,18 @@ function guardar() {
 
 export function listarPerfiles() { return datos.perfiles; }
 
-export function crearPerfil(nombre) {
+// `inicial`: { personaje, personajes } con el personaje elegido al empezar y la lista del elenco (con `bajoLlave`).
+// Empiezan desbloqueados todos menos los que están bajo llave, más el elegido.
+export function crearPerfil(nombre, inicial = {}) {
   nombre = (nombre || '').trim().slice(0, 14);
   if (!nombre || datos.perfiles.length >= MAX_PERFILES) return null;
+  const elegido = inicial.personaje || 'pegaso';
+  const desbloqueados = (inicial.personajes || []).filter(q => !q.bajoLlave || q.id === elegido).map(q => q.id);
+  if (!desbloqueados.includes(elegido)) desbloqueados.push(elegido);
   const p = {
     id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-    nombre, objetos: {}, mundos: {}, personaje: 'pegaso', vistoCambio: false, mapa: 'mundo', llegada: null, eco: null, mundoUnido: true, canalIncorporado: true, fichaUlisesPresentada: true,
+    nombre, objetos: {}, mundos: {}, personaje: elegido, vistoCambio: false, mapa: 'mundo', llegada: null, eco: null, mundoUnido: true, canalIncorporado: true, fichaUlisesPresentada: true,
+    desbloqueoIncorporado: true, desbloqueados, saberes: {}, charlas: {}, cartas: {},
   };
   datos.perfiles.push(p);
   guardar();
@@ -129,6 +135,44 @@ export function migrarAlCanal(perfil, mapa) {
     }
   }
   perfil.canalIncorporado = true;
+  guardar();
+  return true;
+}
+
+// Desbloqueo de personajes con charlas: los perfiles anteriores conservan a los seis (no se les quita nada de lo jugado)
+// y ganan las claves nuevas. Solo agrega claves; no toca `mundos`. Corre una sola vez por perfil.
+export function migrarDesbloqueo(perfil, todos) {
+  const hubo = !!perfil.desbloqueoIncorporado;
+  if (!hubo) perfil.desbloqueados = [...new Set([...(Array.isArray(perfil.desbloqueados) ? perfil.desbloqueados : []), ...todos])];
+  if (!Array.isArray(perfil.desbloqueados) || !perfil.desbloqueados.length) perfil.desbloqueados = [...todos];
+  for (const k of ['saberes', 'charlas', 'cartas']) if (!perfil[k] || typeof perfil[k] !== 'object') perfil[k] = {};
+  perfil.desbloqueoIncorporado = true;
+  guardar();
+  return !hubo;
+}
+
+// Lo desbloqueado, aprendido o ganado nunca se pierde. Devuelven true si era nuevo.
+export function desbloquearPersonaje(perfil, id) {
+  if (perfil.desbloqueados.includes(id)) return false;
+  perfil.desbloqueados.push(id);
+  guardar();
+  return true;
+}
+export function registrarSaber(perfil, id) {
+  if (perfil.saberes[id]) return false;
+  perfil.saberes[id] = true;
+  guardar();
+  return true;
+}
+export function registrarCarta(perfil, id) {
+  if (perfil.cartas[id]) return false;
+  perfil.cartas[id] = true;
+  guardar();
+  return true;
+}
+export function resolverCharla(perfil, id) {
+  if (perfil.charlas[id]?.resuelta) return false;
+  perfil.charlas[id] = { resuelta: true };
   guardar();
   return true;
 }

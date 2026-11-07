@@ -1,5 +1,5 @@
 // Joystick táctil, botones y teclado. Todo termina en un único objeto `entrada`.
-export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, alCambiar, alMenu, alFicha }) {
+export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, btnHablar, alCambiar, alMenu, alFicha, alHablar }) {
   const entrada = { x: 0, y: 0, saltoPulsado: false, poderPulsado: false, poderMantenido: false };
 
   // --- Joystick ---
@@ -42,6 +42,7 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
         activo = null; el.classList.remove('apretado'); if (arriba) arriba();
       });
   }
+  if (btnHablar) boton(btnHablar, () => { if (alHablar) alHablar(); });
   boton(btnSalto, () => { entrada.saltoPulsado = true; });
   boton(btnPoder, () => { poderDelPuntero = true; entrada.poderPulsado = true; entrada.poderMantenido = true; }, () => { poderDelPuntero = false; actualizarPoder(); });
 
@@ -65,6 +66,7 @@ export function crearControles({ zona, joystick, palanca, btnSalto, btnPoder, al
     else if (ev.code === 'KeyC') alCambiar(-1);
     else if (ev.code === 'Escape') alMenu();
     else if (ev.code === 'KeyI' && alFicha) alFicha();
+    else if (ev.code === 'KeyT' && alHablar) alHablar();   // E y J ya son del poder
     else { teclas.add(ev.code); recalcular(); if (ev.code.startsWith('Arrow')) ev.preventDefault(); }
   });
   addEventListener('keyup', ev => {

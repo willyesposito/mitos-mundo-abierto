@@ -172,5 +172,8 @@
     {"x": 10, "y": 73},
     {"x": 10, "y": 88}
   ],
+  "interlocutores": [
+    {"id": "teseo", "charla": "teseo", "x": 16, "y": 104}
+  ],
   "migracionCanal": {"desde": 74, "hasta": 97, "desplazamiento": 14}
 }
