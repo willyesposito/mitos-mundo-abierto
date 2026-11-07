@@ -54,3 +54,4 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Acabado de caminos:** revisar las intersecciones en una captura real antes de publicar. Los ramales deben formar una superficie continua, sin bordes internos cruzados ni cortes entre casillas; los jardines requieren un acabado integrado, no manchas lisas sueltas. Por qué: la primera revisión espacial dejó uniones y superficies visualmente sin terminar.
 
 - **U1 y U2 validadas en el celular el 2026-11-07.** El botón de poder va sin palabras, solo ícono, por pedido de Willy: las palabras podían confundir en pantalla chica (D35).
+- **En las charlas, cuanta más información del mito, mejor: se puede sumar canon de fuentes clásicas (por ejemplo Ovidio) además de la ficha, siempre cotejado y sin violencia explícita, para chicos de 10 años o más.** Por qué: Guille lo pidió al aprobar la charla de Dédalo (2026-11-07).

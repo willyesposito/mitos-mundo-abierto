@@ -25,7 +25,7 @@ Todo es de canon firme y está cotejado (ver más abajo).
 **Cotejado (2026-11-07):**
 - Con la ficha de Dédalo de `JuegoMitosFeli` (`personajes.json`, id `dedalo`, tier plateado): el texto coincide (inventor de Atenas, laberinto, alas de plumas y cera, advertencia a Ícaro, cae al mar que lleva su nombre, llega a Sicilia).
 - Con Ovidio, *Metamorfosis* VIII (traducción de David Drake, https://david-drake.com/2007/metamorphoses-daedalus/): las plumas se ordenan de menor a mayor, se cosen al medio con hilo, se fijan en la base con cera y el armazón se curva. La advertencia es volar a media altura: bajo, la espuma pesa las alas; alto, el sol las quema. Dédalo casi no encuentra la salida de su propio laberinto.
-- Un ajuste: la ficha dice solo "no vueles demasiado alto". La charla suma lo del mar porque está en Ovidio. Si preferís ceñirte a la ficha, se saca esa mitad de la frase en N4b.
+- Un ajuste: la ficha dice solo "no vueles demasiado alto". La charla suma lo del mar porque está en Ovidio, y Guille aprobó usar a Ovidio como fuente (2026-11-07: "cuanta más info mejor").
 
 ## Habilidades (de la ficha)
 
@@ -151,7 +151,7 @@ El efecto `{"carta": "dedalo"}` de N8 sigue el de Teseo (`"carta": "teseo"`). Si
 
 ## Preguntas abiertas
 
-1. **El taller.** Hay que armar un taller para Dédalo, en una habitación o al aire libre (decisión de Guille, 2026-11-07). Falta elegir en qué zona va y construirlo: es un cambio de mapa y de código, no de este documento. Lo que necesita el taller: un banco con plumas y cera visibles y un lugar donde se pueda parar a hablar con él. La regla de la zona elegida (alturas, paredes) se resuelve al diseñarlo.
+1. **El taller es una habitación** (decisión de Guille, 2026-11-07). Falta elegir en qué zona va y construirla: es un cambio de mapa y de código, no de este documento. Lo que necesita: un banco con plumas y cera visibles y un lugar donde se pueda parar a hablar con él. Como es un recinto cerrado, la regla de paredes y alturas de la zona elegida se resuelve al diseñarlo.
 2. **Guiño de Pegaso o Fénix** a las plumas de N2: aprobado como idea (2026-11-07), sin construir.
 3. **Fuera de esta charla, pero en la ficha:** el capítulo "El Hilo y la Caracola" (Dédalo pasa un hilo por una caracola con una hormiga y una gota de miel) sirve para una segunda charla de acertijo si se quiere. No lo agregué.
 4. **El otro juego tiene un oráculo** (`oraculo.html`, `oraculo.js`). Conviene mirarlo cuando se diseñe el oráculo de este juego, antes de inventar uno desde cero.
