@@ -35,6 +35,7 @@ const MAX_SOGA = 5;
 const VEL_BARCA = 3;        // Ulises: la barca va más lenta que a pie
 const MEDIO_BARCA = 0.3;    // semiancho de la caja con la que la barca choca contra la orilla
 const RADIO_BARCA = 1.7;    // distancia a la barca para subir
+const RADIO_CHARLA = 1.7;   // distancia a un interlocutor para poder hablarle
 const TECHO_BOCA = 0.45;    // bajo la roca de la boca baja no cabe saltar ni volar
 
 export function alturaCelda(c) {
@@ -183,6 +184,10 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     }
   }
 
+  // Interlocutores: personas con quien conversar. No son obstáculo ni cambian nada del piso.
+  const interlocutores = (mapa.interlocutores || []).filter(q => celdas[q.y] && celdas[q.y][q.x] !== undefined)
+    .map(q => ({ id: q.id, charla: q.charla, x: q.x + 0.5, y: q.y + 0.5 }));
+
   const coleccionables = (mapa.objetos || []).filter(o => o.tipo === 'coleccionable').map(o => ({
     id: o.id, x: o.x + 0.5, y: o.y + 0.5,
     zBase: alturaCelda(celdas[o.y][o.x]),
@@ -191,7 +196,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
 
   const m = {
     id: mapa.id, zonas: mapa.zonas || [], barcas: mapa.barcas || [], barcasRemo: barcas,
-    cols, rows, celdas, origen, empujables, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
+    cols, rows, celdas, origen, empujables, interlocutores, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], senales: [], eventos: [], t: 0, velo: 0,
     jugador: {
       x: arranque[0], y: arranque[1], z: 0, vz: 0,
@@ -202,7 +207,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       seguro: { x: arranque[0], y: arranque[1], z: 0 }, seguroBarca: null, aBordo: null,
       estado: 'jugando', estadoT: 0,
     },
-    suelo, alturaTile, actualizar, cambiarPersonaje, estado,
+    suelo, alturaTile, actualizar, cambiarPersonaje, estado, interlocutorCercano,
   };
 
   // Estado persistente del mapa. Una clave por mecanismo: los poderes nuevos suman la suya.
@@ -222,6 +227,18 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       sogas: sogas.filter(s => s.tendida).map(s => s.a.join(',')),
       barcas: Object.fromEntries(barcas.filter(b => Math.hypot(b.x - b.ox - 0.5, b.y - b.oy - 0.5) > 0.01).map(b => [b.origen, [+b.x.toFixed(2), +b.y.toFixed(2)]])),
     };
+  }
+
+  // El interlocutor más cercano al que se le puede hablar (dentro de RADIO_CHARLA y sin estar en el aire), o null.
+  function interlocutorCercano() {
+    const j = m.jugador;
+    if (j.estado !== 'jugando' || j.z - Math.max(suelo(j.x, j.y), 0) > 1.0) return null;
+    let mejor = null, d0 = RADIO_CHARLA;
+    for (const q of interlocutores) {
+      const d = Math.hypot(q.x - j.x, q.y - j.y);
+      if (d <= d0) { d0 = d; mejor = q; }
+    }
+    return mejor;
   }
 
   function empujableEn(tx, ty) {

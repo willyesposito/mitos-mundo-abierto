@@ -34,6 +34,7 @@
   <div id="fila-acciones">
     <div id="zona-joystick"><div id="joystick"><div id="palanca"></div></div></div>
     <div id="botones">
+      <button id="btn-hablar" class="boton-accion" aria-label="Hablar" aria-keyshortcuts="T" hidden><span class="ico"></span><kbd class="atajo-accion">T</kbd></button>
       <button id="btn-poder" class="boton-accion" aria-label="Poder" aria-keyshortcuts="E"><span class="ico"></span><kbd class="atajo-accion">E</kbd></button>
       <button id="btn-salto" class="boton-accion" aria-label="Saltar" aria-keyshortcuts="Space"><span class="ico"></span><span class="etiqueta">Saltar</span><kbd class="atajo-accion">Espacio</kbd></button>
     </div>
@@ -58,6 +59,15 @@
   </div>
 </section>
 
+<section id="pantalla-eleccion" class="pantalla" hidden>
+  <div class="tarjeta eleccion" role="dialog" aria-labelledby="eleccion-titulo">
+    <h2 id="eleccion-titulo">¿Con quién empezás?</h2>
+    <p class="sub">Los demás se suman conversando con la gente del mundo.</p>
+    <div id="eleccion-lista"></div>
+    <button id="eleccion-volver" class="boton-grande claro">Volver</button>
+  </div>
+</section>
+
 <section id="pantalla-ficha" class="pantalla" hidden>
   <div class="tarjeta ficha" role="dialog" aria-labelledby="ficha-nombre">
     <button id="ficha-cerrar" class="boton-redondo cerrar" aria-label="Cerrar la ficha" data-icono="cerrar"></button>
@@ -68,11 +78,24 @@
       <h3 id="ficha-poder-titulo"></h3>
       <div id="ficha-poder"></div>
     </div>
+    <div class="caja-habilidades">
+      <h3>Habilidades</h3>
+      <ul id="ficha-habilidades"></ul>
+    </div>
     <p id="ficha-senal"></p>
     <div class="fila-ficha">
       <button id="ficha-anterior" class="boton-grande claro"></button>
       <button id="ficha-siguiente" class="boton-grande"></button>
     </div>
+  </div>
+</section>
+
+<section id="pantalla-charla" hidden>
+  <div class="tarjeta-charla" role="dialog" aria-labelledby="charla-nombre">
+    <button id="charla-cerrar" class="boton-redondo cerrar" aria-label="Cerrar la charla" data-icono="cerrar"></button>
+    <div class="charla-cabecera"><span id="charla-marcador" class="marcador-charla" aria-hidden="true"></span><h2 id="charla-nombre"></h2></div>
+    <p id="charla-texto"></p>
+    <div id="charla-opciones"></div>
   </div>
 </section>
 
