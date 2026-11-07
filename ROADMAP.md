@@ -47,8 +47,9 @@ Continuación: orden, dependencias de arte y contrato de migración en `plan-con
 
 - [x] **Aviso de ficha de Ulises en perfiles anteriores:** construido para revisión. Aviso una sola vez si hay progreso, sin interrumpir ni cambiar personaje; marca aditiva sin mover coordenadas. Suite rápida: 50 OK, 0 fallas (15 chequeos nuevos). Captura revisada; validación física pendiente. No incluye U2.
 
-- [x] **U1 Poder de Ulises**: construida (`probar.js --rapido` con los chequeos de U1). Decisiones: D29, D31. Corrió con marcadores, sin esperar los sprites. Falta probarla en el celular.
-- [x] **U2 El canal**: construido para revisión. Decisiones: D30, D33 y D34. Arte local autorizado (14 SVG), canal, dos barcas, objetos y migración implementados. Suite completa final: 293 OK, 0 fallas, incluye arranque offline; además 76 chequeos de canal/migración, 478 gráficos y 22 de exploración aprobados. Capturas revisadas. Pendiente validación en dispositivo y cotejo visual externo del frasco y sello por HTTP 403 de fuentes citadas. No publicado ni mergeado.
+- [x] **U1 Poder de Ulises**: construida (`probar.js --rapido` con los chequeos de U1). Decisiones: D29, D31. Corrió con marcadores, sin esperar los sprites. **Validada por Willy en el celular el 2026-11-07.**
+- [x] **U2 El canal**: construido para revisión. Decisiones: D30, D33 y D34. Arte local autorizado (14 SVG), canal, dos barcas, objetos y migración implementados. Suite completa final: 293 OK, 0 fallas, incluye arranque offline; además 76 chequeos de canal/migración, 478 gráficos y 22 de exploración aprobados. Capturas revisadas. **Validado en el celular el 2026-11-07.** Pendiente cotejo visual externo del frasco y sello por HTTP 403 de fuentes citadas. No publicado ni mergeado.
+- [x] **Ambiente interactivo**: construido. Decisión: D35. El botón de poder, sin palabras, también llama al animal cercano (sonido sintetizado y gesto). `probar.js --rapido` pasa con 29 chequeos nuevos. Falta probarlo en el celular.
 - [ ] **Laberinto**: pendiente de diseño.
 - [ ] **Cueva del monte**: pendiente de diseño.
 

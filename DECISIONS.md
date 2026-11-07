@@ -215,3 +215,11 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Decisión:** canal en filas 74–87 y puerto desplazado 14 filas; plaza y palacio conservan coordenadas. Bocas en columna 11 y amarres en columna 10 de bolsillos de agua de tres casillas para poder cruzar sin chocar con la barca de la otra orilla. Frasco en una roca cerca del muelle sur; sello al noroeste, revelado por una barca a dos casillas o menos y guardado separado de la recolección.
 - **Compatibilidad:** la unión de mapas anteriores a D23 usa el desplazamiento original del puerto; después `migrarAlCanal` traslada una sola vez el estado y la llegada del puerto. Las llegadas antiguas sobre casillas convertidas en agua se llevan al muelle firme contiguo. No se alteran mapas antiguos de respaldo ni el campo de pruebas. Si una recarga en una roca deja todas las barcas inaccesibles, se acerca una a una orilla libre de esa roca; si ya hay una accesible se conserva su posición.
 - **Por qué:** evita el desplazamiento doble, el bloqueo entre dos barcas y que un perfil quede varado en una roca. Todo ello mantiene las reglas de D29–D31.
+
+### D35. Llamar a los animales con el botón de poder
+- **Estado:** tomada (Willy, 2026-11-07), construida para revisión.
+- **Decisión:** el botón de poder también llama al animal vivo más cercano (menos de 1,7 casillas), con sonido sintetizado y gesto. El botón queda sin palabras, solo ícono (la letra del atajo se ve en escritorio).
+- **Por qué:** el juego ya tenía audio sintetizado y animales que reaccionaban por cercanía, pero no respondían a la jugadora. Reusar el botón evita sumar controles al celular.
+- **Descartado:** toque directo sobre el mapa (detección nueva, compite con el joystick); sonidos grabados (rompen "sin archivos").
+- **Abierto:** en el celular nada indica que el botón también llama; lo valida la jugadora.
+- **Detalle:** `plan-ambiente-interactivo.md`.

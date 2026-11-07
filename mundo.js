@@ -1,6 +1,8 @@
 // Reglas y física del mundo: alturas, salto, vuelo, empujar, embestir, objetos.
 // No dibuja nada y no toca el DOM. Habla con la interfaz por la cola `eventos`.
 
+import { llamarAmbiente } from './ambiente.js';
+
 export const TW = 44;   // ancho de baldosa en pantalla
 export const TH = 36;   // profundidad de baldosa en pantalla
 export const LH = 30;   // píxeles por nivel de altura
@@ -640,6 +642,8 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     if (control && j.personaje === 'eco') { escuchar(); if (poderPulsado) repetir(); }
     if (control && j.personaje === 'ariadna' && poderPulsado) tender();
     if (control && j.personaje === 'ulises' && poderPulsado) subirOBajar();
+    // Llamado (D35): el mismo botón también llama al animal más cercano; no gasta ni cambia nada del poder
+    if (control && poderPulsado) { const a = llamarAmbiente(m); if (a) m.eventos.push({ tipo: 'llama', animal: a.tipo }); }
     // Cualquiera puede pararse en la barca, pero solo Ulises la mueve: avisar al intentar irse por el agua
     if (control && j.personaje !== 'ulises' && barcaBajo(j) && mag > 0.4 && suelo(j.x + ix * 0.7, j.y + iy * 0.7) <= ABISMO && j.pistaCool <= 0) {
       j.pistaCool = 8; m.eventos.push({ tipo: 'pista', texto: 'La barca la mueve Ulises.' });

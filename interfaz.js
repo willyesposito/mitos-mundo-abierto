@@ -83,7 +83,6 @@ export function crearInterfaz({ personajes, catalogo, mapa }) {   // `mapa` es e
     const p = porId[id];
     const btn = $('btn-poder');
     btn.querySelector('.ico').innerHTML = ICONOS[p.poder.id] || '';
-    btn.querySelector('.etiqueta').textContent = p.poder.nombre;
     btn.classList.toggle('apagado', !p.poder.activo);
     btn.setAttribute('aria-label', p.poder.nombre);
     personajeActual = id; pintarChipEco();

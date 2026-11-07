@@ -8,6 +8,7 @@ import { crearSonido } from './sonido.js';
 import { actualizarPerfil, registrarObjeto, guardarMundo, migrarAlMundo, migrarAlCanal } from './nucleo.js';
 
 const $ = id => document.getElementById(id);
+const SONIDO_ANIMAL = { gato: 'maulla', cabra: 'bala', gaviota: 'grazna', golondrina: 'trina', delfin: 'chasquea' };   // pulpo y lirios no suenan (D35)
 const pedir = u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
 
 async function arrancar() {
@@ -139,6 +140,7 @@ async function arrancar() {
         actualizarPerfil(perfil, { personaje: e.id, vistoCambio: true });
         ui.pistaCambio(false);
       } else if (e.tipo === 'reja') { ui.aviso('¡Se abrió una reja!', '', 2600); sonido.tocar('abre'); }
+      else if (e.tipo === 'llama') { const s = SONIDO_ANIMAL[e.animal]; if (s) sonido.tocar(s); }
       else if (e.tipo === 'brillo') sonido.tocar('brillo');
       else if (e.tipo === 'brasero') { ui.aviso('¡Se encendió un brasero!', '', 2200); sonido.tocar('brasero'); }
       else if (e.tipo === 'sol') { ui.aviso('¡Se abrió la puerta del sol!', '', 2800); sonido.tocar('abre'); }

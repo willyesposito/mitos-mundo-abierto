@@ -43,7 +43,7 @@ export function crearAmbiente(m) {
       return x >= minX && x <= maxX && y >= minY && y <= maxY;
     })) return false;
     return true;
-  }).map(([tipo, x, y], i) => ({ tipo, x, y, z: agua.has(tipo) ? -.12 : 0, fase: i * 1.93, reaccion: 0 }));
+  }).map(([tipo, x, y], i) => ({ tipo, x, y, z: agua.has(tipo) ? -.12 : 0, fase: i * 1.93, reaccion: 0, llamado: 0, poderActivo: false }));
 }
 
 export function ambienteDe(m) {
@@ -51,24 +51,66 @@ export function ambienteDe(m) {
   return estados.get(m);
 }
 
+const RADIO_LLAMADO = 1.7, DURACION_LLAMADO = 1.5;
+
+// Llamado (D35): el botón de poder también llama al animal vivo más cercano. Solo marca el gesto;
+// no toca la física ni el guardado. Un animal no se vuelve a llamar mientras dura su gesto.
+export function llamarAmbiente(m) {
+  const j = m.jugador;
+  let mejor = null, dist = RADIO_LLAMADO;
+  for (const e of ambienteDe(m).elementos) {
+    if (!vivos.has(e.tipo) || e.llamado > 0) continue;
+    const d = Math.hypot(j.x - e.x, j.y - e.y);
+    if (d < dist) { dist = d; mejor = e; }
+  }
+  if (mejor) mejor.llamado = 1;
+  return mejor;
+}
+
 export function actualizarAmbiente(m, reducir) {
   const estado = ambienteDe(m), dt = Math.max(0, Math.min(.1, m.t - estado.ultimo));
   estado.ultimo = m.t;
   for (const e of estado.elementos) {
+    e.llamado = Math.max(0, e.llamado - dt / DURACION_LLAMADO);
     const j = m.jugador, cerca = Math.hypot(j.x - e.x, j.y - e.y) < 1.7;
     const poder = (j.personaje === 'eco' && m.ondas?.length > 0 && (aves.has(e.tipo)||['cabra','delfin'].includes(e.tipo)))
       || (j.personaje === 'fenix' && j.brillo > 0 && ['lirios','pulpo'].includes(e.tipo))
       || (j.personaje === 'minotauro' && (j.embiste || j.esfuerzo > 0) && ['gato','cabra'].includes(e.tipo))
       || (j.personaje === 'ariadna' && m.sogas.some(s => s.prog < 1) && e.tipo === 'gato')
       || (j.personaje === 'pegaso' && j.planeo && (aves.has(e.tipo)||e.tipo==='delfin'));
+    e.poderActivo = !!poder;
     const objetivo = !reducir && cerca && vivos.has(e.tipo) ? (poder ? 1 : .45) : 0;
     e.reaccion += (objetivo - e.reaccion) * Math.min(1, dt * 4);
   }
   return estado.elementos;
 }
 
+// Gesto del llamado: sube y baja una vez en ~1,5 s. Si el poder ya hace reaccionar al animal, esa reacción manda.
+function gestoLlamado(e, t) {
+  const s = Math.sin((1 - e.llamado) * Math.PI), z = { dx: 0, dy: 0, giro: 0, escala: 1 };
+  switch (e.tipo) {
+    case 'gato': z.escala = 1 + s * .14; z.giro = s * .12; z.dx = s * 2; break;
+    case 'cabra': z.dy = -s * 14; break;
+    case 'gaviota': z.dy = -s * 10; z.escala = 1 + s * .12; z.giro = Math.sin(t * 22) * s * .08; break;
+    case 'golondrina': z.dx = Math.sin(t * 18) * s * 4; z.dy = -s * 9; z.giro = Math.sin(t * 26) * s * .12; break;
+    case 'delfin': z.dy = -s * 22; z.giro = -s * .3; break;
+    case 'pulpo': z.dy = -s * 8; z.escala = 1 + s * .1; break;
+    case 'lirios': z.escala = 1 + s * .18; break;
+  }
+  return z;
+}
+
 export function movimientoAmbiente(e, t, reducir) {
-  if (reducir) return { dx: 0, dy: 0, giro: 0, escala: 1 };
+  const g = e.llamado > 0 && !e.poderActivo ? gestoLlamado(e, t) : null;
+  if (reducir) {
+    // Con movimiento reducido el gesto se atenúa (el sonido suena igual)
+    return g ? { dx: g.dx * .25, dy: g.dy * .25, giro: g.giro * .25, escala: 1 + (g.escala - 1) * .25 } : { dx: 0, dy: 0, giro: 0, escala: 1 };
+  }
+  const b = movimientoBase(e, t);
+  return g ? { dx: b.dx + g.dx, dy: b.dy + g.dy, giro: b.giro + g.giro, escala: b.escala * g.escala } : b;
+}
+
+function movimientoBase(e, t) {
   const fase = t + e.fase, r = e.reaccion;
   if (aves.has(e.tipo)) return { dx: Math.sin(fase * 1.3) * r * 12, dy: -r * (12 + 5 * Math.sin(fase * 2)), giro: Math.sin(fase * 2) * .04, escala: 1 };
   if (e.tipo === 'delfin') return { dx: Math.sin(fase * .8) * 7, dy: -Math.max(0, Math.sin(fase * .8)) * 8, giro: Math.sin(fase * .8) * .15, escala: 1 };
