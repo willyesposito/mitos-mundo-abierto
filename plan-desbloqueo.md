@@ -26,6 +26,52 @@ Termina cuando la jugadora, en el celular, empieza el juego, llega a una charla,
 
 Fuera de esta sesión: poderes nuevos de dorados, las demás tandas, oráculo como brújula, velocidad con efecto en el juego.
 
+## Sesión 2 (propuesta, pendiente de OK)
+
+Objetivo (Guille, 2026-11-07): que los 6 personajes se puedan desbloquear de verdad, con Dédalo ya jugable. Se empieza con un solo personaje y los otros 5 quedan bajo llave. Una sola de las 5 se desbloquea con un objeto interactivo (recompensa fácil); las otras 4 con charlas.
+
+### Cadena propuesta (todo de fichas de `JuegoMitosFeli` y del propio juego)
+
+| Se desbloquea | Cómo | Base en las fichas |
+|---|---|---|
+| Minotauro | Charla de Teseo (ya hecha) | Teseo lo venció y salió con el hilo |
+| Ariadna | Charla de Dédalo (`charla-dedalo.md`, falta pasarla a datos): su final recomienda a Ariadna | Dédalo le contó el secreto; ella le dio el hilo a Teseo |
+| Pegaso | **Objeto interactivo:** la fuente que brotó del casco de Pegaso (fuente de las Musas) | "De una patada de su casco brotó una fuente" |
+| Eco | Charla de Narciso (normal) | Narciso se quedó mirando su reflejo; Eco solo podía repetir lo que él decía |
+| Ulises | Charla de Nausícaa (normal) | Nausícaa encontró a Odiseo náufrago, le dio ropa y comida y lo guió al palacio |
+| Fénix | **Sin cadena todavía.** Las fichas no lo vinculan con ningún otro personaje. Hay que decidir con qué se conecta antes de escribir nada | — |
+
+Quién empieza determina qué cadenas se abren primero: cada personaje es interlocutor de las charlas que no son la suya, así que nadie queda sin ruta (hay que verificar que cada elegido tenga un camino a los otros 5).
+
+### Poderes agrupados por lo que destraban (para evaluar)
+
+Un personaje desbloqueado hereda el poder de su familia, según su habilidad más alta. Los dorados pueden sumar un poder propio.
+
+| Familia | Qué destraba | Hoy | Se podría sumar |
+|---|---|---|---|
+| Fuerza | Romper muros agrietados, empujar bloques y vasijas | Minotauro | Heracles, Aquiles |
+| Astucia | Tender sogas entre argollas | Ariadna | Penélope, Odiseo |
+| Vuelo | Subir a terrazas (Fénix) y techos (Pegaso) | Pegaso, Fénix | Belerofonte (con Pegaso), Perseo |
+| Luz | Encender braseros y puertas del sol | Fénix | Helios |
+| Voz | Sonidos que atraviesan paredes | Eco | — |
+| Agua | Navegar barcas | Ulises | Poseidón |
+
+Abierto: cuánto de esta tabla se construye. Cada familia nueva que se suma obliga a que haya desafíos del mapa que la usen, así que se agrega de a una.
+
+### Qué incluye la sesión 2 (mínimo)
+
+1. Pasar la charla de Dédalo a `datos/charlas/dedalo.json` y ubicarlo en el mapa (su taller es una habitación, ver `charla-dedalo.md`).
+2. Poner a los 5 restantes bajo llave y ajustar la elección inicial.
+3. La fuente de Pegaso como objeto interactivo que lo desbloquea.
+4. Charlas de Narciso y Nausícaa, con el mismo formato.
+5. Aún no: poderes nuevos ni la cadena de Fénix.
+
+### Preguntas
+
+1. ¿Va la cadena de la tabla (Pegaso por la fuente; Eco por Narciso; Ulises por Nausícaa)?
+2. Fénix: ¿con qué personaje querés conectarlo? Si no hay canon claro, puede ser el último en desbloquearse por un objeto o quedar libre hasta decidirlo.
+3. ¿Los desbloqueados de las 85 serán jugables? Para esta sesión no hace falta decidirlo.
+
 ## Escala de velocidad (1 a 10)
 
 Las fichas no traen velocidad. Esta escala es un criterio de juego mío, no canon: sigue la naturaleza de cada ser, y se ajusta si no te convence.
