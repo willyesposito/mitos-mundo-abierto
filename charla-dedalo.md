@@ -29,7 +29,7 @@ Todo es de canon firme y está cotejado (ver más abajo).
 
 ## Habilidades (de la ficha)
 
-Fuerza 3, astucia 10, valentía 6, magia 4, liderazgo 4, bondad 6. Astucia en el máximo de la escala y fuerza baja. Todavía no condicionan nada en esta charla; cuando se diseñe qué habilita cada habilidad, la astucia de Dédalo es la candidata natural para una opción que solo él ofrece.
+Fuerza 3, astucia 10, valentía 6, magia 4, liderazgo 4, bondad 6. Velocidad 4, de la escala de `plan-desbloqueo.md` (las fichas no la traen). Astucia en el máximo de la escala y fuerza baja. Todavía no condicionan nada en esta charla; cuando se diseñe qué habilita cada habilidad, la astucia de Dédalo es la candidata natural para una opción que solo él ofrece.
 
 ## Cómo se juega
 
@@ -56,7 +56,7 @@ Cuatro caminos, todos vuelven a N1 con "Seguir" salvo el final:
 
 ## Datos
 
-Está en el formato del motor de charlas de PR #28 (`charlas.js`, `datos/charlas/teseo.json`), con `interlocutor` con el nombre, `nivel`, `habilidades` de la ficha y `estado: "borrador"`. La velocidad no está porque las fichas no la traen y no se inventa. Quedaría como `datos/charlas/dedalo.json`, más su entrada en `datos/charlas/indice.json`. Pasa `validarCharla` del motor sin problemas y se recorrió completa con `crearSesion` (alas, rama equivocada, laberinto, hilo y final).
+Está en el formato del motor de charlas de PR #28 (`charlas.js`, `datos/charlas/teseo.json`), con `interlocutor` con el nombre, `nivel`, `habilidades` de la ficha y `estado: "borrador"`. La velocidad (4) viene de la escala de `plan-desbloqueo.md` (PR #26), no de la ficha; es un criterio de juego, no canon. Quedaría como `datos/charlas/dedalo.json`, más su entrada en `datos/charlas/indice.json`. Pasa `validarCharla` del motor sin problemas y se recorrió completa con `crearSesion` (alas, rama equivocada, laberinto, hilo y final).
 
 ```json
 {
@@ -64,7 +64,7 @@ Está en el formato del motor de charlas de PR #28 (`charlas.js`, `datos/charlas
   "interlocutor": "Dédalo",
   "color": "#B0803A",
   "nivel": "plateado",
-  "habilidades": {"fuerza": 3, "astucia": 10, "valentia": 6, "magia": 4, "liderazgo": 4, "bondad": 6},
+  "habilidades": {"fuerza": 3, "astucia": 10, "valentia": 6, "magia": 4, "liderazgo": 4, "bondad": 6, "velocidad": 4},
   "estado": "borrador",
   "inicio": "n1",
   "nodos": {
