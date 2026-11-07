@@ -54,6 +54,8 @@ Continuación: orden, dependencias de arte y contrato de migración en `plan-con
 
 Sin fecha: taller de Dédalo y Talos.
 
+- [ ] **Idea: personas con las que conversar y oráculos** (2026-11-07): sin sesión asignada ni diseño. Aprobada por la jugadora como idea. Personas en el mapa con las que se puede interactuar: charlas, cuentos ligados a los mitos y personajes del juego, y oráculos que hacen preguntas y ayudan a descubrir algo. Mecánica de referencia: elegir entre dos respuestas y que cambie lo que sigue (diálogo con opciones, sin copiar ningún juego). Abierto: qué mitos y personajes hablan, cómo se muestran los textos en el celular (el juego tiene cero texto en inglés y lectora fuerte), si el oráculo se apoya en Delfos (canon a confirmar antes de escribir nada) y cómo se relaciona con la interacción con animales. Al diseñarla, anotar la decisión en `DECISIONS.md`.
+
 ## Mejora gráfica de ChatGPT / Codex (2026-11-02)
 
 Construida: 240 chequeos integrales, 17 rápidos y 366 invariantes gráficas aprobados. Implementados A2 (vistas y pasos), ambiente y reacciones de A6, apertura visual de A5 y ajustes de profundidad, pisos, cámara y controles (D28). Verificación y límites en `plan-mejora-grafica-codex.md`. Validación en celular real pendiente; no se marca validada ninguna sesión.
