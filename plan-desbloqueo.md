@@ -21,10 +21,27 @@ Termina cuando la jugadora, en el celular, empieza el juego, llega a una charla,
 1. **Guardado.** El perfil suma qué personajes están desbloqueados, qué saberes tiene y qué charlas resolvió. Migración de perfiles anteriores: los 6 pasan a estar desbloqueados, para no quitar nada de lo ya jugado.
 2. **Inicio.** Pantalla de elección del personaje inicial y tira de personajes que muestra solo los desbloqueados. Ver pregunta abierta 1.
 3. **Motor de charlas.** Pantalla de diálogo con elecciones, que lee charlas de archivos de datos. Texto legible en celular vertical, sin texto en inglés.
-4. **Tanda 1 (pocas).** Dos o tres interlocutores del núcleo del laberinto, escritos desde sus fichas (historia, "¿Por qué?", pistas): Dédalo (plateado, ya en diseño en otro hilo, sirve de plantilla) y Teseo (dorado). Sin mitos inventados; todo lo que no esté en la ficha se pregunta antes de escribirlo.
+4. **Tanda 1 (pocas).** Cadena corta del laberinto, escrita desde las fichas (historia, "¿Por qué?", pistas) y desde las fichas del propio juego: Ariadna (inicio) → Teseo (dorado) → Minotauro, que es el primer personaje que queda bajo llave. Sin mitos inventados; lo que no esté en una ficha se pregunta antes de escribirlo. La charla de Dédalo la escribe otro hilo y entra cuando esté lista, usando el mismo formato de datos.
 5. **Habilidades en la ficha.** Se muestran en la ficha del personaje. Todavía no condicionan nada: eso viene con la segunda charla jugable.
 
 Fuera de esta sesión: poderes nuevos de dorados, las demás tandas, oráculo como brújula, velocidad con efecto en el juego.
+
+## Escala de velocidad (1 a 10)
+
+Las fichas no traen velocidad. Esta escala es un criterio de juego mío, no canon: sigue la naturaleza de cada ser, y se ajusta si no te convence.
+
+| Personaje | Velocidad | Criterio |
+|---|---|---|
+| Pegaso | 9 | caballo alado |
+| Fénix | 8 | ave que vuela |
+| Minotauro | 6 | bestia grande, fuerte antes que veloz |
+| Eco | 6 | ninfa de los montes, liviana |
+| Teseo | 6 | héroe entrenado |
+| Ariadna | 5 | humana, sin rasgo de carrera |
+| Ulises | 5 | humano, su fuerte es la astucia |
+| Dédalo | 4 | inventor, su fuerte es el ingenio |
+
+Las otras seis habilidades de los 6 jugables se copian tal cual de las fichas (Ulises toma las de Odiseo).
 
 ## Preguntas abiertas
 
