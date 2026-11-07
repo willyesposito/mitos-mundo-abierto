@@ -109,6 +109,7 @@ body.con-pista #tira { box-shadow: 0 0 0 5px var(--oro-palido); }
 .boton-accion .ico { width: 34px; height: 34px; display: block; }
 #btn-salto .ico { width: 30px; height: 30px; }
 .boton-accion .ico svg { width: 100%; height: 100%; }
+#btn-poder .ico { width: 48px; height: 48px; }   /* sin palabras: el ícono ocupa el lugar de la etiqueta */
 .boton-accion .etiqueta { font-size: 13px; font-weight: bold; letter-spacing: .02em; }
 .boton-accion.apretado { transform: translateY(4px); }
 .boton-accion.apagado { opacity: .38; filter: grayscale(.5); }
@@ -193,7 +194,7 @@ body.con-pista #tira { box-shadow: 0 0 0 5px var(--oro-palido); }
 
 @media (max-height: 520px) {
   #zona-joystick { height: 112px; width: 130px; } #joystick { width: 100px; height: 100px; } #palanca { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
-  #btn-poder { width: 80px; height: 80px; } #btn-salto { width: 62px; height: 62px; } .boton-accion .ico { width: 24px; height: 24px; } .boton-accion .etiqueta { font-size: 11px; }
+  #btn-poder { width: 80px; height: 80px; } #btn-salto { width: 62px; height: 62px; } .boton-accion .ico { width: 24px; height: 24px; } #btn-poder .ico { width: 40px; height: 40px; } .boton-accion .etiqueta { font-size: 11px; }
   .pj .retrato { width: 38px; height: 38px; } .pj canvas { width: 36px !important; height: 36px !important; } .pj > span { display: none; } .pj .insignia { width: 20px; height: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { #pista-cambio .cartel { animation: none; } #contadores.pulso { animation: none; } }
@@ -288,6 +289,7 @@ button:focus-visible { outline: 3px solid var(--egeo); outline-offset: 3px; }
   #botones { gap: 8px; padding: 0; }
   #btn-poder, #btn-salto { width: 86px; height: 70px; border-radius: 12px; gap: 1px; }
   .boton-accion .ico, #btn-salto .ico { width: 23px; height: 23px; }
+  #btn-poder .ico { width: 30px; height: 30px; }
   .atajo-accion { display: block; font-family: inherit; font-size: 11px; font-weight: normal; line-height: 1; }
   #ayuda-teclado {
     grid-area: teclado; display: flex; justify-content: center; flex-wrap: wrap; gap: 5px 20px;

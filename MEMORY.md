@@ -52,3 +52,5 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 
 - **Prioridad de jugabilidad y espacios:** teclado como entrada principal en PC; tablet y celular deben conservar controles táctiles utilizables en ambas orientaciones. Las actividades deben poder ubicarse desde el recorrido y una guía opcional, porque la exploración anterior no las hacía fáciles de encontrar. Primera revisión espacial autorizada sobre plaza, conservando desafíos y progreso.
 - **Acabado de caminos:** revisar las intersecciones en una captura real antes de publicar. Los ramales deben formar una superficie continua, sin bordes internos cruzados ni cortes entre casillas; los jardines requieren un acabado integrado, no manchas lisas sueltas. Por qué: la primera revisión espacial dejó uniones y superficies visualmente sin terminar.
+
+- **U1 y U2 validadas en el celular el 2026-11-07.** El botón de poder va sin palabras, solo ícono, por pedido de Willy: las palabras podían confundir en pantalla chica (D35).

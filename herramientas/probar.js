@@ -137,7 +137,7 @@ async function main() {
     let todos = true;
     for (const id of t6.ids) { await elegirU(id); if ((await J()).pj !== id) todos = false; }
     ok(todos, 'los seis personajes se pueden elegir tocando la tira');
-    ok((await page.textContent('#btn-poder .etiqueta')) === 'Navegar', 'con Ulises elegido el botón de poder dice Navegar');
+    ok((await page.getAttribute('#btn-poder', 'aria-label')) === 'Navegar', 'con Ulises elegido el botón de poder se llama Navegar (aria-label)');
     const pxU = await page.evaluate(() => { const c = document.querySelector('.pj[data-id=ulises] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k; });
     ok(pxU > 500, `la tira muestra el sprite de Ulises (${pxU} píxeles)`);
     await page.click('#btn-ficha');
@@ -245,6 +245,48 @@ async function main() {
   }
   await seccionFichaUlises();
   await require('./probar-canal-navegador')(browser, url, SALIDA, ok);
+  // Ambiente interactivo (D35): el botón de poder también llama al animal más cercano. Corre en el mundo, con Pegaso.
+  async function seccionAmbiente() {
+    ok((await page.$('#btn-poder .etiqueta')) === null && (await page.getAttribute('#btn-poder', 'aria-label')).length > 0
+      && (await page.evaluate(() => [...document.querySelectorAll('#btn-poder *')].every(n => n.tagName === 'KBD' || n.className === 'ico' || n.closest('.ico')) && document.querySelector('#btn-poder').textContent.replace(document.querySelector('#btn-poder kbd').textContent, '').trim() === '')),
+      'el botón de poder no tiene texto visible: solo ícono y atajo, con aria-label');
+    const previo = await page.evaluate(() => { const j = window.__mundo.jugador; return [j.x, j.y, j.z, window.__mundo.jugador.personaje]; });
+    const elementos = () => page.evaluate(async () => { const a = await import('./ambiente.js'); return a.ambienteDe(window.__mundo).elementos.map(e => ({ tipo: e.tipo, x: e.x, y: e.y, z: e.z })); });
+    const lista = await elementos();
+    const SONIDO = { gato: 'maulla', cabra: 'bala', gaviota: 'grazna', golondrina: 'trina', delfin: 'chasquea', pulpo: null, lirios: null };
+    for (const [tipo, sn] of Object.entries(SONIDO)) {
+      const idx = lista.findIndex(e => e.tipo === tipo);
+      if (idx < 0) { ok(false, `ambiente: hay un ${tipo} en el mundo`); continue; }
+      await page.evaluate(([i]) => { window.__mundo.cambiarPersonaje('pegaso'); }, [idx]);
+      // Se pone al personaje a ~0,8 casillas del animal y se pulsa el poder en el mismo cuadro
+      const r = await page.evaluate(async ([i, sn]) => {
+        const a = await import('./ambiente.js'), m = window.__mundo, j = m.jugador, e = a.ambienteDe(m).elementos[i];
+        e.llamado = 0; j.x = e.x + 0.8; j.y = e.y; j.z = Math.max(0, e.z); j.vz = 0; j.enSuelo = true; j.estado = 'jugando'; j.seguro = { x: j.x, y: j.y, z: j.z };
+        const antes = window.__sonidos.length;
+        return { antes };
+      }, [idx, sn]);
+      await page.keyboard.press('KeyE'); await espera(120);
+      const d = await page.evaluate(async ([i]) => {
+        const a = await import('./ambiente.js'), e = a.ambienteDe(window.__mundo).elementos[i];
+        return { llamado: e.llamado, sonidos: window.__sonidos.slice() };
+      }, [idx]);
+      const nuevos = d.sonidos.slice(r.antes);
+      ok(d.llamado > 0, `ambiente: ${tipo} responde al llamado (llamado ${d.llamado.toFixed(2)})`);
+      ok(sn ? nuevos.includes(sn) : !nuevos.some(n => ['maulla', 'bala', 'grazna', 'trina', 'chasquea'].includes(n)),
+        sn ? `ambiente: ${tipo} suena "${sn}"` : `ambiente: ${tipo} se llama en silencio`);
+      if (tipo === 'gato') {
+        await page.keyboard.press('KeyE'); await espera(80);
+        const n2 = await page.evaluate(() => window.__sonidos.filter(n => n === 'maulla').length);
+        ok(n2 === nuevos.filter(n => n === 'maulla').length + d.sonidos.slice(0, r.antes).filter(n => n === 'maulla').length, 'ambiente: no se vuelve a llamar mientras dura el gesto');
+        const bk = await page.evaluate(async () => { const a = await import('./ambiente.js'); const e = a.ambienteDe(window.__mundo).elementos.find(q => q.tipo === 'gato'); const g = a.movimientoAmbiente({ ...e, llamado: .5, poderActivo: false, reaccion: 0 }, 1, false), q = a.movimientoAmbiente({ ...e, llamado: .5, poderActivo: false, reaccion: 0 }, 1, true); return { gx: Math.abs(g.escala - 1) + Math.abs(g.giro), qx: Math.abs(q.escala - 1) + Math.abs(q.giro) }; });
+        ok(bk.gx > 0 && bk.qx > 0 && bk.qx < bk.gx, 'ambiente: con movimiento reducido el gesto se atenúa');
+      }
+      await page.waitForFunction(async ([i]) => { const a = await import('./ambiente.js'); return a.ambienteDe(window.__mundo).elementos[i].llamado === 0; }, [idx], { timeout: 4000 }).then(() => ok(true, `ambiente: ${tipo} vuelve a su reposo`), () => ok(false, `ambiente: ${tipo} vuelve a su reposo`));
+    }
+    await page.evaluate(([x, y, z, pj]) => { const m = window.__mundo, j = m.jugador; m.cambiarPersonaje(pj); j.x = x; j.y = y; j.z = z; j.vz = 0; j.enSuelo = true; j.estado = 'jugando'; j.seguro = { x, y, z }; }, previo);
+    await espera(200);
+  }
+
   // Modo rápido: chequeos propios y cortos sobre un perfil nuevo (contexto limpio). No toca el resto de las secciones.
   if (RAPIDO) {
     const eng = /\b(the|and|you|with|press|hold|power|button|close|next|previous)\b/i;
@@ -269,7 +311,7 @@ async function main() {
     ok(!eng.test(tm + ' ' + tl), 'el menú y la lista de objetos no tienen texto en inglés');
     await page.click('#menu-seguir'); await espera(200);
     await page.click('.pj[data-id=minotauro]'); await espera(200);
-    ok((await est()).pj === 'minotauro' && (await page.textContent('#btn-poder .etiqueta')) === 'Embestir', 'cambia de personaje tocando su botón');
+    ok((await est()).pj === 'minotauro' && (await page.getAttribute('#btn-poder', 'aria-label')) === 'Embestir', 'cambia de personaje tocando su botón');
     await page.click('#btn-menu'); await page.click('#menu-perfiles');
     ok(await page.isVisible('#pantalla-perfiles'), 'el menú abre la pantalla de perfiles');
     await page.click('.perfil'); await page.waitForFunction(() => window.__mundo); await espera(300);
@@ -285,6 +327,7 @@ async function main() {
       const t = await page.evaluate(id => { const c = document.querySelector(`.pj[data-id=${id}] canvas`); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k; }, id);
       ok(n > 500 && t > 500, `se dibuja ${id} (${n} píxeles en el lienzo, ${t} en la tira)`);
     }
+    await seccionAmbiente();
     await seccionU1();
     ok(errores.length === 0, 'sin errores en consola' + (errores.length ? ': ' + errores.join(' | ') : ''));
     await browser.close(); servidor.close();
@@ -298,6 +341,7 @@ async function main() {
   await foto('01-perfiles');
   await page.fill('#nombre-nuevo', 'Prueba'); await page.click('#form-nuevo button[type=submit]');
   await page.waitForFunction(() => window.__mundo); await espera(400);
+  await seccionAmbiente();
   await foto('02-inicio');
   let s = await est();
   ok(s.pj === 'pegaso' && s.enSuelo && Math.abs(s.x - 10.5) < 0.01 && Math.abs(s.y - 21.5) < 0.01, 'arranca con Pegaso en el muelle del puerto');
@@ -384,7 +428,7 @@ async function main() {
   await page.click('.pj[data-id=minotauro]'); await espera(200);
   s = await est(); ok(s.pj === 'minotauro', 'cambia a Minotauro tocando su botón');
   ok(!(await page.isVisible('#pista-cambio')), 'la pista de cambio desaparece tras cambiar');
-  ok((await page.textContent('#btn-poder .etiqueta')) === 'Embestir', 'el botón de poder pasa a "Embestir"');
+  ok((await page.getAttribute('#btn-poder', 'aria-label')) === 'Embestir', 'el botón de poder pasa a "Embestir"');
   await foto('08-minotauro');
 
   // 6. Minotauro: bloque a la placa, reja, objeto 2
