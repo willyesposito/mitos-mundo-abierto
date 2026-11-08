@@ -10,9 +10,9 @@ const reducirMovimiento = () => preferenciaMovimiento.matches;
 const transiciones = new WeakMap();
 const apoyos = new WeakMap();
 const ORIGEN_AMBIENTE = {
-  anforas: [-44,-46], cabra: [-21,-38], delfin: [-33,-29], fresco: [-45,-47],
-  gato: [-18,-23], gaviota: [-18,-20], golondrina: [-16,-19], laurel: [-33,-93],
-  lirios: [-29,-44], olivo: [-45,-92], pulpo: [-22,-28], redes: [-28,-41],
+  anforas: [-44,-46], cabra: [-22,-44], delfin: [-34,-35], fresco: [-45,-47],
+  gato: [-20,-26], gaviota: [-18,-20], golondrina: [-19,-23], laurel: [-33,-93],
+  lirios: [-29,-44], olivo: [-45,-92], pulpo: [-26,-30], redes: [-28,-41],
 };
 
 const NIVEL_AGUA = -0.12;
