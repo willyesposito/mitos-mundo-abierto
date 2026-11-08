@@ -95,12 +95,12 @@ async function main() {
     OFF = [0, 0];
   };
   // Un perfil nuevo pasa por la elección del personaje inicial. Las pruebas viejas empiezan con Pegaso y, salvo que se
-  // pida lo contrario, con el Minotauro ya desbloqueado (la tira de seis), como antes de que hubiera que ganarlo.
-  const nuevoPerfil = async (pg, nombre, elegido = 'pegaso', conMinotauro = true) => {
+  // pida lo contrario, con los seis ya desbloqueados (la tira de seis), como antes de que hubiera que ganarlos.
+  const nuevoPerfil = async (pg, nombre, elegido = 'pegaso', conTodos = true) => {
     await pg.fill('#nombre-nuevo', nombre); await pg.click('#form-nuevo button[type=submit]');
     await pg.waitForSelector('#pantalla-eleccion:not([hidden])');
     await pg.click(`#pantalla-eleccion .carta-eleccion[data-id=${elegido}]`);
-    if (conMinotauro) await pg.evaluate(() => window.__desbloquear('minotauro'));
+    if (conTodos) await pg.evaluate(() => ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco', 'ulises'].forEach(id => window.__desbloquear(id)));
   };
   const bloque = () => page.evaluate(() => window.__mundo.empujables.filter(e => e.tipo === 'bloque').map(e => [e.tx, e.ty])[0]);
 
@@ -283,7 +283,7 @@ async function main() {
     const pj = JSON.parse(fs.readFileSync(path.join(RAIZ, 'datos/personajes.json'), 'utf8')).personajes;
     ok(Object.entries(ESPERADAS).every(([id, v]) => { const h = pj.find(q => q.id === id)?.habilidades; return h && CLAVES.every((k, i) => h[k] === v[i]) && Object.keys(h).length === 7; }),
       'los seis personajes traen las siete habilidades (con velocidad) con los valores pedidos');
-    ok(pj.filter(q => q.bajoLlave).map(q => q.id).join() === 'minotauro', 'solo el Minotauro está bajo llave, marcado en los datos');
+    ok(!pj.some(q => q.bajoLlave), 'ningún personaje trae marca de bajo llave: el perfil nuevo empieza solo con el elegido');
 
     let { c, p } = await nuevaPag();
     try {
@@ -317,23 +317,21 @@ async function main() {
       ok(await p.evaluate(() => { const c = document.querySelector('.carta-eleccion[data-id=pegaso] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) k++; return k > 500; }), 'las tarjetas traen el retrato dibujado');
       await foto('desbloqueo-eleccion');
       await p.click('.carta-eleccion[data-id=ariadna]'); await p.waitForFunction(() => window.__mundo); await espera(300);
-      ok(await activo(p) === 'ariadna' && (await tira(p)).join() === 'pegaso,ariadna,fenix,eco,ulises', `elegir Ariadna la deja activa y la tira no muestra al Minotauro (${(await tira(p)).join()})`);
+      ok(await activo(p) === 'ariadna' && (await tira(p)).join() === 'ariadna', `elegir Ariadna la deja activa y la tira muestra solo a Ariadna (${(await tira(p)).join()})`);
       let g = await guardado(p, 'Eleg');
-      ok(g.personaje === 'ariadna' && g.desbloqueados.join() === 'pegaso,fenix,ariadna,eco,ulises' || (g.desbloqueados.length === 5 && !g.desbloqueados.includes('minotauro') && g.desbloqueados.includes('ariadna')), 'el perfil guarda los desbloqueados (todos menos el Minotauro) y el personaje elegido');
+      ok(g.personaje === 'ariadna' && g.desbloqueados.join() === 'ariadna', 'el perfil guarda como único desbloqueado al personaje elegido');
       ok(g.desbloqueoIncorporado === true && typeof g.saberes === 'object' && typeof g.charlas === 'object' && typeof g.cartas === 'object', 'el perfil trae saberes, charlas y cartas');
       await p.keyboard.press('Digit1'); await espera(100);
       const d1 = await activo(p); await p.keyboard.press('Digit6'); await espera(100);
-      ok(d1 === 'pegaso' && await activo(p) === 'pegaso' && (await p.evaluate(() => window.__mundo.jugador.personaje)) !== 'minotauro', 'los números eligen solo entre los desbloqueados (el 6 no existe sin el Minotauro)');
-      await p.click('.pj[data-id=ariadna]'); await espera(100);
+      ok(d1 === 'ariadna' && await activo(p) === 'ariadna', 'los números eligen solo entre los desbloqueados (con uno solo, no cambian nada)');
 
       // Ficha con las siete habilidades; las flechas no revelan al que sigue bajo llave
       await p.click('#btn-ficha'); await espera(150);
       const fh = await p.evaluate(() => [...document.querySelectorAll('#ficha-habilidades li')].map(li => [li.querySelector('.hab-nombre').textContent, +li.querySelector('.hab-valor').textContent, li.querySelectorAll('.hab-barra i.lleno').length, li.querySelectorAll('.hab-barra i').length]));
       ok(fh.map(f => f[0]).join() === 'Fuerza,Astucia,Valentía,Magia,Liderazgo,Bondad,Velocidad' && fh.map(f => f[1]).join() === ESPERADAS.ariadna.join() && fh.every(f => f[2] === f[1] && f[3] === 10),
         `la ficha de Ariadna muestra las siete habilidades con nombre en español y barras de 1 a 10 (${fh.map(f => f[1]).join(' ')})`);
-      const visto = [];
-      for (let i = 0; i < 5; i++) { visto.push(await p.textContent('#ficha-nombre')); await p.click('#ficha-siguiente'); }
-      ok(visto.length === 5 && new Set(visto).size === 5 && !visto.includes('Minotauro'), `las fichas recorren solo a los desbloqueados (${visto.join(', ')})`);
+      await p.click('#ficha-siguiente'); await espera(100);
+      ok((await p.textContent('#ficha-nombre')) === 'Ariadna', 'con un solo desbloqueado las flechas de la ficha no muestran a nadie más');
       ok(!eng.test(await p.evaluate(() => document.getElementById('pantalla-ficha').innerText)), 'la ficha con habilidades no tiene texto en inglés');
       await p.click('#ficha-cerrar'); await espera(200);
 
@@ -343,6 +341,12 @@ async function main() {
       await junto(p); await espera(250);
       ok(await p.isVisible('#btn-hablar') && (await p.getAttribute('#btn-hablar', 'aria-label')) === 'Hablar' && (await p.textContent('#btn-hablar')).replace(/\s+/g, '').replace(/T$/, '') === '',
         'junto a Teseo aparece el botón de hablar, solo con ícono (nombre accesible "Hablar")');
+      await p.evaluate(() => window.__desbloquear('pegaso'));
+      await p.click('#btn-ficha'); await espera(150);
+      const visto = [];
+      for (let i = 0; i < 2; i++) { visto.push(await p.textContent('#ficha-nombre')); await p.click('#ficha-siguiente'); }
+      ok(new Set(visto).size === 2 && !visto.includes('Minotauro'), `las fichas recorren solo a los desbloqueados (${visto.join(', ')})`);
+      await p.click('#ficha-cerrar'); await espera(200);
       // (g) El poder se comporta igual: Pegaso sigue volando con el botón de poder aunque haya un interlocutor cerca
       await p.click('.pj[data-id=pegaso]'); await espera(100);
       await p.keyboard.down('KeyE'); await espera(700);
@@ -388,7 +392,7 @@ async function main() {
       const jAntes = await activo(p);
       await p.keyboard.press('Digit1'); await espera(250);
       ok(!(await p.isVisible('#pantalla-charla')), 'la charla termina con "Gracias"');
-      ok((await tira(p)).join() === 'pegaso,minotauro,ariadna,fenix,eco,ulises' && await activo(p) === jAntes, 'al cerrar el Minotauro aparece en la tira sin cambiar al personaje activo');
+      ok((await tira(p)).join() === 'pegaso,minotauro,ariadna' && await activo(p) === jAntes, 'al cerrar el Minotauro aparece en la tira sin cambiar al personaje activo');
       ok(await p.isVisible('#aviso') && (await p.textContent('#aviso')).includes('Se suma un personaje') && (await p.textContent('#aviso')).includes('Minotauro'), 'aparece el aviso "Se suma un personaje" con el nombre');
       await foto('desbloqueo-tira-con-minotauro');
       g = await guardado(p, 'Eleg');
@@ -416,13 +420,13 @@ async function main() {
       ok(await p.isVisible('#pantalla-perfiles') && (await p.inputValue('#nombre-nuevo')) === 'Mino', 'volver de la elección regresa a los perfiles sin perder el nombre');
       await p.click('#form-nuevo button[type=submit]'); await p.waitForSelector('#pantalla-eleccion:not([hidden])');
       await p.click('.carta-eleccion[data-id=minotauro]'); await p.waitForFunction(() => window.__mundo); await espera(300);
-      ok(await activo(p) === 'minotauro' && (await tira(p)).join() === 'pegaso,minotauro,ariadna,fenix,eco,ulises', 'elegir al Minotauro al inicio lo deja activo y en la tira');
+      ok(await activo(p) === 'minotauro' && (await tira(p)).join() === 'minotauro', 'elegir al Minotauro al inicio lo deja activo y solo en la tira');
       // Ya lo tiene: terminar la charla no repite el aviso, pero guarda la carta
       await junto(p); await espera(250); await abrirCharla(p);
       await elegir(p, '¿Quién vivía en el laberinto?'); await elegir(p, 'Seguir'); await elegir(p, '¿Cómo pensabas salir?'); await elegir(p, 'Seguir');
       await elegir(p, 'Ya entendí'); await elegir(p, 'Gracias'); await espera(250);
       const gm = await guardado(p, 'Mino');
-      ok(!(await p.isVisible('#aviso')) && gm.cartas.teseo === true && gm.charlas.teseo?.resuelta === true && gm.desbloqueados.length === 6, 'si ya tiene al Minotauro, la charla (en el otro orden) no repite el aviso y guarda la carta');
+      ok(!(await p.isVisible('#aviso')) && gm.cartas.teseo === true && gm.charlas.teseo?.resuelta === true && gm.desbloqueados.length === 1, 'si ya tiene al Minotauro, la charla (en el otro orden) no repite el aviso y guarda la carta');
     } finally { await c.close(); }
 
     // (d) Un perfil anterior, sin las claves nuevas, se migra con los seis y entra directo
@@ -447,6 +451,168 @@ async function main() {
       g = await guardado(p, 'Anterior');
       ok(g.desbloqueados.length === 6 && g.saberes.hilo === true && g.saberes.asterion === true && g.cartas.teseo === true, 'lo aprendido y ganado sigue ahí tras recargar');
     } finally { await c.close(); }
+
+    // ---- Sesión 2: los seis se desbloquean de verdad ----
+    const juntoA = (p, id) => p.evaluate(i => {
+      const m = window.__mundo, q = [...m.interlocutores, ...m.interactivos].find(z => z.id === i), j = m.jugador;
+      j.x = q.x - 1.0; j.y = q.y; j.z = 0; j.vz = 0; j.enSuelo = true; j.estado = 'jugando'; j.seguro = { x: j.x, y: j.y, z: 0 };
+    }, id);
+    const crearYEntrar = async (p, nombre, elegido) => {
+      await p.goto(url); await p.waitForSelector('#pantalla-perfiles:not([hidden])');
+      await p.fill('#nombre-nuevo', nombre); await p.click('#form-nuevo button[type=submit]');
+      await p.waitForSelector('#pantalla-eleccion:not([hidden])');
+      await p.click(`.carta-eleccion[data-id=${elegido}]`); await p.waitForFunction(() => window.__mundo); await espera(300);
+    };
+
+    // (a) Cada uno de los seis, elegido al empezar, arranca solo en la tira
+    for (const id of ['pegaso', 'minotauro', 'ariadna', 'fenix', 'eco', 'ulises']) {
+      ({ c, p } = await nuevaPag());
+      try {
+        await crearYEntrar(p, 'Solo', id);
+        const g = await guardado(p, 'Solo');
+        ok((await tira(p)).join() === id && g.desbloqueados.join() === id && await activo(p) === id, `un perfil nuevo que elige a ${id} arranca con solo ${id} en la tira`);
+      } finally { await c.close(); }
+    }
+
+    // (b) Todo lo que desbloquea se alcanza a pie desde el inicio, sin poderes: búsqueda por casillas de suelo común
+    ({ c, p } = await nuevaPag());
+    try {
+      await crearYEntrar(p, 'Alcance', 'ulises');
+      const r = await p.evaluate(() => {
+        const m = window.__mundo, firmes = new Set(['.', ',', 'p', 'S']);
+        const firme = (x, y) => x >= 0 && y >= 0 && x < m.cols && y < m.rows && firmes.has(m.origen[y][x]);
+        const ini = [Math.floor(m.jugador.x), Math.floor(m.jugador.y)], vistos = new Set([ini.join()]), cola = [ini];
+        while (cola.length) {
+          const [x, y] = cola.shift();
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const a = x + dx, b = y + dy;
+            if (!vistos.has(a + ',' + b) && firme(a, b)) { vistos.add(a + ',' + b); cola.push([a, b]); }
+          }
+        }
+        const blancos = [...m.interlocutores, ...m.interactivos].map(q => {
+          const cx = Math.floor(q.x), cy = Math.floor(q.y);
+          const hablable = [...vistos].some(k => { const [a, b] = k.split(',').map(Number); return Math.hypot(a + 0.5 - q.x, b + 0.5 - q.y) <= 1.5; });
+          return { id: q.id, enSuelo: firme(cx, cy) && m.origen[cy][cx] !== 'b', alcanzable: vistos.has(cx + ',' + cy), hablable };
+        });
+        return blancos;
+      });
+      const necesarios = ['teseo', 'dedalo', 'narciso', 'nausicaa', 'fuente-musas', 'cenizas'];
+      ok(necesarios.every(id => r.some(q => q.id === id)), `el mundo trae los seis puntos de desbloqueo (${r.map(q => q.id).join(', ')})`);
+      for (const q of r) ok(q.enSuelo && q.alcanzable && q.hablable, `a pie y sin poderes se llega a ${q.id} (suelo firme: ${q.enSuelo}, alcanzable: ${q.alcanzable})`);
+      // Caminando de verdad: entrar al taller de Dédalo por su puerta abierta y poder hablarle
+      await p.evaluate(() => { const j = window.__mundo.jugador; j.x = 6.5; j.y = 97.5; j.z = 0; j.vz = 0; j.enSuelo = true; j.estado = 'jugando'; });
+      await espera(200);
+      ok(!(await p.isVisible('#btn-hablar')), 'afuera del taller el botón de hablar no aparece');
+      await p.keyboard.down('ArrowUp');
+      const t0 = Date.now();
+      while (Date.now() - t0 < 4000 && !(await p.isVisible('#btn-hablar'))) await espera(30);
+      await p.keyboard.up('ArrowUp');
+      const yd = await p.evaluate(() => window.__mundo.jugador.y);
+      ok(await p.isVisible('#btn-hablar') && yd < 95, `caminando por la entrada se llega a Dédalo dentro del taller (y ${yd.toFixed(2)})`);
+    } finally { await c.close(); }
+
+    // (c) y (e) Cada charla, completada, desbloquea a su personaje, guarda la carta y queda tras recargar; si ya está, sin aviso
+    const CHARLAS = [
+      { id: 'dedalo', suma: 'ariadna', elegido: 'pegaso', carta: 'dedalo', pasos: ['¿Qué estás armando?', 'Para que la ala se curve', 'Seguir', 'Dicen que hiciste el laberinto.', '¿Cómo se sale de ahí?', 'Seguir', 'Ya entendí', 'Gracias'] },
+      { id: 'narciso', suma: 'eco', elegido: 'pegaso', carta: 'narciso', pasos: ['¿Qué ves?', 'Seguir', '¿Conocés a una ninfa llamada Eco?', 'Seguir', 'Creo que ya entendí', 'Voy a buscarla'] },
+      { id: 'nausicaa', suma: 'ulises', elegido: 'pegaso', carta: 'nausicaa', pasos: ['¿Quién era?', 'Seguir', '¿Y qué hiciste?', 'Seguir', 'Creo que ya entendí', 'Gracias'] },
+    ];
+    for (const ch of CHARLAS) {
+      ({ c, p } = await nuevaPag());
+      try {
+        const nom = 'C' + ch.id.slice(0, 5);
+        await crearYEntrar(p, nom, ch.elegido);
+        await juntoA(p, ch.id); await espera(250); await abrirCharla(p);
+        ok((await p.textContent('#charla-nombre')).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() === ch.id, `hablar cerca abre la charla de ${ch.id}`);
+        for (let i = 0; i < ch.pasos.length; i++) {
+          if (ch.id === 'narciso' && i === 4) ok(!(await tira(p)).includes(ch.suma), `${ch.id}: antes del cierre ${ch.suma} sigue bajo llave`);
+          await elegir(p, ch.pasos[i]); await espera(60);
+        }
+        await espera(250);
+        let g = await guardado(p, nom);
+        ok((await tira(p)).includes(ch.suma) && g.desbloqueados.includes(ch.suma) && g.cartas[ch.carta] === true && g.charlas[ch.id]?.resuelta === true, `la charla de ${ch.id} desbloquea a ${ch.suma}, guarda la carta y queda resuelta`);
+        ok(await p.isVisible('#aviso') && (await p.textContent('#aviso')).includes('Se suma un personaje'), `${ch.id}: aparece el aviso de personaje nuevo`);
+        await entrar(p, nom); g = await guardado(p, nom);
+        ok((await tira(p)).includes(ch.suma) && !(await p.isVisible('#aviso')) && g.cartas[ch.carta] === true, `${ch.id}: tras recargar ${ch.suma} sigue en la tira y no se repite el aviso`);
+      } finally { await c.close(); }
+      // (e) Si ya se tiene a ese personaje, la charla no repite el aviso
+      ({ c, p } = await nuevaPag());
+      try {
+        const nom = 'Y' + ch.id.slice(0, 5);
+        await crearYEntrar(p, nom, ch.suma);
+        await juntoA(p, ch.id); await espera(250); await abrirCharla(p);
+        for (const t of ch.pasos) { await elegir(p, t); await espera(60); }
+        await espera(250);
+        const g = await guardado(p, nom);
+        ok(!(await p.isVisible('#aviso')) && g.desbloqueados.length === 1 && g.cartas[ch.carta] === true && g.charlas[ch.id]?.resuelta === true, `${ch.id}: si ya tiene a ${ch.suma} no hay aviso repetido y igual guarda la carta`);
+      } finally { await c.close(); }
+    }
+
+    // (d) La fuente de las Musas y las cenizas: objetos que desbloquean a Pegaso y Fénix, y quedan usados
+    ({ c, p } = await nuevaPag());
+    try {
+      await crearYEntrar(p, 'Objetos', 'ariadna');
+      await juntoA(p, 'fuente-musas'); await espera(250);
+      // (g) el botón de poder no usa el objeto
+      await p.keyboard.down('KeyE'); await espera(300); await p.keyboard.up('KeyE'); await espera(150);
+      let g = await guardado(p, 'Objetos');
+      ok(!(await tira(p)).includes('pegaso') && !(g.usados || {})['fuente-musas'] && (await p.getAttribute('#btn-poder', 'aria-label')) === 'Hilo', 'junto a la fuente el botón de poder sigue siendo el poder y no la usa');
+      ok(await p.isVisible('#btn-hablar'), 'junto a la fuente aparece el botón de interacción');
+      await p.keyboard.press('KeyT'); await espera(250);
+      g = await guardado(p, 'Objetos');
+      ok(await p.isVisible('#aviso') && (await p.textContent('#aviso')).includes('Una fuente brota') && (await p.textContent('#aviso')).includes('Pegaso se suma'), 'usar la fuente muestra su aviso');
+      ok((await tira(p)).join() === 'pegaso,ariadna' && g.usados['fuente-musas'] === true && g.desbloqueados.includes('pegaso'), 'la fuente desbloquea a Pegaso y queda usada en el perfil');
+      await juntoA(p, 'cenizas'); await espera(250);
+      await p.click('#btn-hablar'); await espera(250);
+      g = await guardado(p, 'Objetos');
+      ok(await p.isVisible('#aviso') && (await p.textContent('#aviso')).includes('Entre las cenizas') && (await tira(p)).join() === 'pegaso,ariadna,fenix' && g.usados.cenizas === true, 'las cenizas muestran su aviso, desbloquean al Fénix y quedan usadas');
+      ok(!eng.test(await p.evaluate(() => document.getElementById('aviso').innerText)), 'los avisos de los objetos no tienen texto en inglés');
+      await entrar(p, 'Objetos'); g = await guardado(p, 'Objetos');
+      ok((await tira(p)).join() === 'pegaso,ariadna,fenix' && !(await p.isVisible('#aviso')) && g.usados['fuente-musas'] === true && g.usados.cenizas === true
+        && await p.evaluate(() => window.__mundo.interactivos.every(q => q.usado)), 'tras recargar siguen desbloqueados y usados, sin aviso, y los objetos no desaparecen');
+      await juntoA(p, 'fuente-musas'); await espera(250);
+      ok(!(await p.isVisible('#aviso')), 'usado, el objeto sigue ahí y no repite nada');
+      await p.keyboard.press('KeyT'); await espera(250);
+      ok(!(await p.isVisible('#aviso')) && (await tira(p)).length === 3, 'volver a usar un objeto ya usado no cambia nada');
+    } finally { await c.close(); }
+    ({ c, p } = await nuevaPag());
+    try {
+      await crearYEntrar(p, 'Dos', 'pegaso');
+      await juntoA(p, 'fuente-musas'); await espera(250); await p.keyboard.press('KeyT'); await espera(250);
+      const g = await guardado(p, 'Dos');
+      ok(!(await p.isVisible('#aviso')) && g.desbloqueados.join() === 'pegaso' && g.usados['fuente-musas'] === true, 'si ya tiene a Pegaso, la fuente no repite el aviso ni duplica nada');
+    } finally { await c.close(); }
+
+    // (f) Un perfil existente no pierde nada con lo nuevo
+    ({ c, p } = await nuevaPag());
+    try {
+      await p.goto(url);
+      const viejo = { id: 'previo', nombre: 'Previo', objetos: { 'hacha-doble': true }, mundos: { mundo: { muros: ['5,62'], rejas: [], empujables: {} } }, personaje: 'eco', vistoCambio: true, mapa: 'mundo', llegada: [11.5, 109.5], eco: null, mundoUnido: true, canalIncorporado: true, fichaUlisesPresentada: true,
+        desbloqueoIncorporado: true, desbloqueados: ['pegaso', 'fenix', 'ariadna', 'eco', 'ulises'], saberes: { hilo: true }, charlas: {}, cartas: {} };
+      await p.evaluate(([k, v]) => localStorage.setItem(k, JSON.stringify({ version: 1, perfiles: [v] })), [clave, viejo]);
+      await p.reload(); await p.waitForSelector('#pantalla-perfiles:not([hidden])');
+      await p.click('.perfil'); await p.waitForFunction(() => window.__mundo); await espera(300);
+      const g = await guardado(p, 'Previo');
+      ok(g.desbloqueados.join() === viejo.desbloqueados.join() && JSON.stringify(g.mundos) === JSON.stringify(viejo.mundos) && JSON.stringify(g.objetos) === JSON.stringify(viejo.objetos) && g.saberes.hilo === true,
+        'un perfil guardado antes (cinco desbloqueados) conserva exactamente lo suyo');
+      ok((await tira(p)).join() === 'pegaso,ariadna,fenix,eco,ulises', 'su tira sigue igual: nada se bloquea ni se agrega');
+    } finally { await c.close(); }
+
+    // (h) Los textos de las charlas y de los objetos caben en el celular
+    {
+      const dir = path.join(RAIZ, 'datos/charlas'), ind = JSON.parse(fs.readFileSync(path.join(dir, 'indice.json'), 'utf8')).charlas;
+      let pasadas = [];
+      for (const id of ind) {
+        const ch = JSON.parse(fs.readFileSync(path.join(dir, id + '.json'), 'utf8'));
+        for (const [nid, n] of Object.entries(ch.nodos)) {
+          if (n.texto.length > 220) pasadas.push(`${id}.${nid} (${n.texto.length})`);
+          for (const o of n.opciones) if (o.texto.length > 60) pasadas.push(`${id}.${nid} opción (${o.texto.length})`);
+        }
+      }
+      ok(ind.join() === 'teseo,dedalo,narciso,nausicaa' && pasadas.length === 0, 'las cuatro charlas respetan ~220 caracteres por pantalla y ~60 por opción' + (pasadas.length ? ': ' + pasadas.join(', ') : ''));
+      const inter = JSON.parse(fs.readFileSync(path.join(RAIZ, 'datos/mapa-mundo.json'), 'utf8')).interactivos;
+      ok(inter.length === 2 && inter.every(q => q.titulo.length <= 60 && q.texto.length <= 220 && !eng.test(q.titulo + ' ' + q.texto)), 'los textos de los objetos interactivos caben y no están en inglés');
+    }
   }
   await seccionDesbloqueo();
   await require('./probar-canal-navegador')(browser, url, SALIDA, ok);

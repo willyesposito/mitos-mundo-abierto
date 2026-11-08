@@ -21,18 +21,17 @@ function guardar() {
 
 export function listarPerfiles() { return datos.perfiles; }
 
-// `inicial`: { personaje, personajes } con el personaje elegido al empezar y la lista del elenco (con `bajoLlave`).
-// Empiezan desbloqueados todos menos los que están bajo llave, más el elegido.
+// `inicial`: { personaje } con el personaje elegido al empezar. Un perfil nuevo arranca solo con ese personaje:
+// los demás se desbloquean jugando (charlas y objetos del mundo).
 export function crearPerfil(nombre, inicial = {}) {
   nombre = (nombre || '').trim().slice(0, 14);
   if (!nombre || datos.perfiles.length >= MAX_PERFILES) return null;
   const elegido = inicial.personaje || 'pegaso';
-  const desbloqueados = (inicial.personajes || []).filter(q => !q.bajoLlave || q.id === elegido).map(q => q.id);
-  if (!desbloqueados.includes(elegido)) desbloqueados.push(elegido);
+  const desbloqueados = [elegido];
   const p = {
     id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
     nombre, objetos: {}, mundos: {}, personaje: elegido, vistoCambio: false, mapa: 'mundo', llegada: null, eco: null, mundoUnido: true, canalIncorporado: true, fichaUlisesPresentada: true,
-    desbloqueoIncorporado: true, desbloqueados, saberes: {}, charlas: {}, cartas: {},
+    desbloqueoIncorporado: true, desbloqueados, saberes: {}, charlas: {}, cartas: {}, usados: {},
   };
   datos.perfiles.push(p);
   guardar();
@@ -145,7 +144,7 @@ export function migrarDesbloqueo(perfil, todos) {
   const hubo = !!perfil.desbloqueoIncorporado;
   if (!hubo) perfil.desbloqueados = [...new Set([...(Array.isArray(perfil.desbloqueados) ? perfil.desbloqueados : []), ...todos])];
   if (!Array.isArray(perfil.desbloqueados) || !perfil.desbloqueados.length) perfil.desbloqueados = [...todos];
-  for (const k of ['saberes', 'charlas', 'cartas']) if (!perfil[k] || typeof perfil[k] !== 'object') perfil[k] = {};
+  for (const k of ['saberes', 'charlas', 'cartas', 'usados']) if (!perfil[k] || typeof perfil[k] !== 'object') perfil[k] = {};
   perfil.desbloqueoIncorporado = true;
   guardar();
   return !hubo;
@@ -173,6 +172,14 @@ export function registrarCarta(perfil, id) {
 export function resolverCharla(perfil, id) {
   if (perfil.charlas[id]?.resuelta) return false;
   perfil.charlas[id] = { resuelta: true };
+  guardar();
+  return true;
+}
+// Un objeto interactivo del mundo (fuente, cenizas) usado queda usado para siempre.
+export function marcarUsado(perfil, id) {
+  if (!perfil.usados) perfil.usados = {};
+  if (perfil.usados[id]) return false;
+  perfil.usados[id] = true;
   guardar();
   return true;
 }

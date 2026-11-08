@@ -1,0 +1,92 @@
+{
+  "id": "nausicaa",
+  "interlocutor": "Nausícaa",
+  "color": "#2f8f83",
+  "nivel": "normal",
+  "habilidades": {
+    "fuerza": 3,
+    "astucia": 7,
+    "valentia": 6,
+    "magia": 1,
+    "liderazgo": 4,
+    "bondad": 9,
+    "velocidad": 5
+  },
+  "estado": "borrador",
+  "inicio": "n1",
+  "nodos": {
+    "n1": {
+      "texto": "Estaba lavando ropa junto al mar con mis sirvientas cuando encontré a un hombre agotado y sin nada.",
+      "opciones": [
+        {
+          "texto": "¿Quién era?",
+          "va": "n2",
+          "sinSaber": {
+            "saber": "naufrago"
+          }
+        },
+        {
+          "texto": "¿Y qué hiciste?",
+          "va": "n3",
+          "sinSaber": {
+            "saber": "hospitalidad"
+          }
+        },
+        {
+          "texto": "Creo que ya entendí",
+          "va": "n4",
+          "requiere": {
+            "saberes": [
+              "naufrago",
+              "hospitalidad"
+            ]
+          }
+        }
+      ]
+    },
+    "n2": {
+      "texto": "Era Odiseo, que llevaba años intentando volver a su hogar. En vez de tenerle miedo, decidí ayudarlo.",
+      "da": [
+        "naufrago"
+      ],
+      "opciones": [
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n3": {
+      "texto": "Le di ropa y comida, y lo guié hasta el palacio de mi padre. Allí lo recibieron con hospitalidad y lo ayudaron a seguir su viaje.",
+      "da": [
+        "hospitalidad"
+      ],
+      "opciones": [
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n4": {
+      "texto": "Ayudar a quien llega sin nada es lo que hace un buen anfitrión. Él pasó diez años de mar: si querés, puede acompañarte.",
+      "requiere": {
+        "saberes": [
+          "naufrago",
+          "hospitalidad"
+        ]
+      },
+      "efecto": {
+        "desbloquea": [
+          "ulises"
+        ],
+        "carta": "nausicaa"
+      },
+      "opciones": [
+        {
+          "texto": "Gracias"
+        }
+      ]
+    }
+  }
+}

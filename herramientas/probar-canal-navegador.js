@@ -17,7 +17,7 @@ module.exports = async function probarCanal(browser, url, salida, ok) {
   const poder=async()=>{await p.keyboard.press('KeyE');await p.waitForTimeout(150)};
   const foto=async n=>{if(await p.isVisible('#aviso'))await p.click('#aviso');await p.waitForTimeout(500);await p.screenshot({path:path.join(salida,'U2-'+n+'.png')})};
   try{
-    await p.goto(url);await p.fill('#nombre-nuevo','Canal');await p.click('#form-nuevo button[type=submit]');await p.click('.carta-eleccion[data-id=pegaso]');await p.waitForFunction(()=>window.__mundo);
+    await p.goto(url);await p.fill('#nombre-nuevo','Canal');await p.click('#form-nuevo button[type=submit]');await p.click('.carta-eleccion[data-id=pegaso]');await p.waitForFunction(()=>window.__mundo);await p.evaluate(()=>window.__desbloquear('ulises'));
     await p.click('.pj[data-id=ulises]');await ir(10.5,89.5,'y');await foto('muelle-sur');
     ok(!(await estado()).visible,'el sello está oculto al llegar al muelle sur');
     await poder();ok((await estado()).aBordo,'U2 navegador: embarca desde puerto');

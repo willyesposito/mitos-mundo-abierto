@@ -145,12 +145,12 @@
     "###########r############",
     "bbbbbbbbbb~~~bbbbbbbbbbb",
     "bb...................bbb",
-    "bb...................bbb",
-    "bb...................bbb",
-    "bb...................bbb",
-    "bb...................bbb",
-    "bb...................bbb",
-    "bb...................bbb",
+    "bb.bbbbbbb...........bbb",
+    "bb.b.....b...........bbb",
+    "bb.b.....b...........bbb",
+    "bb.b.....b...........bbb",
+    "bb.b.....b...........bbb",
+    "bb.bbb.bbb...........bbb",
     "bb...................bbb",
     "bb...................bbb",
     "bb~~~~~~~.....~~~~~~~bbb",
@@ -173,7 +173,14 @@
     {"x": 10, "y": 88}
   ],
   "interlocutores": [
-    {"id": "teseo", "charla": "teseo", "x": 16, "y": 104}
+    {"id": "teseo", "charla": "teseo", "x": 16, "y": 104},
+    {"id": "dedalo", "charla": "dedalo", "x": 7, "y": 92, "banco": [4.6, 91.7]},
+    {"id": "narciso", "charla": "narciso", "x": 3, "y": 97},
+    {"id": "nausicaa", "charla": "nausicaa", "x": 18, "y": 97}
+  ],
+  "interactivos": [
+    {"id": "fuente-musas", "tipo": "fuente", "x": 15, "y": 92, "desbloquea": "pegaso", "titulo": "Una fuente brota", "texto": "De un golpe de casco de Pegaso nació la fuente de las Musas. Pegaso se suma."},
+    {"id": "cenizas", "tipo": "cenizas", "x": 11, "y": 91, "desbloquea": "fenix", "titulo": "Entre las cenizas", "texto": "De unas cenizas tibias renace el Fénix. Se suma."}
   ],
   "migracionCanal": {"desde": 74, "hasta": 97, "desplazamiento": 14}
 }

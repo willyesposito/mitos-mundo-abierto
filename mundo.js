@@ -186,7 +186,10 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
 
   // Interlocutores: personas con quien conversar. No son obstáculo ni cambian nada del piso.
   const interlocutores = (mapa.interlocutores || []).filter(q => celdas[q.y] && celdas[q.y][q.x] !== undefined)
-    .map(q => ({ id: q.id, charla: q.charla, x: q.x + 0.5, y: q.y + 0.5 }));
+    .map(q => ({ id: q.id, charla: q.charla, x: q.x + 0.5, y: q.y + 0.5, banco: q.banco || null }));
+  // Objetos interactivos (fuente, cenizas): se usan con el mismo botón que hablar. `usado` lo pone quien guarda el perfil.
+  const interactivos = (mapa.interactivos || []).filter(q => celdas[q.y] && celdas[q.y][q.x] !== undefined)
+    .map(q => ({ id: q.id, tipo: q.tipo, x: q.x + 0.5, y: q.y + 0.5, desbloquea: q.desbloquea, titulo: q.titulo, texto: q.texto, usado: false, t0: -10 }));
 
   const coleccionables = (mapa.objetos || []).filter(o => o.tipo === 'coleccionable').map(o => ({
     id: o.id, x: o.x + 0.5, y: o.y + 0.5,
@@ -196,7 +199,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
 
   const m = {
     id: mapa.id, zonas: mapa.zonas || [], barcas: mapa.barcas || [], barcasRemo: barcas,
-    cols, rows, celdas, origen, empujables, interlocutores, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
+    cols, rows, celdas, origen, empujables, interlocutores, interactivos, coleccionables, enlaces, braseros, soles, fuentes, puertasSonido, sogas, sonidos, ondas: [], eco: sonidos[guardado.eco] ? guardado.eco : null,
     particulas: [], senales: [], eventos: [], t: 0, velo: 0,
     jugador: {
       x: arranque[0], y: arranque[1], z: 0, vz: 0,
@@ -207,7 +210,7 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
       seguro: { x: arranque[0], y: arranque[1], z: 0 }, seguroBarca: null, aBordo: null,
       estado: 'jugando', estadoT: 0,
     },
-    suelo, alturaTile, actualizar, cambiarPersonaje, estado, interlocutorCercano,
+    suelo, alturaTile, actualizar, cambiarPersonaje, estado, interlocutorCercano, cercano,
   };
 
   // Estado persistente del mapa. Una clave por mecanismo: los poderes nuevos suman la suya.
@@ -235,6 +238,18 @@ export function crearMundo(mapa, recogidos, guardado = {}, llegada = null) {
     if (j.estado !== 'jugando' || j.z - Math.max(suelo(j.x, j.y), 0) > 1.0) return null;
     let mejor = null, d0 = RADIO_CHARLA;
     for (const q of interlocutores) {
+      const d = Math.hypot(q.x - j.x, q.y - j.y);
+      if (d <= d0) { d0 = d; mejor = q; }
+    }
+    return mejor;
+  }
+
+  // Lo más cercano con lo que se puede hacer algo con el botón de hablar: un interlocutor o un objeto interactivo.
+  function cercano() {
+    const j = m.jugador;
+    if (j.estado !== 'jugando' || j.z - Math.max(suelo(j.x, j.y), 0) > 1.0) return null;
+    let mejor = null, d0 = RADIO_CHARLA;
+    for (const q of [...interlocutores, ...interactivos]) {
       const d = Math.hypot(q.x - j.x, q.y - j.y);
       if (d <= d0) { d0 = d; mejor = q; }
     }

@@ -19,7 +19,7 @@ async function revisar(){
   });
   const page=await ctx.newPage();page.on('pageerror',e=>errores.push(e.message));
   await page.goto('http://localhost:4173/?prueba&pruebas');
-  await page.fill('#nombre-nuevo','Visual');await page.click('#form-nuevo button[type=submit]');await page.click('.carta-eleccion[data-id=pegaso]');await page.evaluate(()=>window.__desbloquear&&window.__desbloquear('minotauro'));
+  await page.fill('#nombre-nuevo','Visual');await page.click('#form-nuevo button[type=submit]');await page.click('.carta-eleccion[data-id=pegaso]');await page.evaluate(()=>window.__desbloquear&&['pegaso','minotauro','ariadna','fenix','eco','ulises'].forEach(id=>window.__desbloquear(id)));
   await page.waitForFunction(()=>window.__mundo&&window.__sprites().listos);
   await page.click('.pj[data-id="ariadna"]');
   const ubicar=async(x,y,id='ariadna')=>{
