@@ -1,0 +1,188 @@
+{
+  "id": "dedalo",
+  "interlocutor": "Dédalo",
+  "color": "#B0803A",
+  "nivel": "plateado",
+  "habilidades": {
+    "fuerza": 3,
+    "astucia": 10,
+    "valentia": 6,
+    "magia": 4,
+    "liderazgo": 4,
+    "bondad": 6,
+    "velocidad": 4
+  },
+  "estado": "borrador",
+  "inicio": "n1",
+  "nodos": {
+    "n1": {
+      "texto": "Soy Dédalo, artesano. Mirá vos, alguien que mira antes de tocar. ¿Qué querés saber?",
+      "opciones": [
+        {
+          "texto": "¿Qué estás armando?",
+          "va": "n2",
+          "sinSaber": {
+            "saber": "alas"
+          }
+        },
+        {
+          "texto": "Dicen que hiciste el laberinto.",
+          "va": "n5"
+        },
+        {
+          "texto": "Ya entendí",
+          "va": "n8",
+          "requiere": {
+            "saberes": [
+              "alas",
+              "secreto-del-hilo"
+            ]
+          }
+        }
+      ]
+    },
+    "n2": {
+      "texto": "Alas. Se arman de a una pluma, de la más corta a la más larga, como una escalera. ¿Por qué creés que van así?",
+      "opciones": [
+        {
+          "texto": "Para que la ala se curve como la de un pájaro.",
+          "va": "n3"
+        },
+        {
+          "texto": "Para que quede prolija.",
+          "va": "n2b"
+        }
+      ]
+    },
+    "n2b": {
+      "texto": "Prolija queda, sí. Pero una ala no vuela por prolija. Fijate cómo se curva cuando la ordeno así. Probá de nuevo.",
+      "opciones": [
+        {
+          "texto": "Ah, para que se curve.",
+          "va": "n3"
+        }
+      ]
+    },
+    "n3": {
+      "texto": "Eso. La curva agarra el aire. Las plumas se cosen con hilo en el medio y se fijan con cera en la base.",
+      "da": [
+        "alas"
+      ],
+      "opciones": [
+        {
+          "texto": "¿Y para qué las hacés?",
+          "va": "n4"
+        },
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n4": {
+      "texto": "Minos no nos dejaba salir de Creta, ni por tierra ni por mar. Quedaba el cielo. Eran dos pares: uno para mí y otro para mi hijo, Ícaro.",
+      "requiere": {
+        "saber": "alas"
+      },
+      "opciones": [
+        {
+          "texto": "¿Y salió bien?",
+          "va": "n4b"
+        },
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n4b": {
+      "texto": "Le dije que volara a media altura: arriba el sol ablanda la cera, abajo la espuma moja las plumas. Voló tan contento que subió de más. La cera cedió y cayó al mar.",
+      "opciones": [
+        {
+          "texto": "Lo siento.",
+          "va": "n4c"
+        },
+        {
+          "texto": "¿Y vos?",
+          "va": "n4d"
+        }
+      ]
+    },
+    "n4c": {
+      "texto": "Gracias. Lo busqué hasta encontrarlo. Ese mar hoy lleva su nombre. Un buen invento no alcanza si se olvida la advertencia.",
+      "opciones": [
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n4d": {
+      "texto": "Seguí volando, con las alas puestas y el corazón en otra parte. Llegué a Sicilia. Desde ahí se ve lejos todo lo que perdí.",
+      "opciones": [
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n5": {
+      "texto": "Minos quería un lugar del que nadie saliera. Lo hice tan enredado que casi no encuentro yo mismo la salida.",
+      "opciones": [
+        {
+          "texto": "¿Y quién vivía adentro?",
+          "va": "n6"
+        },
+        {
+          "texto": "¿Cómo se sale de ahí?",
+          "va": "n7"
+        }
+      ]
+    },
+    "n6": {
+      "texto": "Asterión, hijo de la reina Pasífae, mitad hombre y mitad toro. Minos lo guardaba ahí. Teseo entró y lo venció.",
+      "opciones": [
+        {
+          "texto": "¿Y cómo salió Teseo?",
+          "va": "n7"
+        },
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n7": {
+      "texto": "Con un hilo. Yo le conté el secreto a Ariadna, la hija de Minos, y ella le dio a Teseo un ovillo para marcar el camino de vuelta.",
+      "da": [
+        "secreto-del-hilo"
+      ],
+      "opciones": [
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n8": {
+      "texto": "Ya conocés mis dos mitades: lo que inventé y lo que perdí. Con eso podés llevarte mi carta.",
+      "requiere": {
+        "saberes": [
+          "alas",
+          "secreto-del-hilo"
+        ]
+      },
+      "efecto": {
+        "desbloquea": [
+          "ariadna"
+        ],
+        "carta": "dedalo"
+      },
+      "opciones": [
+        {
+          "texto": "Gracias"
+        }
+      ]
+    }
+  }
+}

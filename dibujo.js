@@ -83,6 +83,8 @@ function dibujarMundo(ctx, m, v, personajes) {
   for (const b of m.barcas) if (ver(b.y)) items.push({ fila: b.y, prof: b.y + 0.4, tipo: 'barca', b });
   for (const b of m.barcasRemo) if (ver(Math.floor(b.y))) items.push({ fila: Math.floor(b.y), prof: b.y - 0.6, tipo: 'barcaRemo', b });
   for (const q of m.interlocutores) if (ver(Math.floor(q.y))) items.push({ fila: Math.floor(q.y), prof: q.y, tipo: 'interlocutor', q });
+  for (const q of m.interactivos) if (ver(Math.floor(q.y))) items.push({ fila: Math.floor(q.y), prof: q.y, tipo: 'interactivo', q });
+  for (const q of m.interlocutores) if (q.banco && ver(Math.floor(q.banco[1]))) items.push({ fila: Math.floor(q.banco[1]), prof: q.banco[1] + 0.5, tipo: 'banco', q });
   // Las argollas y las sogas se dibujan después de todas las baldosas por las que pasan
   for (const s of m.sogas) {
     const maxFila = Math.max(s.a[1], s.b[1]);
@@ -339,19 +341,91 @@ function dibujarInterlocutor(ctx, m, q) {
   ctx.font = 'bold 15px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = COL.cal; ctx.fillText((q.nombre || '?').slice(0, 1).toUpperCase(), 0, -14);
   ctx.restore();
-  if (m.interlocutorCercano() === q) {
-    const salto = reducirMovimiento() ? 0 : Math.sin(m.t * 4) * 2.5, by = gy - 68 + salto;
-    ctx.save(); ctx.translate(gx, by);
-    ctx.lineWidth = 2; ctx.strokeStyle = COL.tinta; ctx.lineJoin = 'round'; ctx.fillStyle = COL.cal;
-    ctx.beginPath();
-    ctx.moveTo(-14, -9); ctx.lineTo(14, -9); ctx.quadraticCurveTo(18, -9, 18, -5); ctx.lineTo(18, 5);
-    ctx.quadraticCurveTo(18, 9, 14, 9); ctx.lineTo(-1, 9); ctx.lineTo(-6, 15); ctx.lineTo(-6, 9); ctx.lineTo(-14, 9);
-    ctx.quadraticCurveTo(-18, 9, -18, 5); ctx.lineTo(-18, -5); ctx.quadraticCurveTo(-18, -9, -14, -9); ctx.closePath();
-    ctx.fill(); ctx.stroke();
-    ctx.fillStyle = COL.oxido;
-    for (const dx of [-8, 0, 8]) { ctx.beginPath(); ctx.arc(dx, 0, 2.2, 0, Math.PI * 2); ctx.fill(); }
+  if (m.interlocutorCercano() === q) dibujarGlobo(ctx, m, gx, gy - 68);
+}
+
+// Globo de diálogo sobre quien se puede usar o con quien se puede hablar.
+function dibujarGlobo(ctx, m, gx, by0) {
+  const salto = reducirMovimiento() ? 0 : Math.sin(m.t * 4) * 2.5, by = by0 + salto;
+  ctx.save(); ctx.translate(gx, by);
+  ctx.lineWidth = 2; ctx.strokeStyle = COL.tinta; ctx.lineJoin = 'round'; ctx.fillStyle = COL.cal;
+  ctx.beginPath();
+  ctx.moveTo(-14, -9); ctx.lineTo(14, -9); ctx.quadraticCurveTo(18, -9, 18, -5); ctx.lineTo(18, 5);
+  ctx.quadraticCurveTo(18, 9, 14, 9); ctx.lineTo(-1, 9); ctx.lineTo(-6, 15); ctx.lineTo(-6, 9); ctx.lineTo(-14, 9);
+  ctx.quadraticCurveTo(-18, 9, -18, 5); ctx.lineTo(-18, -5); ctx.quadraticCurveTo(-18, -9, -14, -9); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = COL.oxido;
+  for (const dx of [-8, 0, 8]) { ctx.beginPath(); ctx.arc(dx, 0, 2.2, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}
+
+// Objetos interactivos sin sprite: la fuente de las Musas (seca hasta usarla, luego con chorro) y las cenizas (con un brillo
+// que se apaga al usarlas). Nunca desaparecen.
+function dibujarInteractivo(ctx, m, q) {
+  const gx = q.x * TW, gy = q.y * TH - Math.max(m.suelo(q.x, q.y), 0) * LH, quieto = reducirMovimiento();
+  ctx.save(); ctx.translate(gx, gy);
+  ctx.lineWidth = 2; ctx.strokeStyle = COL.tinta; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.fillStyle = 'rgba(20,10,30,.35)'; ctx.beginPath(); ctx.ellipse(0, 2, 24, 9, 0, 0, Math.PI * 2); ctx.fill();
+  if (q.tipo === 'fuente') {
+    // pila de piedra con borde, agua adentro y chorro
+    ctx.fillStyle = COL.calSombra; ctx.beginPath(); ctx.ellipse(0, -2, 22, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = COL.cal; ctx.beginPath(); ctx.ellipse(0, -9, 22, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = q.usado ? COL.egeo : COL.linoSombra; ctx.beginPath(); ctx.ellipse(0, -9, 16, 6.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = COL.cal; ctx.beginPath(); ctx.rect(-4, -30, 8, 22); ctx.fill(); ctx.stroke();
+    if (q.usado) {
+      const f = quieto ? 0 : m.t * 3;
+      ctx.strokeStyle = COL.espuma; ctx.lineWidth = 3;
+      for (const [dx, k] of [[-1, 0], [0, 0.5], [1, 0.25]]) {
+        const a = quieto ? 0.7 : 0.5 + 0.35 * Math.sin(f + k * 6);
+        ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(0, -34); ctx.quadraticCurveTo(dx * 14, -50, dx * 20, -16); ctx.stroke();
+      }
+      ctx.globalAlpha = 1; ctx.strokeStyle = COL.tinta; ctx.lineWidth = 2;
+      ctx.strokeStyle = COL.espuma; ctx.beginPath(); ctx.ellipse(0, -9, 10, 4, 0, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      // una gota de brillo marca que se puede usar
+      const b = quieto ? 0.8 : 0.55 + 0.35 * Math.sin(m.t * 3);
+      ctx.globalAlpha = b; ctx.fillStyle = COL.oro; ctx.beginPath(); ctx.arc(0, -40, 4, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+  } else {
+    // montoncito de cenizas con brasas
+    ctx.fillStyle = '#7d726a'; ctx.beginPath(); ctx.ellipse(0, -2, 22, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#a69a8f'; ctx.beginPath(); ctx.moveTo(-15, -4); ctx.quadraticCurveTo(-8, -26, 0, -24); ctx.quadraticCurveTo(9, -26, 15, -4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5f554e'; for (const [dx, dy] of [[-7, -9], [4, -13], [9, -6]]) { ctx.beginPath(); ctx.arc(dx, dy, 2.2, 0, Math.PI * 2); ctx.fill(); }
+    if (!q.usado) {
+      const b = quieto ? 0.85 : 0.6 + 0.4 * Math.sin(m.t * 4);
+      ctx.globalAlpha = b; ctx.fillStyle = '#e8892a'; ctx.beginPath(); ctx.arc(-2, -16, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = COL.oro; ctx.beginPath(); ctx.arc(-2, -16, 2, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = '#e6b866'; ctx.beginPath(); ctx.moveTo(-5, -22); ctx.lineTo(0, -34); ctx.lineTo(5, -22); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  }
+  ctx.restore();
+  if (m.cercano() === q && !q.usado) dibujarGlobo(ctx, m, gx, gy - 66);
+}
+
+// Banco del taller de Dédalo: tablón con plumas ordenadas de menor a mayor, un cuenco de cera y un ovillo de hilo.
+function dibujarBanco(ctx, m, q) {
+  const gx = q.banco[0] * TW, gy = q.banco[1] * TH - Math.max(m.suelo(q.banco[0], q.banco[1]), 0) * LH;
+  ctx.save(); ctx.translate(gx, gy);
+  ctx.lineWidth = 2; ctx.strokeStyle = COL.tinta; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.fillStyle = 'rgba(20,10,30,.3)'; ctx.beginPath(); ctx.ellipse(0, 4, 54, 10, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = COL.linoSombra; for (const dx of [-46, 44]) { ctx.beginPath(); ctx.rect(dx - 4, -18, 8, 20); ctx.fill(); ctx.stroke(); }
+  ctx.fillStyle = COL.lino; ctx.beginPath(); ctx.rect(-54, -30, 108, 14); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = COL.linoSombra; ctx.beginPath(); ctx.rect(-54, -18, 108, 4); ctx.fill();
+  // plumas de menor a mayor, apoyadas sobre el tablón
+  for (let i = 0; i < 6; i++) {
+    const x = -44 + i * 8, h = 10 + i * 3;
+    ctx.save(); ctx.translate(x, -30); ctx.rotate(-0.25);
+    ctx.fillStyle = i % 2 ? '#fffaf0' : COL.cal; ctx.beginPath(); ctx.ellipse(0, -h / 2, 3.4, h / 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.restore();
   }
+  // cuenco de cera
+  ctx.fillStyle = COL.ocre; ctx.beginPath(); ctx.ellipse(24, -32, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#f2d98a'; ctx.beginPath(); ctx.ellipse(24, -34, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+  // ovillo
+  ctx.fillStyle = COL.oxido; ctx.beginPath(); ctx.arc(42, -36, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(42, -36, 3.5, 0.4, 3.6); ctx.stroke();
+  ctx.restore();
 }
 
 // ---------- Objetos y personajes ----------
@@ -364,6 +438,8 @@ function dibujarItem(ctx, m, it, personajes) {
   else if (it.tipo === 'barca') dibujarBarca(ctx, m, it.b);
   else if (it.tipo === 'barcaRemo') dibujarBarcaRemo(ctx, it.b);
   else if (it.tipo === 'interlocutor') dibujarInterlocutor(ctx, m, it.q);
+  else if (it.tipo === 'interactivo') dibujarInteractivo(ctx, m, it.q);
+  else if (it.tipo === 'banco') dibujarBanco(ctx, m, it.q);
   else if (it.tipo === 'soga') dibujarSoga(ctx, it.s);
   else if (it.tipo === 'argolla') dibujarArgolla(ctx, it.s, it.p);
   else if (it.tipo === 'objeto') dibujarObjeto(ctx, m, it.c);

@@ -1,0 +1,86 @@
+{
+  "id": "narciso",
+  "interlocutor": "Narciso",
+  "color": "#3f7f8f",
+  "nivel": "normal",
+  "habilidades": {
+    "fuerza": 3,
+    "astucia": 4,
+    "valentia": 3,
+    "magia": 4,
+    "liderazgo": 2,
+    "bondad": 2,
+    "velocidad": 4
+  },
+  "estado": "borrador",
+  "inicio": "n1",
+  "nodos": {
+    "n1": {
+      "texto": "Mirá qué quieto está este estanque. Dicen que soy muy hermoso, pero a mí solo me interesa lo que veo acá.",
+      "opciones": [
+        {
+          "texto": "¿Qué ves?",
+          "va": "n2",
+          "sinSaber": {
+            "saber": "reflejo"
+          }
+        },
+        {
+          "texto": "¿Conocés a una ninfa llamada Eco?",
+          "va": "n3",
+          "sinSaber": {
+            "saber": "eco"
+          }
+        },
+        {
+          "texto": "Creo que ya entendí",
+          "va": "n4",
+          "requiere": {
+            "saber": "eco"
+          }
+        }
+      ]
+    },
+    "n2": {
+      "texto": "Mi reflejo. Me quedé tanto tiempo mirándolo que, según cuenta el mito, en este lugar nació una flor que lleva mi nombre.",
+      "da": [
+        "reflejo"
+      ],
+      "opciones": [
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n3": {
+      "texto": "Eco. Se enamoró de mí y solo podía repetir lo que yo decía. Yo no le hice caso.",
+      "da": [
+        "eco"
+      ],
+      "opciones": [
+        {
+          "texto": "Seguir",
+          "va": "n1"
+        }
+      ]
+    },
+    "n4": {
+      "texto": "Quizás debí escucharla. Si la encontrás, decile que su voz sigue en los montes y en las cuevas.",
+      "requiere": {
+        "saber": "eco"
+      },
+      "efecto": {
+        "desbloquea": [
+          "eco"
+        ],
+        "carta": "narciso"
+      },
+      "opciones": [
+        {
+          "texto": "Voy a buscarla"
+        }
+      ]
+    }
+  }
+}

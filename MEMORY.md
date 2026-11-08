@@ -59,3 +59,5 @@ Las decisiones de arranque (repo propio, todo dibujado por código, perfiles, t�
 - **Las habilidades de las fichas (1 a 10) no existen para velocidad:** la escala de velocidad es criterio de juego, no canon, y se ajusta si Guille lo pide.
 - **`window.__desbloquear` solo existe con `?prueba`:** las pruebas viejas la usan para saltar la elección inicial.
 - **En las charlas, cuanta más información del mito, mejor: se puede sumar canon de fuentes clásicas (por ejemplo Ovidio) además de la ficha, siempre cotejado y sin violencia explícita, para chicos de 10 años o más.** Por qué: Guille lo pidió al aprobar la charla de Dédalo (2026-11-07).
+- **Fuera del puerto el mundo no se recorre a pie sin poderes** (hace falta la barca de Ulises): todo lo que desbloque un personaje va en el puerto, en suelo, con prueba de alcance a pie. Por qué: un perfil que elige a alguien sin poder de agua o vuelo quedaría trabado (visto en la sesión 2 del desbloqueo, 2026-11-08).
+- **La pista "Tocá a otro personaje" solo se muestra con 2 o más desbloqueados.** Por qué: con uno solo no hay a quién cambiar y la pista tapaba el botón de hablar.

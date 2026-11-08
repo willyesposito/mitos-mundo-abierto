@@ -28,7 +28,7 @@ async function main() {
       const page=await ctx.newPage(),errores=[];
       page.on('pageerror',e=>errores.push(e.message));
       await page.goto('http://localhost:4173/?prueba&pruebas');
-      await page.fill('#nombre-nuevo','Prueba');await page.click('#form-nuevo button[type=submit]');await page.click('.carta-eleccion[data-id=pegaso]');await page.evaluate(()=>window.__desbloquear&&window.__desbloquear('minotauro'));
+      await page.fill('#nombre-nuevo','Prueba');await page.click('#form-nuevo button[type=submit]');await page.click('.carta-eleccion[data-id=pegaso]');await page.evaluate(()=>window.__desbloquear&&['pegaso','minotauro','ariadna','fenix','eco','ulises'].forEach(id=>window.__desbloquear(id)));
       await page.waitForFunction(()=>window.__mundo&&window.__sprites().listos);
       await page.click('.pj[data-id="ariadna"]');
       await page.evaluate(()=>{const j=window.__mundo.jugador;Object.assign(j,{x:13.5,y:65.5,z:0,vz:0,enSuelo:true});j.seguro={x:j.x,y:j.y,z:0};});

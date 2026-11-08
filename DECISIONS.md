@@ -233,3 +233,11 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Tono:** sin suavizar de más, pero sin violencia explícita, apto para 10 años o más (Guille, 2026-11-07).
 - **Abierto:** los textos de Teseo están en borrador; la charla de Dédalo (PR #27) entra con este formato; poderes nuevos solo para dorados; qué habilidad habilita qué; la escala de velocidad es mía, no canon.
 - **Detalle:** `plan-desbloqueo.md`.
+
+### D37. Cadena de desbloqueo de los seis personajes
+- **Estado:** tomada (Guille, 2026-11-08), construida para revisión.
+- **Decisión:** un perfil nuevo arranca solo con el personaje elegido. Los otros cinco se desbloquean por separado, sin orden: Minotauro con la charla de Teseo, Ariadna con la de Dédalo, Eco con la de Narciso, Ulises con la de Nausícaa, Pegaso con la fuente de las Musas (objeto interactivo) y Fénix con las cenizas (objeto interactivo). El botón de hablar (tecla T) sirve para el interlocutor u objeto más cercano. Perfiles anteriores: todo desbloqueado.
+- **Por qué:** Guille pidió empezar con uno y desbloquear el resto conversando, con un objeto como recompensa más fácil; con dos objetos (Pegaso y Fénix) las cadenas que salen de las fichas de `JuegoMitosFeli` quedan completas sin inventar mitos.
+- **Dónde:** todo lo desbloqueable está en el puerto, en suelo y alcanzable a pie sin poderes (hay prueba de alcance). El resto del mundo exige poderes o la barca, así que ponerlo más lejos habría trabado a algunos perfiles.
+- **Abierto:** los textos de Narciso y Nausícaa y el taller de Dédalo son borrador; el botón dice "Hablar" también para objetos; falta "Mis cartas"; familias de poder y habilidades con efecto siguen pendientes.
+- **Detalle:** `plan-desbloqueo.md`, `charla-dedalo.md`.

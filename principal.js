@@ -5,7 +5,7 @@ import { crearDibujo, estadoSprites, dibujarPersonaje, dibujarObjeto } from './d
 import { crearInterfaz } from './interfaz.js';
 import { crearControles } from './controles.js';
 import { crearSonido } from './sonido.js';
-import { actualizarPerfil, registrarObjeto, guardarMundo, migrarAlMundo, migrarAlCanal, migrarDesbloqueo, desbloquearPersonaje, registrarSaber, registrarCarta, resolverCharla } from './nucleo.js';
+import { actualizarPerfil, registrarObjeto, guardarMundo, migrarAlMundo, migrarAlCanal, migrarDesbloqueo, desbloquearPersonaje, marcarUsado, registrarSaber, registrarCarta, resolverCharla } from './nucleo.js';
 import { crearSesion, tieneEfectos, nombreDe } from './charlas.js';
 
 const $ = id => document.getElementById(id);
@@ -55,6 +55,7 @@ async function arrancar() {
   function desbloquear(id, avisar = true) {
     if (!desbloquearPersonaje(perfil, id)) return false;
     ui.mostrarTira(perfil.desbloqueados);
+    if (!perfil.vistoCambio && perfil.desbloqueados.length > 1) ui.pistaCambio(true);
     const p = personajes.find(q => q.id === id);
     if (avisar && p) ui.aviso('Se suma un personaje', p.nombre, 4200);
     return true;
@@ -63,7 +64,8 @@ async function arrancar() {
   // Hablar con el interlocutor cercano: el juego queda en pausa mientras dura la charla.
   function hablar() {
     if (!mundo || ui.menuAbierto()) return;
-    const q = mundo.interlocutorCercano();
+    const q = mundo.cercano();
+    if (q && q.desbloquea) return usarObjeto(q);
     const charla = q && charlasPorId[q.charla];
     if (!charla) return;
     corriendo = false; entrada.x = entrada.y = 0; entrada.poderMantenido = false; entrada.poderPulsado = false;
@@ -71,6 +73,16 @@ async function arrancar() {
     const sesion = crearSesion(charla, { saberes: perfil.saberes, resuelta: !!perfil.charlas[charla.id]?.resuelta });
     ui.abrirCharla(sesion);
     aplicarPaso(sesion.inicial, sesion);
+  }
+  // Objeto interactivo: la primera vez desbloquea a su personaje (si todavía no lo tiene) y queda usado para siempre.
+  function usarObjeto(q) {
+    if (q.usado) return;
+    q.usado = true; q.t0 = mundo.t;
+    marcarUsado(perfil, q.id);
+    if (!perfil.desbloqueados.includes(q.desbloquea)) {
+      desbloquear(q.desbloquea, false);
+      ui.aviso(q.titulo, q.texto, 5200);
+    }
   }
   // Guarda al momento lo aprendido y los efectos de cada paso: cerrar a mitad no pierde nada.
   function aplicarPaso(r, sesion) {
@@ -119,6 +131,7 @@ async function arrancar() {
     mundo = crearMundo(mapa, perfil.objetos, guardado, llegada);
     const libres = personajes.filter(x => perfil.desbloqueados.includes(x.id));
     mundo.jugador.personaje = libres.some(x => x.id === personaje) ? personaje : (libres[0] || personajes[0]).id;
+    for (const q of mundo.interactivos) q.usado = !!(perfil.usados || {})[q.id];
     for (const q of mundo.interlocutores) { const c = charlasPorId[q.charla]; q.nombre = c ? nombreDe(c) : ''; q.color = c ? c.color : '#5f7a3a'; }
     if (fundido) { mundo.jugador.estado = 'volviendo'; mundo.velo = 1; }
     ui.usarMapa(mapa);
@@ -161,7 +174,7 @@ async function arrancar() {
     ui.mostrarTira(perfil.desbloqueados);
     cargarMapa('mundo', perfil.llegada, perfil.personaje, false);
     ui.marcarPersonaje(mundo.jugador.personaje);
-    ui.pistaCambio(!perfil.vistoCambio);
+    ui.pistaCambio(!perfil.vistoCambio && perfil.desbloqueados.length > 1);   // con un solo personaje no hay a quién cambiar
     ui.recogidosMenu = perfil.objetos;
     reanudar();
     if (avisarUlises) ui.aviso('Nueva ficha: Ulises', 'Elegí a Ulises y tocá el botón de ficha para conocer su poder: Navegar.', 6500);
@@ -244,7 +257,7 @@ async function arrancar() {
     while (dt > 0) { const s = Math.min(dt, 1 / 60); mundo.actualizar(s, entrada); dt -= s; }
     procesarEventos();
     actualizarZona(); recordarLugar(false);
-    ui.hablarVisible(!!mundo.interlocutorCercano());
+    ui.hablarVisible(!!mundo.cercano());
     const j = mundo.jugador;
     centrarCamara(j.estado === 'volviendo' && j.estadoT < 0.02, total);
     dibujo.dibujar(mundo, vista);

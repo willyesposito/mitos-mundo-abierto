@@ -10,7 +10,7 @@
         ],
         "senal": "Algo visible sobre una terraza o un techo." } },
     { "id": "minotauro", "nombre": "Minotauro", "color": "#8a5a3c", "rasgo": "cuernos",
-      "habilidades": {"fuerza": 9, "astucia": 3, "valentia": 7, "magia": 2, "liderazgo": 1, "bondad": 3, "velocidad": 6}, "bajoLlave": true,
+      "habilidades": {"fuerza": 9, "astucia": 3, "valentia": 7, "magia": 2, "liderazgo": 1, "bondad": 3, "velocidad": 6},
       "poder": {"id": "embestir", "nombre": "Embestir", "activo": true},
       "ficha": {
         "texto": "Su nombre era Asterión, que quiere decir \"el estrellado\". Era hijo de la reina Pasífae, medio hermano de Ariadna, y tenía cabeza de toro. El rey Minos le encargó a Dédalo un laberinto para encerrarlo. Teseo entró con el hilo de Ariadna, lo venció y encontró la salida.",

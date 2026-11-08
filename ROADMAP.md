@@ -4,7 +4,7 @@ Estado de las sesiones. El contenido de cada una (fichas, catálogo, desafíos) 
 
 Estados: **pendiente**, **construida** (`probar.js` pasa) y **validada** (la jugadora lo usó en el celular). Solo Willy marca "validada".
 
-Última verificación: 2026-11-07, `probar.js` completo con 367 chequeos OK y ninguna falla (desbloqueo, sesión 1).
+Última verificación: 2026-11-08, `probar.js` completo con 413 chequeos OK y ninguna falla (desbloqueo, sesión 2).
 
 ## Etapa 1: primer mapa completo (puerto, plaza, palacio)
 
@@ -51,6 +51,7 @@ Continuación: orden, dependencias de arte y contrato de migración en `plan-con
 - [x] **U2 El canal**: construido para revisión. Decisiones: D30, D33 y D34. Arte local autorizado (14 SVG), canal, dos barcas, objetos y migración implementados. Suite completa final: 293 OK, 0 fallas, incluye arranque offline; además 76 chequeos de canal/migración, 478 gráficos y 22 de exploración aprobados. Capturas revisadas. **Validado en el celular el 2026-11-07.** Pendiente cotejo visual externo del frasco y sello por HTTP 403 de fuentes citadas. No publicado ni mergeado.
 - [x] **Ambiente interactivo**: construido. Decisión: D35. El botón de poder, sin palabras, también llama al animal cercano (sonido sintetizado y gesto). `probar.js --rapido` pasa con 29 chequeos nuevos. Falta probarlo en el celular.
 - [x] **Desbloqueo con charlas, sesión 1**: construida para revisión. Decisión: D36. Elección del personaje inicial, tira con solo los desbloqueados, motor de charlas, Teseo (dorado) que desbloquea al Minotauro, habilidades en la ficha. Falta probarla en el celular. Plan en `plan-desbloqueo.md`. Siguientes: charla de Dédalo (PR #27), cadenas de Pegaso, Fénix, Eco y Ulises, habilidades con efecto.
+- [x] **Desbloqueo con charlas, sesión 2**: construida para revisión. Decisión: D37. Los seis se desbloquean (Teseo, Dédalo con taller, Narciso, Nausícaa, fuente de las Musas, cenizas), todo en el puerto y a pie. Falta probarla en el celular. Siguientes: familias de poder, habilidades con efecto, "Mis cartas".
 - [ ] **Laberinto**: pendiente de diseño.
 - [ ] **Cueva del monte**: pendiente de diseño.
 
