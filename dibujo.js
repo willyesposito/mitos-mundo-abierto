@@ -268,23 +268,85 @@ export function simbolo(ctx, id, cx, cy, r) {
 
 // Agua: manchas y destellos en el sprite; las olas se mueven por código; franja baja con espuma junto a la tierra.
 const OLAS = [[1, 7], [2, 5], [2, 7], [3, 5], [1, 10]];   // [ondas, medio ancho]
+const R_ORILLA = 18;   // radio de las esquinas de agua contra la tierra
 function dibujarAgua(ctx, m, x, y, px, py) {
-  recorte(ctx, 'mar', (x * TW) % 176, (y * TH) % 108, TW, TH, px, py, 1);
-  const tierra = (cx, cy) => cx >= 0 && cy >= 0 && cx < m.cols && cy < m.rows && m.celdas[cy][cx] !== '~' && m.celdas[cy][cx] !== 'r';
-  const N = tierra(x, y - 1), O = tierra(x - 1, y), E = tierra(x + 1, y);
-  if (N || O || E) {
-    ctx.fillStyle = '#3d8cb8';
-    if (N) ctx.fillRect(px, py, TW, 10);
-    if (O) ctx.fillRect(px, py, 10, TH);
-    if (E) ctx.fillRect(px + TW - 10, py, 10, TH);
-    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-    ctx.setLineDash([10, 6]); ctx.lineDashOffset = -m.t * 4;
-    ctx.beginPath();
-    if (N) { ctx.moveTo(px + 4, py + 5); ctx.lineTo(px + TW - 4, py + 5); }
-    if (O) { ctx.moveTo(px + 5, py + 6); ctx.lineTo(px + 5, py + TH - 6); }
-    if (E) { ctx.moveTo(px + TW - 5, py + 6); ctx.lineTo(px + TW - 5, py + TH - 6); }
-    ctx.stroke(); ctx.setLineDash([]);
+  const esTierra = (cx, cy) => cx >= 0 && cy >= 0 && cx < m.cols && cy < m.rows && m.celdas[cy][cx] !== '~' && m.celdas[cy][cx] !== 'r';
+  const N = esTierra(x, y - 1), O = esTierra(x - 1, y), E = esTierra(x + 1, y), S = esTierra(x, y + 1);
+  const boca = m.celdas[y][x] === 'r';
+  const quieto = reducirMovimiento();
+  if (boca || !(N || O || E || S)) {
+    recorte(ctx, 'mar', (x * TW) % 176, (y * TH) % 108, TW, TH, px, py, 1);
+    if (boca && (N || O || E)) orillaRecta(ctx, m, px, py, N, O, E);
+    olasAgua(ctx, m, x, y, px, py);
+    return;
   }
+  // Esquinas redondeadas donde el agua tiene tierra en dos lados contiguos
+  const rNO = N && O ? R_ORILLA : 0, rNE = N && E ? R_ORILLA : 0, rSE = S && E ? R_ORILLA : 0, rSO = S && O ? R_ORILLA : 0;
+  if (rNO || rNE || rSE || rSO) losas(ctx, 'suelo', 4, x, y, px, py);   // el suelo que asoma en la esquina
+  const x0 = px, y0 = py, x1 = px + TW, y1 = py + TH;
+  ctx.save();
+  ctx.beginPath();
+  // Se extiende 1 px hacia el agua vecina para que no asome costura
+  const ex1 = x1 + (E ? 0 : 1), ey1 = y1 + (S ? 0 : 1);
+  ctx.moveTo(x0 + rNO, y0); ctx.lineTo(ex1 - rNE, y0);
+  if (rNE) ctx.arc(x1 - rNE, y0 + rNE, rNE, -Math.PI / 2, 0); else ctx.lineTo(ex1, y0);
+  ctx.lineTo(ex1, ey1 - rSE);
+  if (rSE) ctx.arc(x1 - rSE, y1 - rSE, rSE, 0, Math.PI / 2); else ctx.lineTo(ex1, ey1);
+  ctx.lineTo(x0 + rSO, ey1);
+  if (rSO) ctx.arc(x0 + rSO, y1 - rSO, rSO, Math.PI / 2, Math.PI); else ctx.lineTo(x0, ey1);
+  ctx.lineTo(x0, y0 + rNO);
+  if (rNO) ctx.arc(x0 + rNO, y0 + rNO, rNO, Math.PI, Math.PI * 1.5); else ctx.lineTo(x0, y0);
+  ctx.closePath(); ctx.clip();
+  recorte(ctx, 'mar', (x * TW) % 176, (y * TH) % 108, TW, TH, px, py, 1);
+
+  // Trazado de la orilla a una distancia `d` hacia adentro: tramos rectos (con leve ondulado) y arcos en las esquinas
+  const tramos = (d, onda) => {
+    const amp = quieto ? 0 : onda, f = s => Math.sin(m.t * 1.5 + s * 0.07) * amp;
+    const rec = (ax, ay, bx, by, h) => {   // h: tramo horizontal; el ondulado depende de la coordenada del mundo
+      const n = Math.max(1, Math.ceil(Math.abs(h ? bx - ax : by - ay) / 6));
+      ctx.beginPath();
+      for (let i = 0; i <= n; i++) {
+        const u = i / n, cx = ax + (bx - ax) * u, cy = ay + (by - ay) * u;
+        const o = f(h ? cx : cy) * Math.min(1, Math.min(i, n - i) * 0.6);
+        const qx = h ? cx : cx + o * (ax > x0 + TW / 2 ? -1 : 1), qy = h ? cy + o * (ay > y0 + TH / 2 ? -1 : 1) : cy;
+        if (i) ctx.lineTo(qx, qy); else ctx.moveTo(qx, qy);
+      }
+      ctx.stroke();
+    };
+    const arco = (cx, cy, r, a0, a1) => { ctx.beginPath(); ctx.arc(cx, cy, Math.max(1, r - d), a0, a1); ctx.stroke(); };
+    if (N) rec(x0 + rNO, y0 + d, x1 - rNE, y0 + d, true);
+    if (rNE) arco(x1 - rNE, y0 + rNE, rNE, -Math.PI / 2, 0);
+    if (E) rec(x1 - d, y0 + rNE, x1 - d, y1 - rSE, false);
+    if (rSE) arco(x1 - rSE, y1 - rSE, rSE, 0, Math.PI / 2);
+    if (S) rec(x1 - rSE, y1 - d, x0 + rSO, y1 - d, true);
+    if (rSO) arco(x0 + rSO, y1 - rSO, rSO, Math.PI / 2, Math.PI);
+    if (O) rec(x0 + d, y1 - rSO, x0 + d, y0 + rNO, false);
+    if (rNO) arco(x0 + rNO, y0 + rNO, rNO, Math.PI, Math.PI * 1.5);
+  };
+  ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#3d8cb8'; ctx.lineWidth = 20; tramos(0, 0);
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.setLineDash([10, 6]); ctx.lineDashOffset = quieto ? 0 : -m.t * 4;
+  tramos(5, 1.3);
+  ctx.setLineDash([]);
+  olasAgua(ctx, m, x, y, px, py);
+  ctx.restore();
+}
+// Orilla recta (solo la boca baja, que no cambia)
+function orillaRecta(ctx, m, px, py, N, O, E) {
+  ctx.fillStyle = '#3d8cb8';
+  if (N) ctx.fillRect(px, py, TW, 10);
+  if (O) ctx.fillRect(px, py, 10, TH);
+  if (E) ctx.fillRect(px + TW - 10, py, 10, TH);
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.setLineDash([10, 6]); ctx.lineDashOffset = -m.t * 4;
+  ctx.beginPath();
+  if (N) { ctx.moveTo(px + 4, py + 5); ctx.lineTo(px + TW - 4, py + 5); }
+  if (O) { ctx.moveTo(px + 5, py + 6); ctx.lineTo(px + 5, py + TH - 6); }
+  if (E) { ctx.moveTo(px + TW - 5, py + 6); ctx.lineTo(px + TW - 5, py + TH - 6); }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+function olasAgua(ctx, m, x, y, px, py) {
   ctx.strokeStyle = 'rgba(255,255,255,.38)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
   for (let n = 0; n < 2; n++) {
     const a = azar(x, y, 20 + n), [ondas, medio] = OLAS[a % OLAS.length], largo = ondas * medio * 2;
@@ -331,11 +393,18 @@ function dibujarMarcador(ctx, p, o) {
   ctx.restore();
 }
 
-// Interlocutor sin sprite: marcador con su color y la inicial. Si se le puede hablar, un globo de diálogo flota arriba.
+// Interlocutor: figura propia si tiene sprite (npc-<id>), si no un marcador con su color y la inicial.
+// Si se le puede hablar, un globo de diálogo flota arriba.
 function dibujarInterlocutor(ctx, m, q) {
   const gx = q.x * TW, gy = q.y * TH - Math.max(m.suelo(q.x, q.y), 0) * LH;
   ctx.fillStyle = 'rgba(20,10,30,.42)';
   ctx.beginPath(); ctx.ellipse(gx, gy, 12, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+  const sp = SPRITES['npc-' + q.id], img = sp && imagenes['npc-' + q.id];
+  if (img) {
+    ctx.drawImage(img, gx + sp[0], gy + sp[1], sp[2], sp[3]);
+    if (m.interlocutorCercano() === q) dibujarGlobo(ctx, m, gx, gy - 66);
+    return;
+  }
   dibujarMarcador(ctx, { color: q.color || '#5f7a3a' }, { x: gx, y: gy, fx: 1, escala: 1 });
   ctx.save(); ctx.translate(gx, gy);
   ctx.font = 'bold 15px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -750,6 +819,8 @@ function dibujarJugador(ctx, m, personajes, conSombra) {
 const SPRITES = {
   pegaso: [-22, -51, 44, 52], minotauro: [-18, -51, 36, 52], ariadna: [-18, -51, 36, 52],
   fenix: [-18, -51, 36, 52], eco: [-18, -51, 36, 52], ulises: [-18, -51, 36, 52],
+  // Interlocutores del puerto (de frente, sin animación)
+  'npc-teseo': [-18, -51, 36, 52], 'npc-dedalo': [-18, -51, 36, 52], 'npc-narciso': [-18, -51, 36, 52], 'npc-nausicaa': [-18, -51, 36, 52],
   // Alas de Pegaso y Fénix: piezas aparte, con el origen (0, 0) en la articulación del hombro, donde giran
   'pegaso-ala-cerca': [-27, -28, 34, 34], 'pegaso-ala-lejos': [-27, -28, 34, 34],
   'fenix-ala-cerca': [-27, -28, 34, 34], 'fenix-ala-lejos': [-27, -28, 34, 34],
