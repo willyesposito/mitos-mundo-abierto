@@ -20,27 +20,21 @@ function jardin(ctx,x,y,rx,ry,semilla){
     const p=puntos[i],q=puntos[(i+1)%puntos.length];
     borde.quadraticCurveTo(p[0],p[1],(p[0]+q[0])/2,(p[1]+q[1])/2);
   }
-  borde.closePath();ctx.save();ctx.fillStyle='#aa936c';ctx.fill(borde);
-  ctx.strokeStyle='#bba47b';ctx.lineWidth=8;ctx.stroke(borde);
-  ctx.strokeStyle='#e0cd9f';ctx.lineWidth=3.5;ctx.stroke(borde);ctx.clip(borde);
-  // Tierra moteada y plantas bajas junto a la vegetacion que ya vive en el mapa.
-  for(let i=0;i<110;i++){
+  borde.closePath();ctx.save();
+  // Tierra en tono con el suelo y sin contorno: acompana al camino, no compite con lo jugable.
+  ctx.fillStyle='#cdb787';ctx.fill(borde);ctx.clip(borde);
+  for(let i=0;i<60;i++){
     const xx=px+(azar(i,semilla,1)*2-1)*rx*TW,yy=py+(azar(i,semilla,2)*2-1)*ry*TH;
-    ctx.fillStyle=i%3?'#b6a077':'#958362';ctx.beginPath();
+    ctx.fillStyle=i%3?'#c8b282':'#d2bc8c';ctx.beginPath();
     ctx.ellipse(xx,yy,1+azar(i,semilla,3)*2,.7,-.3,0,Math.PI*2);ctx.fill();
   }
-  for(let i=0;i<14;i++){
+  for(let i=0;i<9;i++){
     const a=i*2.399+semilla,r=.35+azar(i,semilla,4)*.46;
     const xx=px+Math.cos(a)*rx*TW*r,yy=py+Math.sin(a)*ry*TH*r;
-    ctx.fillStyle=i%3?'#858866':'#959474';
+    ctx.fillStyle=i%3?'#b9b087':'#bdb48c';
     for(const lado of [-1,1]){ctx.beginPath();ctx.ellipse(xx+lado*2,yy-1,2.8,1.4,lado*-.7,0,Math.PI*2);ctx.fill();}
-    if(i%5===0){ctx.fillStyle='#cebea0';ctx.beginPath();ctx.ellipse(xx+4,yy+2,3,1.6,.2,0,Math.PI*2);ctx.fill();}
   }
-  ctx.restore();ctx.strokeStyle='#a99470';ctx.lineWidth=1;
-  for(let i=0;i<puntos.length;i+=2){
-    const p=puntos[i],dx=p[0]-px,dy=p[1]-py,l=Math.hypot(dx,dy);
-    ctx.beginPath();ctx.moveTo(p[0]-dx/l*3,p[1]-dy/l*3);ctx.lineTo(p[0]+dx/l*3,p[1]+dy/l*3);ctx.stroke();
-  }
+  ctx.restore();
 }
 
 function crearSuperficie(){
@@ -68,19 +62,18 @@ function crearSuperficie(){
     for(const p of rutas)d.stroke(p);
   };
   trazar(mc,'#fff',58);
-  // TODOS los bordes primero; despues el interior de TODAS las ramas cubre sus cruces.
-  trazar(ctx,'#c2ad83',64);trazar(ctx,'#e1d2ac',60);trazar(ctx,'#d2c2a0',58);
+  // Una sola pasada sobre todas las ramas: la union es una superficie continua, sin bordes.
+  trazar(ctx,'#dcd0b0',58);
   const piedras=lienzo(),pc=piedras.getContext('2d');
-  pc.fillStyle='#cabb9a';pc.fillRect(0,0,ANCHO,ALTO);
-  const tonos=['#dfd2b2','#e4d8ba','#ded0ae','#e7dbbe','#d9ccab'];
+  pc.fillStyle='#d8ccab';pc.fillRect(0,0,ANCHO,ALTO);
+  const tonos=['#ddd1b1','#e0d4b5','#dcd0af','#e1d5b8','#dacead'];
   // Pequenas losas trabadas, con variacion moderada; sin luces ni relieve nuevo.
   for(let fila=-1;fila<ALTO/15+1;fila++)for(let col=-1;col<ANCHO/25+1;col++){
     const xx=col*25+(fila%2?12:0),yy=fila*15,a=azar(col,fila,2)*3,b=azar(col,fila,3)*3;
     pc.fillStyle=tonos[Math.floor(azar(col,fila,4)*tonos.length)];
     pc.beginPath();pc.moveTo(xx+2+a,yy+1.4);pc.lineTo(xx+21,yy+1+b);pc.lineTo(xx+24,yy+4);
     pc.lineTo(xx+23-b,yy+13);pc.lineTo(xx+4,yy+14-a);pc.lineTo(xx+1,yy+10);pc.closePath();pc.fill();
-    pc.strokeStyle='#c7b893';pc.lineWidth=.7;pc.stroke();
-    if(azar(col,fila,8)>.65){pc.fillStyle='#cebf9e';pc.fillRect(xx+7+a,yy+6,1.5,.7);}
+    pc.strokeStyle='#d6caa9';pc.lineWidth=.7;pc.stroke();
   }
   pc.globalCompositeOperation='destination-in';pc.drawImage(mascara,0,0);ctx.drawImage(piedras,0,0);
   // Desgaste transparente en los accesos: evita cortar el material justo en una fila.
