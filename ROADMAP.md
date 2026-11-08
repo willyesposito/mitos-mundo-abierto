@@ -67,3 +67,7 @@ Construida: 240 chequeos integrales, 17 rápidos y 366 invariantes gráficas apr
 ## Jugabilidad y plaza adaptable (D32)
 
 **Construida para revisión:** controles de PC y táctiles, superficie visible, orientación hacia actividades y primera revisión de espacios de la plaza. Pruebas y límites en `jugabilidad-adaptable-codex.md`. Pendiente: prueba de uso en dispositivo, especialmente encontrar actividades sin ayuda externa. Puerto y palacio conservan su distribución.
+
+## Guía de estilo visual (D38)
+
+- [x] **Pase de estilo en el puerto**: construido para revisión. Reglas en `guia-estilo.md`. Seis personajes en todas sus poses, cuatro interlocutores, escenario, mecanismos, objetos y ambiente con un mismo contorno, escala, luz y nivel de detalle. Paredes como fondo calmo con altura legible. `probar.js --rapido` y `probar-graficos.mjs` (492) pasan. Falta verlo en el celular. Pendiente: plaza y palacio; Pegaso de espalda y los costados humanos quedaron rígidos.
