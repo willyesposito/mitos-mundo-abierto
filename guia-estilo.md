@@ -36,7 +36,7 @@ Alto de pies a punta, en px de juego.
 
 ## Detalle por plano
 
-Lo que importa para jugar se lee primero; el fondo acompaña.
+Lo que importa para jugar se lee primero; el fondo acompaña. El objetivo es que la pantalla no canse la vista: más detalle en el fondo resta foco aunque se vea más lindo suelto.
 
 1. **Fondo** (suelo, paredes, terrazas, techos, agua): contraste bajo. Cada pieza varía como mucho un 6 % de luminosidad respecto de su vecina, sin textura de ladrillo marcada ni grietas decorativas oscuras. Las juntas van en tono, nunca en tinta.
 2. **Objetos y ambiente:** tres tonos por material (luz, base, sombra) y contorno.
