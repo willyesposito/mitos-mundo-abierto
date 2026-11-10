@@ -241,3 +241,10 @@ Formato: título, estado, decisión, por qué, qué se descartó. Donde el porqu
 - **Dónde:** todo lo desbloqueable está en el puerto, en suelo y alcanzable a pie sin poderes (hay prueba de alcance). El resto del mundo exige poderes o la barca, así que ponerlo más lejos habría trabado a algunos perfiles.
 - **Abierto:** los textos de Narciso y Nausícaa y el taller de Dédalo son borrador; el botón dice "Hablar" también para objetos; falta "Mis cartas"; familias de poder y habilidades con efecto siguen pendientes.
 - **Detalle:** `plan-desbloqueo.md`, `charla-dedalo.md`.
+
+### D38. Guía de estilo visual y pase sobre todo el arte
+- **Estado:** tomada (Guille, 2026-11-08), en construcción.
+- **Decisión:** reglas comunes de escala, línea, detalle por plano, luz y punto de vista en `guia-estilo.md`, aplicadas a todo lo que se ve en el puerto, incluidos los seis personajes jugables y sus poses. Guille autorizó rediseñar aquí los personajes para unificarlos; se conservan su identidad, su rasgo y la paleta de D17.
+- **Por qué:** en el celular el arte se veía "como un collage de recortes": cuatro manos sin reglas compartidas dejaron contornos de distinto grosor y color, paredes con textura casi realista al lado de personajes planos, y objetos a otra escala y desde otro ángulo.
+- **Descartado:** pasar a 3D (la evaluación de octubre lo estimó en meses y la grilla seguiría viéndose cuadrada); generar imágenes con IA (cuesta mantener el mismo personaje en todas las poses).
+- **Abierto:** plaza y palacio. Si tras el pase sigue pareciendo collage, el siguiente paso es otra fuente de arte (ilustrador o paquete con licencia).

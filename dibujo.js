@@ -10,9 +10,9 @@ const reducirMovimiento = () => preferenciaMovimiento.matches;
 const transiciones = new WeakMap();
 const apoyos = new WeakMap();
 const ORIGEN_AMBIENTE = {
-  anforas: [-44,-50], cabra: [-31,-48], delfin: [-38,-39], fresco: [-45,-47],
-  gato: [-25,-33], gaviota: [-24,-30], golondrina: [-26,-30], laurel: [-29,-70],
-  lirios: [-27,-47], olivo: [-36,-70], pulpo: [-30,-36], redes: [-42,-55],
+  anforas: [-44,-46], cabra: [-22,-44], delfin: [-34,-35], fresco: [-45,-47],
+  gato: [-20,-26], gaviota: [-18,-20], golondrina: [-19,-23], laurel: [-33,-93],
+  lirios: [-29,-44], olivo: [-45,-92], pulpo: [-26,-30], redes: [-28,-41],
 };
 
 const NIVEL_AGUA = -0.12;
@@ -22,6 +22,14 @@ const COL = {
   egeo: '#1f6f9c', ocre: '#d9a441', tinta: '#3b2b1d', oro: '#fff3c8', espuma: '#7fb8d8',
   lino: '#c9a46a', linoSombra: '#8a6a3a',
 };
+
+// Sombra de contacto de la guía de estilo: elipse achatada a 0,4, ancha como el 60 % de la pieza,
+// corrida un poco a la derecha porque la luz viene de arriba a la izquierda.
+function sombraContacto(ctx, cx, cy, ancho, k = 0.6) {
+  const rx = ancho * k / 2;
+  ctx.fillStyle = 'rgba(20,10,30,.35)';
+  ctx.beginPath(); ctx.ellipse(cx + ancho * 0.1, cy, rx, rx * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+}
 
 function alturaVisual(c) { return c === '~' || c === 'r' ? NIVEL_AGUA : c === 'b' ? 0.8 : alturaCelda(c); }
 
@@ -157,7 +165,7 @@ function dibujarTile(ctx, m, x, y) {
     else if (c === 'A') caraSegmentos(ctx, px, fy, alto, n => n === 0 && (x & 1) === 0 ? 'cara-techo-0' : 'cara-techo-1');
     else if (c === 'a') caraSegmentos(ctx, px, fy, alto, () => 'cara-terraza');
     else { ctx.fillStyle = '#9b7a45'; ctx.fillRect(px, fy, TW, alto); ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(px, fy, TW, Math.min(1.2, alto)); }
-    if (c === 'A' || c === 'a') { ctx.fillStyle = 'rgba(20,12,6,.22)'; ctx.fillRect(px, fy + alto - Math.min(5, alto), TW, Math.min(5, alto)); }
+    if (c === 'A' || c === 'a') { ctx.fillStyle = 'rgba(20,12,6,.09)'; ctx.fillRect(px, fy + alto - Math.min(4, alto), TW, Math.min(4, alto)); }
   }
 
   switch (c) {
@@ -253,7 +261,7 @@ function caraPared(ctx, c, px, fy, alto, m, x, y) {
       for (const r of [13, 17]) { ctx.beginPath(); ctx.arc(cx, cy, r, -0.7, 0.7); ctx.stroke(); }
     }
   }
-  ctx.fillStyle = 'rgba(20,12,6,.22)'; ctx.fillRect(px, fy + alto - Math.min(7, alto), TW, Math.min(7, alto));
+  ctx.fillStyle = 'rgba(20,12,6,.09)'; ctx.fillRect(px, fy + alto - Math.min(5, alto), TW, Math.min(5, alto));
 }
 
 // Símbolos de los sonidos (se ven aunque el volumen esté en cero). Rellena y contornea con el estilo actual.
@@ -433,67 +441,77 @@ function dibujarGlobo(ctx, m, gx, by0) {
 function dibujarInteractivo(ctx, m, q) {
   const gx = q.x * TW, gy = q.y * TH - Math.max(m.suelo(q.x, q.y), 0) * LH, quieto = reducirMovimiento();
   ctx.save(); ctx.translate(gx, gy);
-  ctx.lineWidth = 2; ctx.strokeStyle = COL.tinta; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.fillStyle = 'rgba(20,10,30,.35)'; ctx.beginPath(); ctx.ellipse(0, 2, 24, 9, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  sombraContacto(ctx, 0, 0, 34, 0.75);
+  const trazo = (relleno, fino = false) => { ctx.fillStyle = relleno; ctx.fill(); ctx.strokeStyle = COL.tinta; ctx.lineWidth = fino ? 0.9 : 1.6; ctx.stroke(); };
+  const elipse = (cx, cy, rx, ry) => { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); };
   if (q.tipo === 'fuente') {
-    // pila de piedra con borde, agua adentro y chorro
-    ctx.fillStyle = COL.calSombra; ctx.beginPath(); ctx.ellipse(0, -2, 22, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = COL.cal; ctx.beginPath(); ctx.ellipse(0, -9, 22, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = q.usado ? COL.egeo : COL.linoSombra; ctx.beginPath(); ctx.ellipse(0, -9, 16, 6.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = COL.cal; ctx.beginPath(); ctx.rect(-4, -30, 8, 22); ctx.fill(); ctx.stroke();
+    // pila de piedra: cuerpo, borde (elipse a 0,45), agua adentro y columna con chorro
+    ctx.beginPath(); ctx.moveTo(-17, -12); ctx.lineTo(-14, 0); ctx.quadraticCurveTo(0, 4, 14, 0); ctx.lineTo(17, -12); ctx.closePath(); trazo(COL.calSombra);
+    ctx.fillStyle = '#a89774'; ctx.beginPath(); ctx.moveTo(10.5, -11); ctx.lineTo(9, -0.8); ctx.quadraticCurveTo(12, -0.6, 14, 0); ctx.lineTo(17, -12); ctx.closePath(); ctx.fill();
+    elipse(0, -12, 17, 7.6); trazo(COL.cal);
+    elipse(0, -12, 13, 5.7); trazo(q.usado ? COL.egeo : COL.linoSombra, true);
+    ctx.beginPath(); ctx.roundRect(-3, -30, 6, 19, 2); trazo(COL.cal);
+    ctx.fillStyle = COL.calSombra; ctx.fillRect(0.6, -29, 2.2, 17);
     if (q.usado) {
       const f = quieto ? 0 : m.t * 3;
       ctx.strokeStyle = COL.espuma; ctx.lineWidth = 3;
       for (const [dx, k] of [[-1, 0], [0, 0.5], [1, 0.25]]) {
         const a = quieto ? 0.7 : 0.5 + 0.35 * Math.sin(f + k * 6);
-        ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(0, -34); ctx.quadraticCurveTo(dx * 14, -50, dx * 20, -16); ctx.stroke();
+        ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(0, -33); ctx.quadraticCurveTo(dx * 13, -46, dx * 18, -14); ctx.stroke();
       }
-      ctx.globalAlpha = 1; ctx.strokeStyle = COL.tinta; ctx.lineWidth = 2;
-      ctx.strokeStyle = COL.espuma; ctx.beginPath(); ctx.ellipse(0, -9, 10, 4, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = COL.espuma; ctx.lineWidth = 0.9; elipse(0, -12, 9, 3.8); ctx.stroke();
     } else {
       // una gota de brillo marca que se puede usar
       const b = quieto ? 0.8 : 0.55 + 0.35 * Math.sin(m.t * 3);
-      ctx.globalAlpha = b; ctx.fillStyle = COL.oro; ctx.beginPath(); ctx.arc(0, -40, 4, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.globalAlpha = b; ctx.fillStyle = COL.oro; ctx.beginPath(); ctx.arc(0, -38, 4, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
     }
   } else {
-    // montoncito de cenizas con brasas
-    ctx.fillStyle = '#7d726a'; ctx.beginPath(); ctx.ellipse(0, -2, 22, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#a69a8f'; ctx.beginPath(); ctx.moveTo(-15, -4); ctx.quadraticCurveTo(-8, -26, 0, -24); ctx.quadraticCurveTo(9, -26, 15, -4); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#5f554e'; for (const [dx, dy] of [[-7, -9], [4, -13], [9, -6]]) { ctx.beginPath(); ctx.arc(dx, dy, 2.2, 0, Math.PI * 2); ctx.fill(); }
+    // montículo de cenizas con brasas: base en elipse a 0,45, tres tonos con luz a la izquierda
+    elipse(0, -3, 17, 7.6); trazo('#7d726a');
+    ctx.beginPath(); ctx.moveTo(-12, -5); ctx.quadraticCurveTo(-6, -22, 0, -20); ctx.quadraticCurveTo(7, -22, 12, -5); ctx.closePath(); trazo('#a69a8f');
+    ctx.fillStyle = '#8c8078'; ctx.beginPath(); ctx.moveTo(3, -19); ctx.quadraticCurveTo(9, -16, 11.4, -5.6); ctx.lineTo(6, -5); ctx.quadraticCurveTo(7, -13, 3, -19); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5f554e'; for (const [dx, dy] of [[-6, -8], [3, -11], [7, -6]]) { ctx.beginPath(); ctx.arc(dx, dy, 1.8, 0, Math.PI * 2); ctx.fill(); }
     if (!q.usado) {
       const b = quieto ? 0.85 : 0.6 + 0.4 * Math.sin(m.t * 4);
-      ctx.globalAlpha = b; ctx.fillStyle = '#e8892a'; ctx.beginPath(); ctx.arc(-2, -16, 4.5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = COL.oro; ctx.beginPath(); ctx.arc(-2, -16, 2, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.globalAlpha = b; ctx.fillStyle = '#e8892a'; ctx.beginPath(); ctx.arc(-2, -13, 3.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = COL.oro; ctx.beginPath(); ctx.arc(-2, -13, 1.7, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
     } else {
-      ctx.fillStyle = '#e6b866'; ctx.beginPath(); ctx.moveTo(-5, -22); ctx.lineTo(0, -34); ctx.lineTo(5, -22); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-4, -19); ctx.lineTo(0, -29); ctx.lineTo(4, -19); ctx.closePath(); trazo('#e6b866');
     }
   }
   ctx.restore();
-  if (m.cercano() === q && !q.usado) dibujarGlobo(ctx, m, gx, gy - 66);
+  if (m.cercano() === q && !q.usado) dibujarGlobo(ctx, m, gx, gy - 56);
 }
 
-// Banco del taller de Dédalo: tablón con plumas ordenadas de menor a mayor, un cuenco de cera y un ovillo de hilo.
+// Banco del taller de Dédalo: tablero en tres cuartos (20 de alto, 64 de ancho), con plumas ordenadas de menor a mayor,
+// un cuenco de cera y un ovillo de hilo, todo a escala de la mesa.
 function dibujarBanco(ctx, m, q) {
   const gx = q.banco[0] * TW, gy = q.banco[1] * TH - Math.max(m.suelo(q.banco[0], q.banco[1]), 0) * LH;
   ctx.save(); ctx.translate(gx, gy);
-  ctx.lineWidth = 2; ctx.strokeStyle = COL.tinta; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.fillStyle = 'rgba(20,10,30,.3)'; ctx.beginPath(); ctx.ellipse(0, 4, 54, 10, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = COL.linoSombra; for (const dx of [-46, 44]) { ctx.beginPath(); ctx.rect(dx - 4, -18, 8, 20); ctx.fill(); ctx.stroke(); }
-  ctx.fillStyle = COL.lino; ctx.beginPath(); ctx.rect(-54, -30, 108, 14); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = COL.linoSombra; ctx.beginPath(); ctx.rect(-54, -18, 108, 4); ctx.fill();
-  // plumas de menor a mayor, apoyadas sobre el tablón
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  sombraContacto(ctx, 0, 0, 64, 0.6);
+  const trazo = (relleno, fino = false) => { ctx.fillStyle = relleno; ctx.fill(); ctx.strokeStyle = COL.tinta; ctx.lineWidth = fino ? 0.9 : 1.6; ctx.stroke(); };
+  const elipse = (cx, cy, rx, ry, giro = 0) => { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, giro, 0, Math.PI * 2); };
+  // patas, frente del tablero y tablero (tapa a la vista)
+  for (const dx of [-29, 24]) { ctx.beginPath(); ctx.roundRect(dx, -7, 5, 7, 1.5); trazo(COL.linoSombra); }
+  ctx.beginPath(); ctx.roundRect(-32, -12, 64, 6, 2); trazo(COL.lino);
+  ctx.fillStyle = COL.linoSombra; ctx.fillRect(22, -11, 9, 4.4);
+  ctx.beginPath(); ctx.roundRect(-32, -20, 64, 9.5, 3); trazo('#d9bd86');
+  ctx.strokeStyle = '#b8955a'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(-28, -13.5); ctx.lineTo(28, -13.5); ctx.stroke();
+  // plumas apoyadas sobre el tablero, de menor a mayor
   for (let i = 0; i < 6; i++) {
-    const x = -44 + i * 8, h = 10 + i * 3;
-    ctx.save(); ctx.translate(x, -30); ctx.rotate(-0.25);
-    ctx.fillStyle = i % 2 ? '#fffaf0' : COL.cal; ctx.beginPath(); ctx.ellipse(0, -h / 2, 3.4, h / 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.restore();
+    elipse(-26 + i * 5.2, -15.4, 3 + i * 0.8, 1.5, -0.12); trazo(i % 2 ? '#fffaf0' : COL.cal, true);
   }
   // cuenco de cera
-  ctx.fillStyle = COL.ocre; ctx.beginPath(); ctx.ellipse(24, -32, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#f2d98a'; ctx.beginPath(); ctx.ellipse(24, -34, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(9, -17); ctx.lineTo(10.5, -13.5); ctx.quadraticCurveTo(15, -11.5, 19.5, -13.5); ctx.lineTo(21, -17); ctx.closePath(); trazo(COL.ocre, true);
+  elipse(15, -17, 6, 2.7); trazo(COL.ocre, true);
+  elipse(15, -17.2, 4.2, 1.8); ctx.fillStyle = '#f2d98a'; ctx.fill();
   // ovillo
-  ctx.fillStyle = COL.oxido; ctx.beginPath(); ctx.arc(42, -36, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(42, -36, 3.5, 0.4, 3.6); ctx.stroke();
+  ctx.beginPath(); ctx.arc(27, -19, 4.6, 0, Math.PI * 2); trazo(COL.oxido);
+  ctx.strokeStyle = COL.oxidoOscuro; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.arc(27, -19, 2.4, 0.6, 3.8); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(25.4, -20.6, 1.1, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
 
@@ -523,7 +541,7 @@ function dibujarAmbiente(ctx, m, e) {
   ctx.save();
   // Si el personaje está detrás de un árbol, se conserva la lectura de su posición.
   ctx.globalAlpha = cerca && ['olivo','laurel','fresco','redes'].includes(e.tipo) ? .48 : 1;
-  ctx.fillStyle='rgba(59,43,29,.17)'; ctx.beginPath(); ctx.ellipse(x+4,y+3,Math.min(24,s.w*.27),5,0,0,Math.PI*2); ctx.fill();
+  sombraContacto(ctx,x,y,s.w*.8,.6);
   ctx.translate(x+mov.dx,y+mov.dy); ctx.rotate(mov.giro); ctx.scale(.8*mov.escala,.8*mov.escala);
   pintar(ctx,'ambiente-'+e.tipo,0,0); ctx.restore();
 }
@@ -539,15 +557,14 @@ function dibujarApertura(ctx,m,q) {
 
 function dibujarEmpujable(ctx, e) {
   const sx = e.px * TW, sy = e.py * TH;   // los empujables viven en el suelo
-  ctx.fillStyle = 'rgba(0,0,0,.25)';
-  ctx.beginPath(); ctx.ellipse(sx + TW / 2, sy + TH - 5, 17, 6, 0, 0, Math.PI * 2); ctx.fill();
+  if (e.tipo === 'bloque') sombraContacto(ctx, sx + TW / 2, sy + TH - 3, 34, 1.1); else sombraContacto(ctx, sx + TW / 2, sy + TH - 4, 22);
   if (e.tipo === 'bloque') pintar(ctx, 'bloque', sx + TW / 2, sy + TH - 4);
   else pintar(ctx, 'vasija', sx + TW / 2, sy + TH - 5);
 }
 
 function dibujarBrasero(ctx, m, b) {
   const cx = b.x * TW + TW / 2, by = b.y * TH + TH - 6 - b.zBase * LH;
-  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(cx, by + 1, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
+  sombraContacto(ctx, cx, by + 1, 34, 0.75);
   if (b.encendido) {
     ctx.fillStyle = 'rgba(255,243,200,.12)'; ctx.beginPath(); ctx.arc(cx, by - 28, 34, 0, Math.PI * 2); ctx.fill();
   }
@@ -567,7 +584,7 @@ function dibujarBrasero(ctx, m, b) {
 function dibujarFuente(ctx, m, f) {
   const snd = m.sonidos[f.sonido];
   const cx = f.tx * TW + TW / 2, by = f.ty * TH + TH - 6 - f.zBase * LH;
-  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(cx, by + 1, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
+  sombraContacto(ctx, cx, by + 1, 34, 0.75);
   const vib = f.activa && !reducirMovimiento() ? Math.sin(m.t * 30) * .7 : 0;
   pintar(ctx, f.modo === 'sola' ? 'fuente-caracola' : 'fuente-cimbalo', cx + vib, by);
   // insignia del sonido: color y símbolo (apagada y sin brillo hasta que suene)
@@ -598,7 +615,7 @@ function dibujarFuente(ctx, m, f) {
 function dibujarArgolla(ctx, s, p) {
   const h = p === s.a ? s.ha : s.hb;
   const cx = p[0] * TW + TW / 2, cy = p[1] * TH + TH / 2 - h * LH;
-  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(cx, cy + 6, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+  sombraContacto(ctx, cx, cy + 6, 24, 0.9);
   pintar(ctx, s.tendida ? 'argolla-viva' : 'argolla', cx, cy + 6);
 }
 
@@ -833,7 +850,7 @@ const ALAS = {
 };
 // Escenario: origen del viewBox de cada sprite que no es de casilla (el resto empieza en 0, 0).
 const ORIGEN = {
-  bloque: [-20, -57], vasija: [-22, -42], 'brasero-apagado': [-20, -30], 'brasero-encendido': [-20, -30], llama: [-10, -38],
+  bloque: [-18, -40], vasija: [-16, -36], 'brasero-apagado': [-20, -36], 'brasero-encendido': [-20, -36], llama: [-10, -38],
   'fuente-caracola': [-22, -40], 'fuente-cimbalo': [-20, -36], argolla: [-14, -30], 'argolla-viva': [-14, -32],
   coleccionable: [-22, -22], barca: [-52, -32], 'barca-remo': [-48, -28], brillo: [-26, -26],
   ...Object.fromEntries(OBJETOS.map(id => [id, [-22, -22]])),

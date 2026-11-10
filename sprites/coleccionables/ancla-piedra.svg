@@ -8,7 +8,7 @@
 <path d="M-6.8 -11.8 L-10.8 8.6" stroke="#ddd0ac" stroke-width="1.6" stroke-linecap="round"/>
 <path d="M-6.4 -12.7 Q0 -15 6 -12.9" fill="none" stroke="#ddd0ac" stroke-width="1.4" stroke-linecap="round"/>
 <circle cx="-5" cy="3" r=".7" fill="#9a865f"/><circle cx="-2" cy="7.5" r=".6" fill="#9a865f"/><circle cx="3.5" cy="1" r=".7" fill="#9a865f"/><circle cx="-6.5" cy="-4" r=".6" fill="#9a865f"/><circle cx="1" cy="5" r=".5" fill="#ddd0ac"/><circle cx="-3" cy="-1" r=".5" fill="#ddd0ac"/><circle cx="6.5" cy="7" r=".6" fill="#7f6d4a"/>
-<path d="M-8 -13 Q0 -16.5 8 -13 L12.5 11 Q0 15.5 -12.5 11 Z" fill="none" stroke="#3b2b1d" stroke-width="1.8" stroke-linejoin="round"/>
+<path d="M-8 -13 Q0 -16.5 8 -13 L12.5 11 Q0 15.5 -12.5 11 Z" fill="none" stroke="#3b2b1d" stroke-width="1.6" stroke-linejoin="round"/>
 <circle cx="0.5" cy="-6.5" r="3.4" fill="#3b2b1d"/>
 <path d="M-2.3 -5.2 A3 3 0 0 0 3.3 -5.2" fill="none" stroke="#7f6d4a" stroke-width="1"/>
 <path d="M-0.6 -7.2 C-3.2 -11 -5.2 -16 -2.2 -19.4 C0.8 -22.4 6 -20 5 -15" fill="none" stroke="#3b2b1d" stroke-width="4.4" stroke-linecap="round"/>
